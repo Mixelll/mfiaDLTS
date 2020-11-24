@@ -109,10 +109,11 @@ out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
 in_c = '0'; % signal input channel
 osc_c = '0'; % oscillator
 
-for c = fieldnames(device_properties.channels)
-    eval([c{:} '=device_properties.channels.' c{:}]);
+if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'chennels'))
+    for c = fieldnames(device_properties.channels)
+        eval([c{:} '=device_properties.channels.' c{:}]);
+    end
 end
-
 
 % Create a base configuration: Disable all available outputs, awgs,
 % demods, scopes,...
@@ -155,19 +156,19 @@ if strcamp(sweep_order{1}, 'osc_frequency')
     % Stop frequency
     ziDAQ('set', h, 'stop', p.Results.stop_osc_frequency);
 
-elseif strcamp(sweep_order{1}, 'test_signal')
+elseif strcamp(sweep_param, 'test_signal')
     % Sweeping setting is the amplitude of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' out_c '/amplitudes/' out_mixer_c]);
-    % Start frequency = 1 kHz
+    % Start test signal
     ziDAQ('set', h, 'start', p.Results.start_test_signal);
-    % Stop frequency
+    % Stop test signal
     ziDAQ('set', h, 'stop', p.Results.stop_test_signal);
-elseif strcamp(sweep_order{1}, 'bias_voltage')
+elseif strcamp(sweep_param, 'bias_voltage')
     % Sweeping setting is the offset of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' osc_c '/offset']);
-    % Start frequency = 1 kHz
+    % Start bias voltage
     ziDAQ('set', h, 'start', p.Results.start_bias_voltage);
-    % Stop frequency
+    % Stop bias voltage
     ziDAQ('set', h, 'stop', p.Results.stop_bias_voltage);
 end
 
@@ -239,67 +240,11 @@ figure(1); clf;
 timeout = 60;
 t0 = tic;
 % Read and plot intermediate data until the sweep has finished.
-while ~ziDAQ('finished', h)
-    pause(1);
-    tmp = ziDAQ('read', h);
-    fprintf('Sweep progress %0.0f%%\n', ziDAQ('progress', h) * 100);
-    % Using intermediate reads we can plot a continuous refinement of the ongoing
-    % measurement. If not required it can be removed.
-    if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
-        sample = tmp.(device).demods(demod_idx).sample{1};
-        if ~isempty(sample)
-            data = tmp;
-            % Get the magnitude and phase of demodulator from the sweeper result.
-            r = sample.r;
-            theta = sample.phase;
-            param0 = sample.param0;
-            param1 = sample.param1;
-            % Frequency values at which measurement points were taken
-            sweep_i = sample.grid;
-            valid = ~isnan(sweep_i);
-            plot_data(sweep_i(valid), r(valid), theta(valid), p.Results.amplitude, '.-')
-            drawnow;
-        end
-    end
-    if toc(t0) > timeout
-        ziDAQ('clear', h);
-        error('Timeout: Sweeper failed to finish after %f seconds.', timeout)
-    end
-end
-fprintf('Sweep completed after %.2f s.\n', toc(t0));
 
 pts = length(sweep_i);
 sweep_k = val_k*ones(1,pts);
 sweep_j = val_j*ones(1,pts);
 
-% Read the data. This command can also be executed during the waiting (as above).
-tmp = ziDAQ('read', h);
-
-% Unsubscribe from the node; stop filling the data from that node to the
-% internal buffer in the Data Server.
-ziDAQ('unsubscribe', h, ['/' device '/demods/*/sample']);
-
-% Process any remainging data returned by read().
-if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
-    sample = tmp.(device).demods(demod_idx).sample{1};
-    if ~isempty(sample)
-        % Extracting R component and phase of input signal
-        % As several sweeps may be returned, a cell array is used.
-        % In this case we pick the first sweep result by {1}.
-        data = tmp;
-        r = sample.r;
-        theta = sample.phase;
-        param0 = sample.param0;
-        param1 = sample.param1;
-        % Frequency values at which measurement points were taken
-        sweep_i = sample.grid;
-        % Plot the final result
-        plot_data(sweep_i, r, theta, p.Results.amplitude, '-')
-        
-    end
-end
-        end
-    end
  
 % if strcamp(sweep_by, 'bias_voltage')
 % i = '(:, f, a)=';
