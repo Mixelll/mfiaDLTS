@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, device_properties, sweep_param, sweep_range, pts, read_param_struct, intermediate_read, varargin)
+function [data, sweep_param_arr, varargout]  = MFIA_general_sweeper(device, device_properties, sweep_param, sweep_range, pts, read_param_struct, intermediate_read, varargin)
 
 % Define parameters relevant to this example. Default values specified by the
 % inputParser below are overwritten if specified as name-value pairs via the
@@ -63,19 +63,14 @@ p.addParameter('bandwidth_overlap', 0, @isnumeric);
 
 p.parse(varargin{:});
 
-
-keys = {'demodulator', 'demod', 'impedance', 'imp'};
-values = {'demod', 'demod', 'impedance', 'impedance'};
-node_dic = containers.Map(keys,values);
 read_param_cell = fn_struct2cell(read_param_struct);
 if ~isempty(read_param_cell)
-    for i = 1:size(read_param_cell,2)
-        for st = {'demod', 'imp'}
-            locs = strfind(read_param_cell{1,i},'.');
-            if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st)
-            read_param_cell{3,i} = ['sample_' node_dic(st) read_param_cell{1,i}(locs(2):end)];
-            read_param_cell{4,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
-            end
+    locs = strfind(read_param_cell{1,1},'.');
+    loc = locs(1)-1;
+    if ~strcmp(read_param_cell{1,1}(1:loc),'sample')
+        for i = 1:size(read_param_cell,2)
+            read_param_cell{1,i} = ['sample' read_param_cell{1,i}(loc+1:end)];
+            read_param_cell{3,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
         end
     end
 end
@@ -90,8 +85,6 @@ out_c = '0'; % signal output channel
 out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
 in_c = '0'; % signal input channel
 osc_c = '0'; % oscillator
-imp_c = '0';
-imp_index = 1;
 
 if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
     for c = fieldnames(device_properties.channels)
@@ -196,14 +189,13 @@ fprintf('Bandwidth overlap set to %s.\n', bandwidth_overlap);
 
 % Subscribe to the node from which data will be recorded.
 ziDAQ('subscribe', h, ['/' device '/demods/' demod_c '/sample']);
-ziDAQ('subscribe', h, ['/' device, '/imps/' imp_c '/sample']);
 
 % Start sweeping.
 ziDAQ('execute', h);
 fprintf('Sweep Started\n');
 
-full_data = [];
-select_data = struct;
+data = [];
+
 
 figure(1); clf;
 t0 = tic;
@@ -216,21 +208,19 @@ while ~ziDAQ('finished', h)
         % Using intermediate reads we can plot a continuous refinement of the ongoing
         % measurement. If not required it can be removed.
         if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
-            sample_demod = tmp.(device).demods(demod_idx).sample{1};
-            sample_impedance = tmp.(device).imps(imp_index).sample{1};
-            if ~isempty(sample_demod)
-                full_data = tmp;
+            sample = tmp.(device).demods(demod_idx).sample{1};
+            if ~isempty(sample)
+                data = tmp;
                 % Get the desired parameters from the sweeper result.
                 i = 1;
                 for c = read_param_cell
-                    if ~isempty(c{3}) && c{2}
-                        eval(['select_data' c{1}(locs(1):end) '=' c{3} ';'])
-                        eval([varargout{i} '=' c{3} ';'])
+                    if c{2}
+                        eval([varargout{i} '=' c{1} ';'])
                         i=i+1;
                     end
                 end
                 % Sweep parameter values at which measurement points were taken
-                sweep_param_arr = sample_demod.grid;
+                sweep_param_arr = sample.grid;
     %             valid = ~isnan(sweep_i);
     %             plot_data(sweep_i(valid), r(valid), theta(valid), p.Results.amplitude, '.-')
     %             drawnow;
@@ -251,26 +241,23 @@ tmp = ziDAQ('read', h);
 % Unsubscribe from the node; stop filling the data from that node to the
 % internal buffer in the Data Server.
 ziDAQ('unsubscribe', h, ['/' device '/demods/*/sample']);
-ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
 
 % Process any remainging data returned by read().
-    if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
-        sample_demod = tmp.(device).demods(demod_idx).sample{1};
-        sample_impedance = tmp.(device).imps(imp_index).sample{1};
-        if ~isempty(sample_demod)
-            full_data = tmp;
-            % Get the desired parameters from the sweeper result.
-            i = 1;
-            for c = read_param_cell
-                if ~isempty(c{3}) && c{2}
-                    eval(['select_data' c{1}(locs(1):end) '=' c{3} ';'])
-                    eval([varargout{i} '=' c{3} ';'])
-                    i=i+1;
-                end
+if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
+    sample = tmp.(device).demods(demod_idx).sample{1};
+    if ~isempty(sample)
+        % Extracting R component and phase of input signal
+        % As several sweeps may be returned, a cell array is used.
+        % In this case we pick the first sweep result by {1}.
+        data = tmp;
+        for c = read_param_cell
+            if c{2}
+                eval([varargout{i} '=' c{1} ';'])
+                i=i+1;
             end
         end
         % Frequency values at which measurement points were taken
-        sweep_param_arr = sample_demod.grid;
+        sweep_param_arr = sample.grid;
         % Plot the final result
 %         plot_data(sweep_i, r, theta, p.Results.amplitude, '-')
         
@@ -282,6 +269,9 @@ end
 % inside a loop to prevent excessive resource consumption.
 ziDAQ('clear', h);
 
+for s = {[sweep_param '_i']}
+    eval(['data.' s '=' s ';'])
+end
 % Sweeper module returns a structure with following elements:
 % * timestamp -> Time stamp data [uint64]. Divide the timestamp by the
 % device's clockbase in order to get seconds, the clockbase can be obtained
