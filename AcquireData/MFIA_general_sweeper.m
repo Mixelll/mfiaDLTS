@@ -82,7 +82,7 @@ end
            
        
 
-% Define some other helper parameters.
+% Set default device channels.
 demod_c = '0'; % demod channel, for paths on the device
 demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
 out_c = '0'; % signal output channel
@@ -93,6 +93,7 @@ osc_c = '0'; % oscillator
 imp_c = '0';
 imp_index = 1;
 
+% Re-set device channels
 if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
     for c = fieldnames(device_properties.channels)
         eval([c{:} '=device_properties.channels.' c{:} ';']);
