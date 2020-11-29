@@ -12,17 +12,19 @@
 % subfolders and run the Matlab function ziAddPath().
 % >>> ziAddPath;
 %
-
+clear
 % MFIA ID
 device_id = 'dev5168';
 
 % Update MATLAB plot while sweep in progress
 intermediate_read = 0;
-% Selected data to read
+% Selected data to read (grid = sweep parameter)
+% read_param_struct.demod.grid = true;
+read_param_struct.demod.r = true;
+read_param_struct.demod.phase = true;
+read_param_struct.impedance.grid = true;
 read_param_struct.impedance.param0 = true;
 read_param_struct.impedance.param1 = true;
-read_param_struct.demod.r = true;
-read_param_struct.demod.theta = true;
 
 % Sweep by Frequency and iterate over AC amplitude and offset
 sweep_order = {'frequency', 'amplitude', 'offset'};

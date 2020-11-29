@@ -1,5 +1,5 @@
 function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, device_properties, sweep_param, sweep_range, pts, read_param_struct, intermediate_read, varargin)
-
+varargout = {};
 % Define parameters relevant to this example. Default values specified by the
 % inputParser below are overwritten if specified as name-value pairs via the
 % `varargin` input argument.
@@ -19,7 +19,6 @@ p.addParameter('loopcount', 1, isnonnegscalar);
 p.addParameter('xmapping', 0, @isnumeric);
 % Binary scan type.
 p.addParameter('scan', 1, @isnumeric);
-
 
 
 % The value used for the Sweeper's 'settling/inaccuracy' parameter: This
@@ -68,6 +67,10 @@ keys = {'demodulator', 'demod', 'impedance', 'imp'};
 values = {'demod', 'demod', 'impedance', 'impedance'};
 node_dic = containers.Map(keys,values);
 read_param_cell = fn_struct2cell(read_param_struct);
+grid_search = strfind(read_param_cell(1,:), 'grid');
+if ~any([grid_search{:}])
+    read_param_cell = [{'read_param_struct.demod.grid'; true} read_param_cell];
+end
 if ~isempty(read_param_cell)
     for i = 1:size(read_param_cell,2)
         for st = {'demod', 'imp'}
@@ -84,10 +87,10 @@ end
 
 % Set default device channels.
 demod_c = '0'; % demod channel, for paths on the device
-demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
+demod_idx = 1; % 1-based indexing, to access the data
 out_c = '0'; % signal output channel
 % Get the value of the instrument's default Signal Output mixer channel.
-out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
+out_mixer_c = '1';
 in_c = '0'; % signal input channel
 osc_c = '0'; % oscillator
 imp_c = '0';
@@ -95,7 +98,7 @@ imp_index = 1;
 
 % Re-set device channels
 if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
-    for c = fieldnames(device_properties.channels)
+    for c = fieldnames(device_properties.channels)'
         eval([c{:} '=device_properties.channels.' c{:} ';']);
     end
 end
@@ -109,7 +112,7 @@ h = ziDAQ('sweep');
 % Device on which sweeping will be performed
 ziDAQ('set', h, 'device', device);
 %% Sweep by
-if strcamp(sweep_param, 'osc_frequency')
+if strcmp(sweep_param, 'frequency')
     % Sweeping setting is the frequency of the output signal
     ziDAQ('set', h, 'gridnode', ['oscs/' osc_c '/freq']); 
     % Start frequency = 1 kHz
@@ -117,7 +120,7 @@ if strcamp(sweep_param, 'osc_frequency')
     % Stop frequency
     ziDAQ('set', h, 'stop', sweep_range(2));
 	fprintf('Frequency Sweep from %g Hz to %g Hz, %d pts.\n', sweep_range(1), sweep_range(2), pts);
-elseif strcamp(sweep_param, 'test_signal')
+elseif strcmp(sweep_param, 'amplitude')
     % Sweeping setting is the amplitude of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' out_c '/amplitudes/' out_mixer_c]);
     % Start test signal
@@ -125,7 +128,7 @@ elseif strcamp(sweep_param, 'test_signal')
     % Stop test signal
     ziDAQ('set', h, 'stop', sweep_range(2));
 	fprintf('Test Signal Sweep from %.2f mV to %.2f mV, %d pts.\n', 1000*sweep_range(1), 1000*sweep_range(2), pts);
-elseif strcamp(sweep_param, 'bias_voltage')
+elseif strcmp(sweep_param, 'offset')
     % Sweeping setting is the offset of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' osc_c '/offset']);
     % Start bias voltage
@@ -265,7 +268,7 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
             for c = read_param_cell
                 if ~isempty(c{3}) && c{2}
                     eval(['select_data' c{1}(locs(1):end) '=' c{3} ';'])
-                    eval([varargout{i} '=' c{3} ';'])
+                    varargout{i} = eval([c{3}]);
                     i=i+1;
                 end
             end

@@ -98,7 +98,7 @@ imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
 
 % Overwrite default device channels
 if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
-    for c = fieldnames(device_properties.channels)
+    for c = fieldnames(device_properties.channels)'
         eval([c{:} '=device_properties.channels.' c{:}]);
     end
 end
@@ -155,8 +155,6 @@ ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
 
 
 %% Sweep by
-select_data = repmat(struct,1,max([lf la lo]));
-full_data = select_data;
 figure(1); clf;
 for v = 1:max([lf,la,lo])
     if any(strcmp(sweep_order(2:3), 'frequency'))
@@ -183,9 +181,6 @@ for v = 1:max([lf,la,lo])
     full_data(v) = full_data_one;
 end
 
-% Release module resources. Especially important if modules are created
-% inside a loop to prevent excessive resource consumption.
-ziDAQ('clear', h);
 
 % Sweeper module returns a structure with following elements:
 % * timestamp -> Time stamp data [uint64]. Divide the timestamp by the
