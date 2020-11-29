@@ -110,7 +110,7 @@ ziDisableEverything(device);
 
 ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], p.Results.voltage_range);
 ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], 1);
-ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], 2);
+ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], p.Results.voltage_range);
 ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
 
 % ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/*'], 0);
@@ -126,7 +126,7 @@ ziDAQ('setInt', ['/' device '/demods/*/adcselect'], str2double(in_c));
 ziDAQ('setDouble', ['/' device '/demods/*/timeconstant'], p.Results.demod_time_constant);
 % ziDAQ('setDouble', ['/' device '/oscs/' osc_c '/freq'], ); % [Hz]
 
-ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], 0);
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], p.Results.two_terminal);
 if p.Results.two_terminal
     ziDAQ('setInt', ['/' device '/system/impedance/calib/cablelength'], p.Results.cable_length);
 else
@@ -139,7 +139,7 @@ ziDAQ('setDouble', ['/' device '/imps/' imp_c '/current/range'], p.Results.curre
 ziDAQ('setDouble', ['/' device '/imps/' imp_c '/voltage/range'], p.Results.voltage_range);
 ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/range'], p.Results.voltage_range);
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
-ziDAQ('setInt', ['/' device '/imps/' imp_c '/enable'], 0);
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/enable'], 1);
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
 
 
