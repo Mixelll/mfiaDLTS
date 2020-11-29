@@ -27,8 +27,8 @@ read_param_struct.demod.theta = true;
 % Sweep by Frequency and iterate over AC amplitude and offset
 sweep_order = {'frequency', 'amplitude', 'offset'};
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
-start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 20; % V
-start_offset = 1; stop_offset = -1; pts_offset = 21; % V
+start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 2; % V
+start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
@@ -170,7 +170,7 @@ device_properties = struct;
 % demodulator filter settling time.
 
 
-[select_data, full_data] = MFIA_freq_amplitude_bias_sweep(device_id, device_properties, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
+[select_data, full_data] = MFIA_freq_amp_bias_sweep(device_id, device_properties, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
 
 function plot_data(frequencies, r, theta, amplitude, style)
 % Plot data
