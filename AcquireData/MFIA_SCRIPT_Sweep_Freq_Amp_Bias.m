@@ -13,6 +13,9 @@
 % >>> ziAddPath;
 %
 
+% MFIA ID
+device_id = 'dev5168';
+
 % Update MATLAB plot while sweep in progress
 intermediate_read = 0;
 % Selected data to read
@@ -34,10 +37,28 @@ start_offset = 1; stop_offset = -1; pts_offset = 21; % V
 %% Overwite Defaults (uncomment and change value)
 overwrite_defaults = {}; % don't touch
 
-    %Sweep timeout.
+    % Enable two terminal measurement.
+% overwrite_defaults{:,end+1} = {'two_terminal'; 1};
+    
+    % Enable two terminal cable length compensation.
+% overwrite_defaults{:,end+1} = {'cable_length'; 1};
+
+    % Enable four terminal high-pass filter.
+% overwrite_defaults{:,end+1} = {'AC'; 0};
+
+    % Enable auto range.
+% overwrite_defaults{:,end+1} = {'auto_range'; 0};
+
+    % Current range.
+% overwrite_defaults{:,end+1} = {'current_range'; 10e-6};
+
+    % Voltage range.
+% overwrite_defaults{:,end+1} = {'voltage_range'; 3};
+
+    % Sweep timeout.
 % overwrite_defaults{:,end+1} = {'timeout'; 120};
 
-    %Fetch data during the sweep.
+    % Fetch data during the sweep.
 % overwrite_defaults{:,end+1} = {'intermediate_read'; 0};
 
     % Perform one single sweep.
@@ -90,8 +111,13 @@ overwrite_defaults = {}; % don't touch
     % enabled to achieve maximal sweep speed (default: 0). 0 = Disable, 1 = Enable.
 % overwrite_defaults{:,end+1} = {'bandwidth_overlap'; 0};
 
+    %Demodulator time constant.
+% overwrite_defaults{:,end+1} = {'demod_time_constant'; 0.007};
 
-    % Define some other helper parameters.
+    %Demodulator rate.
+% overwrite_defaults{:,end+1} = {'demod_rate'; 13e3};
+
+    % Define device channels.
 device_properties = struct;
 % device_properties.channels.demod_c = '0'; % demod channel, for paths on the device
 % device_properties.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data

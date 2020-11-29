@@ -56,12 +56,29 @@ p = inputParser;
 p.KeepUnmatched=true;
 isnonnegscalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 
+% Enable two terminal measurement.
+p.addParameter('two_terminal', 1, @isnumeric);
+
+% Enable two terminal cable length compensation [m].
+p.addParameter('cable_length', 1, @isnumeric);
+
+% Enable four terminal high-pass filter.
+p.addParameter('AC', 0, @isnumeric);
+
+% Enable current auto range.
+p.addParameter('auto_range', 0, @isnumeric);
+
+% Current manual range, [A].
+p.addParameter('current_range', 10e-6, @isnumeric);
+
+% Voltage manual range, [V].
+p.addParameter('voltage_range', 3, @isnumeric);
 
 % demod time constant, [s].
-p.addParameter('demod_timeconstant', 0.007, @isnumeric);
+p.addParameter('demod_time_constant', 0.007, @isnumeric);
 
 % demod rate, [Hz].
-p.addParameter('demod_rate', 0.1, @isnumeric);
+p.addParameter('demod_rate', 13e3, @isnumeric);
 
 p.parse(varargin{:});
 
@@ -76,6 +93,8 @@ out_c = '0'; % signal output channel
 out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
 in_c = '0'; % signal input channel
 osc_c = '0'; % oscillator
+imp_c = '0'; % IA channel
+imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
 
 if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
     for c = fieldnames(device_properties.channels)
@@ -88,27 +107,40 @@ end
 ziDisableEverything(device);
 
 %% Configure the device ready for this experiment.
+
+ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], p.Results.voltage_range);
 ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], 1);
-ziDAQ('setInt', ['/' device '/sigins/' in_c '/ac'], 1);
 ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], 2);
 ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
-ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], 1);
-ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/*'], 0);
-ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/' out_mixer_c], p.Results.amplitude);
-ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1);
-if strfind(props.devicetype, 'HF2')
-    ziDAQ('setInt', ['/' device '/sigins/' in_c '/diff'], 0);
-    ziDAQ('setInt', ['/' device '/sigouts/' out_c '/add'], 0);
-end
+
+% ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/*'], 0);
+% ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/' out_mixer_c], p.Results.amplitude);
+ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1); 
 ziDAQ('setDouble', ['/' device '/demods/*/phaseshift'], 0);
 ziDAQ('setInt', ['/' device '/demods/*/order'], 4);
-ziDAQ('setDouble', ['/' device '/demods/' demod_c '/rate'], demod_rate);
+ziDAQ('setDouble', ['/' device '/demods/' demod_c '/rate'], p.Results.demod_rate);
 ziDAQ('setInt', ['/' device '/demods/' demod_c '/harmonic'], 1);
 ziDAQ('setInt', ['/' device '/demods/' demod_c '/enable'], 1);
 ziDAQ('setInt', ['/' device '/demods/*/oscselect'], str2double(osc_c));
 ziDAQ('setInt', ['/' device '/demods/*/adcselect'], str2double(in_c));
-ziDAQ('setDouble', ['/' device '/demods/*/timeconstant'], p.Results.demod_timeconstant);
-ziDAQ('setDouble', ['/' device '/oscs/' osc_c '/freq'], p.Results.demod_rate); % [Hz]
+ziDAQ('setDouble', ['/' device '/demods/*/timeconstant'], p.Results.demod_time_constant);
+% ziDAQ('setDouble', ['/' device '/oscs/' osc_c '/freq'], ); % [Hz]
+
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], 0);
+if p.Results.two_terminal
+    ziDAQ('setInt', ['/' device '/system/impedance/calib/cablelength'], p.Results.cable_length);
+else
+    ziDAQ('setInt', ['/' device '/imps/' imp_c '/ac'], p.Results.AC);
+    ziDAQ('setInt', ['/' device '/sigins/' in_c '/ac'], p.Results.AC);
+end
+
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/inputrange'], p.Results.auto_range);
+ziDAQ('setDouble', ['/' device '/imps/' imp_c '/current/range'], p.Results.current_range);
+ziDAQ('setDouble', ['/' device '/imps/' imp_c '/voltage/range'], p.Results.voltage_range);
+ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/range'], p.Results.voltage_range);
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/enable'], 0);
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
 
 
 %% Sweep by
@@ -117,15 +149,15 @@ full_data = select_data;
 figure(1); clf;
 for v = 1:max(lf,la,lo)
     if any(strcmp(sweep_order(2:3), 'frequency'))
-        ziDAQ('setDouble', ['/' device 'imps/0/bias/value'], frequency_vec(v)) 
+        ziDAQ('setDouble', ['/' device 'imps/' imp_c '/bias/value'], frequency_vec(v)) 
     end
     if any(strcmp(sweep_order(2:3), 'amplitude'))
-        ziDAQ('setInt', '/dev5168/imps/0/auto/output', 0);
-        ziDAQ('setDouble', ['/' device 'imps/0/outputs/amplitude'], amplitude_vec(v))
+        ziDAQ('setInt', ['/dev5168/imps/' imp_c '/auto/output'], 0);
+        ziDAQ('setDouble', ['/' device 'imps/' imp_c '/outputs/amplitude'], amplitude_vec(v))
     end
     if any(strcmp(sweep_order(2:3), 'offset'))
-        ziDAQ('setDouble', ['/' device 'imps/0/bias/value'], offset_vec(v))
-        ziDAQ('setInt', '/dev5168/imps/0/bias/enable', 1);
+        ziDAQ('setDouble', ['/' device 'imps/' imp_c '/bias/value'], offset_vec(v))
+        ziDAQ('setInt', ['/dev5168/imps/' imp_c '/bias/enable'], 1);
     end
     
     [select_data_one, full_data_one] = MFIA_general_sweeper(device, device_properties, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
