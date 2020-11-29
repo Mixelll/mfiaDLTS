@@ -149,14 +149,14 @@ full_data = select_data;
 figure(1); clf;
 for v = 1:max([lf,la,lo])
     if any(strcmp(sweep_order(2:3), 'frequency'))
-        ziDAQ('setDouble', ['/' device 'imps/' imp_c '/bias/value'], frequency_vec(v)) 
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], frequency_vec(v)) 
     end
     if any(strcmp(sweep_order(2:3), 'amplitude'))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
-        ziDAQ('setDouble', ['/' device 'imps/' imp_c '/outputs/amplitude'], amplitude_vec(v))
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_vec(v))
     end
     if any(strcmp(sweep_order(2:3), 'offset'))
-        ziDAQ('setDouble', ['/' device 'imps/' imp_c '/bias/value'], offset_vec(v))
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_vec(v))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
     end
     
