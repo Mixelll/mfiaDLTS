@@ -144,20 +144,20 @@ ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
 
 
 %% Sweep by
-select_data = repmat(struct,1,max(lf,la,lo));
+select_data = repmat(struct,1,max([lf la lo]));
 full_data = select_data;
 figure(1); clf;
-for v = 1:max(lf,la,lo)
+for v = 1:max([lf,la,lo])
     if any(strcmp(sweep_order(2:3), 'frequency'))
         ziDAQ('setDouble', ['/' device 'imps/' imp_c '/bias/value'], frequency_vec(v)) 
     end
     if any(strcmp(sweep_order(2:3), 'amplitude'))
-        ziDAQ('setInt', ['/dev5168/imps/' imp_c '/auto/output'], 0);
+        ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
         ziDAQ('setDouble', ['/' device 'imps/' imp_c '/outputs/amplitude'], amplitude_vec(v))
     end
     if any(strcmp(sweep_order(2:3), 'offset'))
         ziDAQ('setDouble', ['/' device 'imps/' imp_c '/bias/value'], offset_vec(v))
-        ziDAQ('setInt', ['/dev5168/imps/' imp_c '/bias/enable'], 1);
+        ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
     end
     
     [select_data_one, full_data_one] = MFIA_general_sweeper(device, device_properties, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
