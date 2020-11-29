@@ -72,8 +72,8 @@ if ~isempty(read_param_cell)
     for i = 1:size(read_param_cell,2)
         for st = {'demod', 'imp'}
             locs = strfind(read_param_cell{1,i},'.');
-            if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st)
-            read_param_cell{3,i} = ['sample_' node_dic(st) read_param_cell{1,i}(locs(2):end)];
+            if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st{:})
+            read_param_cell{3,i} = ['sample_' node_dic(st{:}) read_param_cell{1,i}(locs(2):end)];
             read_param_cell{4,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
             end
         end
