@@ -275,7 +275,7 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
 %         plot_data(sweep_i, r, theta, p.Results.amplitude, '-')
         
     end
-end
+
 
 
 % Release module resources. Especially important if modules are created
