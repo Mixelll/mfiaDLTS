@@ -85,7 +85,7 @@ p.parse(varargin{:});
 unmatched_vars = [fieldnames(p.Unmatched), struct2cell(p.Unmatched)];
 unmatched_vars = unmatched_vars.';
 
-% Define some other helper parameters.
+% Define device channels.
 demod_c = '0'; % demod channel, for paths on the device
 demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
 out_c = '0'; % signal output channel
@@ -96,11 +96,22 @@ osc_c = '0'; % oscillator
 imp_c = '0'; % IA channel
 imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
 
+% Overwrite default device channels
 if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
     for c = fieldnames(device_properties.channels)
         eval([c{:} '=device_properties.channels.' c{:}]);
     end
 end
+
+% Re-set device channels
+device_properties.channels.demod_c = demod_c; % demod channel, for paths on the device
+device_properties.channels.demod_idx = demod_idx; % 1-based indexing, to access the data
+device_properties.channels.out_c = out_c; % signal output channel
+device_properties.channels.out_mixer_c = out_mixer_c;
+device_properties.channels.in_c = in_c; % signal input channel
+device_properties.channels.osc_c = osc_c; % oscillator
+device_properties.channels.imp_c = imp_c; % IA channel
+device_properties.channels.imp_index = imp_index; % IA, 1-based indexing, to access the data
 
 % Create a base configuration: Disable all available outputs, awgs,
 % demods, scopes,...
