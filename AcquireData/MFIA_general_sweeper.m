@@ -144,7 +144,7 @@ elseif strcmp(sweep_param, 'amplitude')
     ziDAQ('set', h, 'start', sweep_range(1));
     % Stop test signal
     ziDAQ('set', h, 'stop', sweep_range(2));
-	if major.disp, fprintf('Test Signal Sweep from %.2f mV to %.2f mV, %d pts.\n', 1000*sweep_range(1), 1000*sweep_range(2), pts); end
+	if major.disp, fprintf('Test Signal Sweep from %.2f mV to %.2f mV, %d pts.\n', 1000*ziDAQ('get', h, 'start').start, 1000*ziDAQ('get', h, 'stop').stop, ziDAQ('get', h, 'samplecount').samplecount); end
 elseif strcmp(sweep_param, 'offset')
     % Sweeping setting is the offset of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' osc_c '/offset']);
@@ -153,14 +153,14 @@ elseif strcmp(sweep_param, 'offset')
     
     % Stop bias voltage
     ziDAQ('set', h, 'stop', sweep_range(2));
-	if major.disp, fprintf('Bias Voltage Sweep from %.2f V to %.2f V, %d pts.\n', sweep_range(1), sweep_range(2), pts); end
+	if major.disp, fprintf('Bias Voltage Sweep from %.2f V to %.2f V, %d pts.\n', ziDAQ('get', h, 'start').start, ziDAQ('get', h, 'stop').stop, ziDAQ('get', h, 'samplecount').samplecount); end
 end
 
 ziDAQ('set', h, 'loopcount', p.Results.loopcount);
-if minor.disp, fprintf('Loop count set to %d  pts.\n', p.Results.loopcount); end
+if minor.disp, fprintf('Loop count set to %d  pts.\n', ziDAQ('get', h, 'loopcount').loopcount); end
 
 ziDAQ('set', h, 'xmapping', p.Results.xmapping);
-if p.Results.xmapping
+if ziDAQ('get', h, 'xmapping').xmapping
     xmapping = 'Linear';
 else
     xmapping = 'Logarithmic';
@@ -168,7 +168,7 @@ end
 if minor.disp, fprintf('X axis mapping set to %s.\n', xmapping); end
 
 ziDAQ('set', h, 'scan', p.Results.scan);
-switch p.Results.scan
+switch ziDAQ('get', h, 'scan').scan
     case 0 
         scan = 'Sequential';
     case 1 
@@ -181,19 +181,19 @@ end
 if minor.disp, fprintf('Scan type set to %s.\n', scan); end
 
 ziDAQ('set', h, 'settling/time', p.Results.settling_time);
-if minor.disp, fprintf('settling/time set to %g sec.\n', p.Results.settling_time); end
+if minor.disp, fprintf('settling/time set to %g sec.\n', ziDAQ('get', h, 'settling/time').settling.time); end
 
 ziDAQ('set', h, 'settling/inaccuracy', p.Results.sweep_inaccuracy);
-if minor.disp, fprintf('Sweep inaccuracy set to %g.\n', p.Results.sweep_inaccuracy); end
+if minor.disp, fprintf('Sweep inaccuracy set to %g.\n', ziDAQ('get', h, 'settling/inaccuracy').settling.inaccuracy); end
 
 ziDAQ('set', h, 'averaging/tc', p.Results.averaging_time_constant);
-if minor.disp, fprintf('Minimum time to record and average data set to %g time constants.\n', p.Results.averaging_time_constant); end
+if minor.disp, fprintf('Minimum time to record and average data set to %g time constants.\n', ziDAQ('get', h, 'averaging/tc').averaging.tc); end
 
 ziDAQ('set', h, 'averaging/sample', p.Results.averaging_samples);
-if minor.disp, fprintf('Averaging set to %g samples.\n', p.Results.averaging_time_constant); end
+if minor.disp, fprintf('Averaging set to %g samples.\n', ziDAQ('get', h, 'averaging/sample').averaging.sample); end
 
 ziDAQ('set', h, 'bandwidthcontrol', p.Results.bandwidth_control);
-switch p.Results.bandwidth_control
+switch ziDAQ('get', h, 'bandwidthcontrol').bandwidthcontrol
     case 0 
         bandwidth_control = 'Manual';
     case 1 
@@ -203,12 +203,12 @@ switch p.Results.bandwidth_control
 end
 if minor.disp, fprintf('Bandwidth control set to %s.\n', bandwidth_control); end
 
-if p.Results.xmapping
+ziDAQ('set', h, 'bandwidthoverlap', p.Results.bandwidth_overlap);
+if ziDAQ('get', h, 'bandwidthoverlap').bandwidthoverlap
     bandwidth_overlap = 'Disabled';
 else
     bandwidth_overlap = 'Enabled';
 end
-ziDAQ('set', h, 'bandwidthoverlap', p.Results.bandwidth_overlap);
 if minor.disp, fprintf('Bandwidth overlap set to %s.\n', bandwidth_overlap); end
 
 
@@ -218,7 +218,7 @@ ziDAQ('subscribe', h, ['/' device, '/imps/' imp_c '/sample']);
 
 % Start sweeping.
 ziDAQ('execute', h);
-if minor.disp, fprintf('Sweep Started\n'); end
+if major.disp, fprintf('Sweep Started\n'); end
 
 full_data = [];
 select_data = struct;
