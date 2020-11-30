@@ -24,6 +24,11 @@ end
 
 if ~isstruct(X), error('argument should be a structure or the name of a structure'), end
 result_cell = rec_struct2cell(Xname,X,result_cell);
+for i = 1:size(result_cell,2)
+    locs = strfind(result_cell{1,i}, '.');
+    result_cell{3,i} = result_cell{1,i}(locs(1):end);
+    result_cell{4,i} = result_cell{1,i}(locs(end)+1:end);
+end
 
 %---------------------------------
 function result_cell = rec_struct2cell(Xname,X,result_cell)

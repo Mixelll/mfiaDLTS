@@ -38,6 +38,7 @@ start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 
 %% Overwite Defaults (uncomment and change value)
 overwrite_defaults = {}; % don't touch
+additional_settings = struct; % don't touch
 
     % Enable two terminal measurement.
 % overwrite_defaults{:,end+1} = {'two_terminal'; 1};
@@ -120,15 +121,14 @@ overwrite_defaults = {}; % don't touch
 % overwrite_defaults{:,end+1} = {'demod_rate'; 13e3};
 
     % Define device channels.
-device_properties = struct;
-% device_properties.channels.demod_c = '0'; % demod channel, for paths on the device
-% device_properties.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
-% device_properties.channels.out_c = '0'; % signal output channel
-% device_properties.channels.out_mixer_c = 2; % Define the value of the instrument's default Signal Output mixer channel.
-% device_properties.channels.in_c = '0'; % signal input channel
-% device_properties.channels.osc_c = '0'; % oscillator
-% device_properties.channels.imp_c = '0'; % IA channel
-% device_properties.channels.imp_index = 1; % IA, 1-based indexing, to access the data
+% additional_settings.channels.demod_c = '0'; % demod channel, for paths on the device
+% additional_settings.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
+% additional_settings.channels.out_c = '0'; % signal output channel
+% additional_settings.channels.out_mixer_c = 2; % Define the value of the instrument's default Signal Output mixer channel.
+% additional_settings.channels.in_c = '0'; % signal input channel
+% additional_settings.channels.osc_c = '0'; % oscillator
+% additional_settings.channels.imp_c = '0'; % IA channel
+% additional_settings.channels.imp_index = 1; % IA, 1-based indexing, to access the data
 
 
 
@@ -172,7 +172,7 @@ device_properties = struct;
 % demodulator filter settling time.
 
 
-[select_data, full_data] = MFIA_freq_amp_bias_sweep(device_id, device_properties, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
+[select_data, full_data] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
 
 function plot_data(frequencies, r, theta, amplitude, style)
 % Plot data

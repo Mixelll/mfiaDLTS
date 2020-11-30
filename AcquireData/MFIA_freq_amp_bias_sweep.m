@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_freq_amp_bias_sweep(device_id, device_properties, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, varargin)
+function [select_data, full_data, varargout]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, varargin)
 % Perform a frequency/test_signal (amplitude)/bias_voltage (offset) sweep and gather demodulator data.
 %
 % NOTE Please ensure that the ziDAQ folders 'Driver' and 'Utils' are in your
@@ -85,33 +85,37 @@ p.parse(varargin{:});
 unmatched_vars = [fieldnames(p.Unmatched), struct2cell(p.Unmatched)];
 unmatched_vars = unmatched_vars.';
 
+%% Set default additional settings
 % Define device channels.
-demod_c = '0'; % demod channel, for paths on the device
-demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
-out_c = '0'; % signal output channel
+additional_settings_internal.channels.demod_c = '0'; % demod channel, for paths on the device
+additional_settings_internal.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
+additional_settings_internal.channels.out_c = '0'; % signal output channel
 % Get the value of the instrument's default Signal Output mixer channel.
-out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
-in_c = '0'; % signal input channel
-osc_c = '0'; % oscillator
-imp_c = '0'; % IA channel
-imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
+additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
+additional_settings_internal.channels.in_c = '0'; % signal input channel
+additional_settings_internal.channels.osc_c = '0'; % oscillator
+additional_settings_internal.channels.imp_c = '0'; % IA channel
+additional_settings_internal.channels.imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
+% Graphs
+additional_settings_internal.display.graph.disp = true;
+additional_settings_internal.display.graph.during_sweep = false;
+% Text
+additional_settings_internal.display.text.major.disp = true;
+additional_settings_internal.display.text.major.each_sweep = true;
+additional_settings_internal.display.text.minor.disp = true;
+additional_settings_internal.display.text.minor.each_sweep = false;
 
-% Overwrite default device channels
-if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
-    for c = fieldnames(device_properties.channels)'
-        eval([c{:} '=device_properties.channels.' c{:}]);
-    end
+% Overwrite default additional settings
+additional_settings_internal = update_structure(additional_settings_internal, additional_settings); 
+
+channels = additional_settings_internal.channels;
+channels_cell = fn_struct2cell(channels);
+
+for i = 1:size(channels_cell,2)
+    eval([channels_cell{4,i} '=' channels_cell{1,i} ';']);
 end
 
-% Re-set device channels
-device_properties.channels.demod_c = demod_c; % demod channel, for paths on the device
-device_properties.channels.demod_idx = demod_idx; % 1-based indexing, to access the data
-device_properties.channels.out_c = out_c; % signal output channel
-device_properties.channels.out_mixer_c = out_mixer_c;
-device_properties.channels.in_c = in_c; % signal input channel
-device_properties.channels.osc_c = osc_c; % oscillator
-device_properties.channels.imp_c = imp_c; % IA channel
-device_properties.channels.imp_index = imp_index; % IA, 1-based indexing, to access the data
+
 
 % Create a base configuration: Disable all available outputs, awgs,
 % demods, scopes,...
@@ -169,7 +173,7 @@ for v = 1:max([lf,la,lo])
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
     end
     
-    [select_data_one, full_data_one] = MFIA_general_sweeper(device, device_properties, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
+    [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
     
     for st = sweep_order(2:3)
         st = st{:};

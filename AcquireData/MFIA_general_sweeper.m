@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, device_properties, sweep_param, sweep_range, pts, read_param_struct, intermediate_read, varargin)
+function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, intermediate_read, varargin)
 varargout = {};
 % Define parameters relevant to this example. Default values specified by the
 % inputParser below are overwritten if specified as name-value pairs via the
@@ -76,34 +76,45 @@ if ~isempty(read_param_cell)
         for st = {'demod', 'imp'}
             locs = strfind(read_param_cell{1,i},'.');
             if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st{:})
-            read_param_cell{3,i} = ['sample_' node_dic(st{:}) read_param_cell{1,i}(locs(2):end)];
-            read_param_cell{4,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
+            read_param_cell{5,i} = ['sample_' node_dic(st{:}) read_param_cell{1,i}(locs(2):end)];
+            read_param_cell{6,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
             end
         end
     end
 end
            
        
-
-% Set default device channels.
-demod_c = '0'; % demod channel, for paths on the device
-demod_idx = 1; % 1-based indexing, to access the data
-out_c = '0'; % signal output channel
+%% Set default additional settings
+% Define device channels.
+additional_settings_internal.channels.demod_c = '0'; % demod channel, for paths on the device
+additional_settings_internal.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
+additional_settings_internal.channels.out_c = '0'; % signal output channel
 % Get the value of the instrument's default Signal Output mixer channel.
-out_mixer_c = '1';
-in_c = '0'; % signal input channel
-osc_c = '0'; % oscillator
-imp_c = '0';
-imp_index = 1;
+additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
+additional_settings_internal.channels.in_c = '0'; % signal input channel
+additional_settings_internal.channels.osc_c = '0'; % oscillator
+additional_settings_internal.channels.imp_c = '0'; % IA channel
+additional_settings_internal.channels.imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
+% Graphs
+additional_settings_internal.display.graph.disp = true;
+additional_settings_internal.display.graph.during_sweep = false;
+% Text
+additional_settings_internal.display.text.major.disp = true;
+additional_settings_internal.display.text.minor.disp = true;
 
-% Re-set device channels
-if isa(device_properties, 'struct') && any(strcmp(fieldnames(device_properties), 'channels'))
-    for c = fieldnames(device_properties.channels)'
-        eval([c{:} '=device_properties.channels.' c{:} ';']);
-    end
+% Overwrite default additional settings
+additional_settings_internal = update_structure(additional_settings_internal, additional_settings); 
+
+channels = additional_settings_internal.channels;
+channels_cell = fn_struct2cell(channels);
+
+for i = 1:size(channels_cell,2)
+    eval([channels_cell{4,i} '=' channels_cell{1,i} ';']);
 end
 
 
+major.disp = additional_settings_internal.display.text.major.disp;
+minor.disp = additional_settings_internal.display.text.minor.disp;
 
 
 %% Sweeper settings
@@ -111,7 +122,13 @@ end
 h = ziDAQ('sweep');
 % Device on which sweeping will be performed
 ziDAQ('set', h, 'device', device);
-%% Sweep by
+if minor.disp, fprintf('Loop count set to %s  pts.\n', ziDAQ('read', h, 'device')); end
+%% Set sweep parameters
+
+% Perform sweeps consisting of sweep_samplecount measurement points (i.e.,
+% record the subscribed data for sweep_samplecount different frequencies).
+ziDAQ('set', h, 'samplecount', pts);
+
 if strcmp(sweep_param, 'frequency')
     % Sweeping setting is the frequency of the output signal
     ziDAQ('set', h, 'gridnode', ['oscs/' osc_c '/freq']); 
@@ -119,7 +136,7 @@ if strcmp(sweep_param, 'frequency')
     ziDAQ('set', h, 'start', sweep_range(1));
     % Stop frequency
     ziDAQ('set', h, 'stop', sweep_range(2));
-	fprintf('Frequency Sweep from %g Hz to %g Hz, %d pts.\n', sweep_range(1), sweep_range(2), pts);
+	if major.disp, fprintf('Frequency Sweep from %g Hz to %g Hz, %d pts.\n', ziDAQ('read', h, 'start'), ziDAQ('read', h, 'stop'), ziDAQ('read', h, 'samplecount')); end
 elseif strcmp(sweep_param, 'amplitude')
     % Sweeping setting is the amplitude of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' out_c '/amplitudes/' out_mixer_c]);
@@ -127,23 +144,20 @@ elseif strcmp(sweep_param, 'amplitude')
     ziDAQ('set', h, 'start', sweep_range(1));
     % Stop test signal
     ziDAQ('set', h, 'stop', sweep_range(2));
-	fprintf('Test Signal Sweep from %.2f mV to %.2f mV, %d pts.\n', 1000*sweep_range(1), 1000*sweep_range(2), pts);
+	if major.disp, fprintf('Test Signal Sweep from %.2f mV to %.2f mV, %d pts.\n', 1000*sweep_range(1), 1000*sweep_range(2), pts); end
 elseif strcmp(sweep_param, 'offset')
     % Sweeping setting is the offset of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' osc_c '/offset']);
     % Start bias voltage
     ziDAQ('set', h, 'start', sweep_range(1));
+    
     % Stop bias voltage
     ziDAQ('set', h, 'stop', sweep_range(2));
-	fprintf('Bias Voltage Sweep from %.2f V to %.2f V, %d pts.\n', sweep_range(1), sweep_range(2), pts);
+	if major.disp, fprintf('Bias Voltage Sweep from %.2f V to %.2f V, %d pts.\n', sweep_range(1), sweep_range(2), pts); end
 end
 
-% Perform sweeps consisting of sweep_samplecount measurement points (i.e.,
-% record the subscribed data for sweep_samplecount different frequencies).
-ziDAQ('set', h, 'samplecount', pts);
-
 ziDAQ('set', h, 'loopcount', p.Results.loopcount);
-fprintf('Loop count set to %d  pts.\n', p.Results.loopcount);
+if minor.disp, fprintf('Loop count set to %d  pts.\n', p.Results.loopcount); end
 
 ziDAQ('set', h, 'xmapping', p.Results.xmapping);
 if p.Results.xmapping
@@ -151,7 +165,7 @@ if p.Results.xmapping
 else
     xmapping = 'Logarithmic';
 end
-fprintf('X axis mapping set to %s.\n', xmapping);
+if minor.disp, fprintf('X axis mapping set to %s.\n', xmapping); end
 
 ziDAQ('set', h, 'scan', p.Results.scan);
 switch p.Results.scan
@@ -164,19 +178,19 @@ switch p.Results.scan
 	case 3 
         scan = 'Reverse';
 end
-fprintf('Scan type set to %s.\n', scan);
+if minor.disp, fprintf('Scan type set to %s.\n', scan); end
 
 ziDAQ('set', h, 'settling/time', p.Results.settling_time);
-fprintf('settling/time set to %g sec.\n', p.Results.settling_time);
+if minor.disp, fprintf('settling/time set to %g sec.\n', p.Results.settling_time); end
 
 ziDAQ('set', h, 'settling/inaccuracy', p.Results.sweep_inaccuracy);
-fprintf('Sweep inaccuracy set to %g.\n', p.Results.sweep_inaccuracy);
+if minor.disp, fprintf('Sweep inaccuracy set to %g.\n', p.Results.sweep_inaccuracy); end
 
 ziDAQ('set', h, 'averaging/tc', p.Results.averaging_time_constant);
-fprintf('Minimum time to record and average data set to %g time constants.\n', p.Results.averaging_time_constant);
+if minor.disp, fprintf('Minimum time to record and average data set to %g time constants.\n', p.Results.averaging_time_constant); end
 
 ziDAQ('set', h, 'averaging/sample', p.Results.averaging_samples);
-fprintf('Averaging set to %g samples.\n', p.Results.averaging_time_constant);
+if minor.disp, fprintf('Averaging set to %g samples.\n', p.Results.averaging_time_constant); end
 
 ziDAQ('set', h, 'bandwidthcontrol', p.Results.bandwidth_control);
 switch p.Results.bandwidth_control
@@ -187,7 +201,7 @@ switch p.Results.bandwidth_control
 	case 2 
         bandwidth_control = 'Auto';
 end
-fprintf('Bandwidth control set to %s.\n', bandwidth_control);
+if minor.disp, fprintf('Bandwidth control set to %s.\n', bandwidth_control); end
 
 if p.Results.xmapping
     bandwidth_overlap = 'Disabled';
@@ -195,7 +209,7 @@ else
     bandwidth_overlap = 'Enabled';
 end
 ziDAQ('set', h, 'bandwidthoverlap', p.Results.bandwidth_overlap);
-fprintf('Bandwidth overlap set to %s.\n', bandwidth_overlap);
+if minor.disp, fprintf('Bandwidth overlap set to %s.\n', bandwidth_overlap); end
 
 
 % Subscribe to the node from which data will be recorded.
@@ -204,7 +218,7 @@ ziDAQ('subscribe', h, ['/' device, '/imps/' imp_c '/sample']);
 
 % Start sweeping.
 ziDAQ('execute', h);
-fprintf('Sweep Started\n');
+if minor.disp, fprintf('Sweep Started\n'); end
 
 full_data = [];
 select_data = struct;
@@ -216,7 +230,7 @@ while ~ziDAQ('finished', h)
     pause(1);
     if intermediate_read
         tmp = ziDAQ('read', h);
-        fprintf('Sweep progress %0.0f%%\n', ziDAQ('progress', h) * 100);
+        if major.disp, fprintf('Sweep progress %0.0f%%\n', ziDAQ('progress', h) * 100); end
         % Using intermediate reads we can plot a continuous refinement of the ongoing
         % measurement. If not required it can be removed.
         if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
@@ -227,7 +241,7 @@ while ~ziDAQ('finished', h)
                 % Get the desired parameters from the sweeper result.
                 i = 1;
                 for c = read_param_cell
-                    if ~isempty(c{3}) && c{2}
+                    if ~isempty(c{5}) && c{2}
                         eval(['select_data' c{1}(locs(1):end) '=' c{3} ';'])
                         eval([varargout{i} '=' c{3} ';'])
                         i=i+1;
@@ -246,7 +260,7 @@ while ~ziDAQ('finished', h)
         error('Timeout: Sweeper failed to finish after %f seconds.', p.Results.timeout)
     end
 end
-fprintf('Sweep completed after %.2f s.\n', toc(t0));
+if major.disp, fprintf('Sweep completed after %.2f s.\n', toc(t0)); end
 
 
 % Read the data. This command can also be executed during the waiting (as above).
@@ -266,7 +280,7 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
             % Get the desired parameters from the sweeper result.
             i = 1;
             for c = read_param_cell
-                if ~isempty(c{3}) && c{2}
+                if ~isempty(c{5}) && c{2}
                     eval(['select_data' c{1}(locs(1):end) '=' c{3} ';'])
                     varargout{i} = eval([c{3}]);
                     i=i+1;
