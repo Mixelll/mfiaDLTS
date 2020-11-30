@@ -129,7 +129,14 @@ additional_settings = struct; % don't touch
 % additional_settings.channels.osc_c = '0'; % oscillator
 % additional_settings.channels.imp_c = '0'; % IA channel
 % additional_settings.channels.imp_index = 1; % IA, 1-based indexing, to access the data
-
+    % Graphs
+% additional_settings.display.graph.disp = true;
+% additional_settings.display.graph.during_sweep = false;
+    % Text
+% additional_settings.display.text.major.disp = true;
+% additional_settings.display.text.major.each_sweep = true;
+% additional_settings.display.text.minor.disp = true;
+% additional_settings.display.text.minor.each_sweep = false;
 
 
 %% Sweep by

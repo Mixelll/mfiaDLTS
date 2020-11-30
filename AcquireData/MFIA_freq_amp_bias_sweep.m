@@ -115,7 +115,7 @@ for i = 1:size(channels_cell,2)
     eval([channels_cell{4,i} '=' channels_cell{1,i} ';']);
 end
 
-
+major.disp = additional_settings_internal.display.text.major.disp;
 
 % Create a base configuration: Disable all available outputs, awgs,
 % demods, scopes,...
@@ -124,6 +124,7 @@ ziDisableEverything(device);
 %% Configure the device ready for this experiment.
 
 ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], p.Results.voltage_range);
+if major.disp, fprintf('Signal out voltage range set to %g.\n', ziDAQ('getDouble', ['/' device '/sigouts/' out_c '/range'])); end
 ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], 1);
 ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], p.Results.voltage_range);
 ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
@@ -174,6 +175,14 @@ for v = 1:max([lf,la,lo])
     end
     
     [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
+    if ~additional_settings_internal.display.text.major.each_sweep
+        additional_settings_internal.display.text.major.disp = false;
+        fprintf('Major text display will not be shown henceforth')
+    end
+    if ~additional_settings_internal.display.text.minor.each_sweep
+        additional_settings_internal.display.text.minor.disp = false;
+        fprintf('Minor text display (settings) will not be shown henceforth')
+    end
     
     for st = sweep_order(2:3)
         st = st{:};

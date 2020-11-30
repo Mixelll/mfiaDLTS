@@ -122,7 +122,7 @@ minor.disp = additional_settings_internal.display.text.minor.disp;
 h = ziDAQ('sweep');
 % Device on which sweeping will be performed
 ziDAQ('set', h, 'device', device);
-if major.disp, fprintf('Device set to %s .\n', device); end
+if major.disp, fprintf('Device set to %s.\n', device); end
 %% Set sweep parameters
 
 % Perform sweeps consisting of sweep_samplecount measurement points (i.e.,
@@ -157,7 +157,7 @@ elseif strcmp(sweep_param, 'offset')
 end
 
 ziDAQ('set', h, 'loopcount', p.Results.loopcount);
-if minor.disp, fprintf('Loop count set to %d  pts.\n', ziDAQ('get', h, 'loopcount').loopcount); end
+if minor.disp, fprintf('Loop count set to %d.\n', ziDAQ('get', h, 'loopcount').loopcount); end
 
 ziDAQ('set', h, 'xmapping', p.Results.xmapping);
 if ziDAQ('get', h, 'xmapping').xmapping
