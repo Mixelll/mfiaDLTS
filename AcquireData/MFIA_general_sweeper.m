@@ -52,12 +52,12 @@ p.addParameter('averaging_samples', 100, isnonnegscalar);
 % to a value > 0 although it is ignored. Otherwise Auto control is automatically chosen (for backwards compatibility reasons).
 % ziDAQ('set', h, 'bandwidth', 100);
 p.addParameter('bandwidth_control', 2, @isnumeric);
-% Sets the bandwidth overlap mode (default 0). If enabled, the bandwidth of a
+% Sets the bandwidth overlap mode (default 0). If ENABLED, the bandwidth of a
 % sweep point may overlap with the frequency of neighboring sweep points. The
 % effective bandwidth is only limited by the maximal bandwidth setting and
 % omega suppression. As a result, the bandwidth is independent of the number
 % of sweep points. For frequency response analysis bandwidth overlap should be
-% enabled to achieve maximal sweep speed (default: 0). 0 = Disable, 1 = Enable.
+% ENABLED to achieve maximal sweep speed (default: 0). 0 = Disable, 1 = Enable.
 p.addParameter('bandwidth_overlap', 0, @isnumeric);
 
 p.parse(varargin{:});
@@ -205,9 +205,9 @@ if minor.disp, fprintf('Bandwidth control set to %s.\n', bandwidth_control); end
 
 ziDAQ('set', h, 'bandwidthoverlap', p.Results.bandwidth_overlap);
 if ziDAQ('get', h, 'bandwidthoverlap').bandwidthoverlap
-    bandwidth_overlap = 'Disabled';
+    bandwidth_overlap = 'DISABLED';
 else
-    bandwidth_overlap = 'Enabled';
+    bandwidth_overlap = 'ENABLED';
 end
 if minor.disp, fprintf('Bandwidth overlap set to %s.\n', bandwidth_overlap); end
 

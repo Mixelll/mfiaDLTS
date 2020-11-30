@@ -124,36 +124,79 @@ ziDisableEverything(device);
 %% Configure the device ready for this experiment.
 
 ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], p.Results.voltage_range);
-if major.disp, fprintf('Signal out voltage range set to %g.\n', ziDAQ('getDouble', ['/' device '/sigouts/' out_c '/range'])); end
-ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], 1);
+if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigouts/' out_c '/range'])); end
+
 ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], p.Results.voltage_range);
+if major.disp, fprintf('Signal in voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigins/' in_c '/range'])); end
+
+ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], 1);
+if ziDAQ('getInt', ['/' device '/sigins/' in_c '/imp50'])
+    AC4T = 'ENABLED';
+else
+    AC4T = 'DISABLED';
+end
+if major.disp, fprintf('Four terminal high-pass filter %s.\n', AC4T); end
+
 ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
 
 % ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/*'], 0);
 % ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/' out_mixer_c], p.Results.amplitude);
+
 ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1); 
+
 ziDAQ('setDouble', ['/' device '/demods/*/phaseshift'], 0);
+if major.disp, fprintf('Demod phase shift set to %g.\n', ziDAQ('getDouble', ['/' device '/demods/*/phaseshift'])); end
+
 ziDAQ('setInt', ['/' device '/demods/*/order'], 4);
+if major.disp, fprintf('Demod order set to %g.\n', ziDAQ('getInt', ['/' device '/demods/*/order'])); end
+
 ziDAQ('setDouble', ['/' device '/demods/' demod_c '/rate'], p.Results.demod_rate);
+if major.disp, fprintf('Demod rate set to %g. Hz\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/rate'])); end
+
 ziDAQ('setInt', ['/' device '/demods/' demod_c '/harmonic'], 1);
+if major.disp, fprintf('Demod harmonic set to %g.\n', ziDAQ('getInt', ['/' device '/demods/' demod_c '/harmonic'])); end
+
 ziDAQ('setInt', ['/' device '/demods/' demod_c '/enable'], 1);
 ziDAQ('setInt', ['/' device '/demods/*/oscselect'], str2double(osc_c));
 ziDAQ('setInt', ['/' device '/demods/*/adcselect'], str2double(in_c));
+
 ziDAQ('setDouble', ['/' device '/demods/*/timeconstant'], p.Results.demod_time_constant);
-% ziDAQ('setDouble', ['/' device '/oscs/' osc_c '/freq'], ); % [Hz]
+if major.disp, fprintf('Demod time constant set to %g sec.\n', ziDAQ('getDouble', ['/' device '/demods/*/timeconstant'])); end
+
 
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], p.Results.two_terminal);
+if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
+    Tselect = 'Two (2) Terminal';
+else
+    Tselect = 'Four (4) Terminal';
+end
+if major.disp, fprintf('Measurement mode set to %s.\n', Tselect); end
+
 if p.Results.two_terminal
     ziDAQ('setInt', ['/' device '/system/impedance/calib/cablelength'], p.Results.cable_length);
+    if major.disp, fprintf('Cable length compensation set to %g m.\n', ziDAQ('getInt', ['/' device '/system/impedance/calib/cablelength'])); end
 else
     ziDAQ('setInt', ['/' device '/imps/' imp_c '/ac'], p.Results.AC);
     ziDAQ('setInt', ['/' device '/sigins/' in_c '/ac'], p.Results.AC);
 end
 
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/inputrange'], p.Results.auto_range);
+if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
+    auto_r = 'ENABLED';
+else
+    auto_r = 'DISABLED';
+end
+if major.disp, fprintf('IA auto range set to %s.\n', auto_r); end
+
 ziDAQ('setDouble', ['/' device '/imps/' imp_c '/current/range'], p.Results.current_range);
+if major.disp, fprintf('IA current range set to %g A.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/current/range'])); end
+
 ziDAQ('setDouble', ['/' device '/imps/' imp_c '/voltage/range'], p.Results.voltage_range);
+if major.disp, fprintf('IA input voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/voltage/range'])); end
+
 ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/range'], p.Results.voltage_range);
+if major.disp, fprintf('IA output voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/range'])); end
+
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/enable'], 1);
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
