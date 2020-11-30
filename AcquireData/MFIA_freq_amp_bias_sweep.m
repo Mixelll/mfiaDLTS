@@ -88,14 +88,14 @@ unmatched_vars = unmatched_vars.';
 %% Set default additional settings
 % Define device channels.
 additional_settings_internal.channels.demod_c = '0'; % demod channel, for paths on the device
-additional_settings_internal.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
+additional_settings_internal.channels.demod_idx = str2double(additional_settings_internal.channels.demod_c)+1; % 1-based indexing, to access the data
 additional_settings_internal.channels.out_c = '0'; % signal output channel
 % Get the value of the instrument's default Signal Output mixer channel.
-additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
+additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(additional_settings_internal.channels.out_c)));
 additional_settings_internal.channels.in_c = '0'; % signal input channel
 additional_settings_internal.channels.osc_c = '0'; % oscillator
 additional_settings_internal.channels.imp_c = '0'; % IA channel
-additional_settings_internal.channels.imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
+additional_settings_internal.channels.imp_index = str2double(additional_settings_internal.channels.imp_c)+1; % IA, 1-based indexing, to access the data
 % Graphs
 additional_settings_internal.display.graph.disp = true;
 additional_settings_internal.display.graph.during_sweep = false;

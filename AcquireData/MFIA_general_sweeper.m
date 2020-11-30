@@ -87,14 +87,14 @@ end
 %% Set default additional settings
 % Define device channels.
 additional_settings_internal.channels.demod_c = '0'; % demod channel, for paths on the device
-additional_settings_internal.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
+additional_settings_internal.channels.demod_idx = str2double(additional_settings_internal.channels.demod_c)+1; % 1-based indexing, to access the data
 additional_settings_internal.channels.out_c = '0'; % signal output channel
 % Get the value of the instrument's default Signal Output mixer channel.
-additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(out_c)));
+additional_settings_internal.channels.out_mixer_c = '1';
 additional_settings_internal.channels.in_c = '0'; % signal input channel
 additional_settings_internal.channels.osc_c = '0'; % oscillator
 additional_settings_internal.channels.imp_c = '0'; % IA channel
-additional_settings_internal.channels.imp_index = str2double(imp_c)+1; % IA, 1-based indexing, to access the data
+additional_settings_internal.channels.imp_index = str2double(additional_settings_internal.channels.imp_c)+1; % IA, 1-based indexing, to access the data
 % Graphs
 additional_settings_internal.display.graph.disp = true;
 additional_settings_internal.display.graph.during_sweep = false;
@@ -122,7 +122,7 @@ minor.disp = additional_settings_internal.display.text.minor.disp;
 h = ziDAQ('sweep');
 % Device on which sweeping will be performed
 ziDAQ('set', h, 'device', device);
-if minor.disp, fprintf('Loop count set to %s  pts.\n', ziDAQ('read', h, 'device')); end
+if major.disp, fprintf('Device set to %s .\n', device); end
 %% Set sweep parameters
 
 % Perform sweeps consisting of sweep_samplecount measurement points (i.e.,
@@ -136,7 +136,7 @@ if strcmp(sweep_param, 'frequency')
     ziDAQ('set', h, 'start', sweep_range(1));
     % Stop frequency
     ziDAQ('set', h, 'stop', sweep_range(2));
-	if major.disp, fprintf('Frequency Sweep from %g Hz to %g Hz, %d pts.\n', ziDAQ('read', h, 'start'), ziDAQ('read', h, 'stop'), ziDAQ('read', h, 'samplecount')); end
+	if major.disp, fprintf('Frequency Sweep from %g Hz to %g Hz, %d pts.\n', ziDAQ('get', h, 'start').start, ziDAQ('get', h, 'stop').stop, ziDAQ('get', h, 'samplecount').samplecount); end
 elseif strcmp(sweep_param, 'amplitude')
     % Sweeping setting is the amplitude of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' out_c '/amplitudes/' out_mixer_c]);
