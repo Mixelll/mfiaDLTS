@@ -201,20 +201,29 @@ ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/enable'], 1);
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
 
+actual_frequency_vec = zeros(1,length(frequency_vec));
+actual_amplitude_vec = zeros(1,length(amplitude_vec));
+actual_offset_vec = zeros(1,length(offset_vec));
 
 %% Sweep by
 figure(1); clf;
 for v = 1:max([lf,la,lo])
     if any(strcmp(sweep_order(2:3), 'frequency'))
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], frequency_vec(v)) 
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], frequency_vec(v))
+        actual_frequency_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
+        if major.disp, fprintf('IA frequency set to %g Hz.\n', actual_frequency_vec(v)); end
     end
     if any(strcmp(sweep_order(2:3), 'amplitude'))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_vec(v))
+        actual_amplitude_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/amplitude']);
+        if major.disp, fprintf('IA test signal (amplitude) set to %g mV.\n', 1000*actual_amplitude_vec(v)); end
     end
     if any(strcmp(sweep_order(2:3), 'offset'))
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_vec(v))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
+        actual_offset_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
+        if major.disp, fprintf('IA bias voltage (offset) set to %g V.\n', actual_offset_vec(v)); end
     end
     
     [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
@@ -229,8 +238,8 @@ for v = 1:max([lf,la,lo])
     
     for st = sweep_order(2:3)
         st = st{:};
-        eval(['select_data_one.' st '=' st '_vec(v);'])
-        eval(['full_data_one.' st '=' st '_vec(v);'])
+        eval(['select_data_one.' st '=actual_' st '_vec(v);'])
+        eval(['full_data_one.' st '=actual_' st '_vec(v);'])
     end
     
     select_data(v) = select_data_one;

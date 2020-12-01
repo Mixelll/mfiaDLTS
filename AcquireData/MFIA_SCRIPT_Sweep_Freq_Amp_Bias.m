@@ -15,7 +15,7 @@
 clear
 % MFIA ID
 device_id = 'dev5168';
-
+desired_order = {'frequency', 'amplitude', 'offset'};
 % Update MATLAB plot while sweep in progress
 intermediate_read = 0;
 % Selected data to read (grid = sweep parameter)
@@ -35,8 +35,16 @@ start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
     'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset); 
+[overwrite_defaults, additional_settings] = settings();
+
+[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
+
+[select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, sweep_pts, frequency_vec, amplitude_vec, offset_vec);
+
+select_data_struct_mat = reshape(select_data_struct_vec, 
 
 %% Overwite Defaults (uncomment and change value)
+function [overwrite_defaults, additional_settings] = settings()
 overwrite_defaults = {}; % don't touch
 additional_settings = struct; % don't touch
 
@@ -137,7 +145,7 @@ additional_settings = struct; % don't touch
 % additional_settings.display.text.major.each_sweep = true;
 % additional_settings.display.text.minor.disp = true;
 % additional_settings.display.text.minor.each_sweep = false;
-
+end
 
 %% Sweep by
 % if strcamp(sweep_param, 'osc_frequency')
@@ -179,7 +187,6 @@ additional_settings = struct; % don't touch
 % demodulator filter settling time.
 
 
-[select_data, full_data] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
 
 function plot_data(frequencies, r, theta, amplitude, style)
 % Plot data
