@@ -58,40 +58,40 @@ additional_settings = struct; % don't touch
 % additional_settings.display.text.minor.disp = true;
 % additional_settings.display.text.minor.each_sweep = false;
     % Enable two terminal measurement.
-% overwrite_defaults{:,end+1} = {'two_terminal'; 1};
+overwrite_defaults(:,end+1) = {'two_terminal'; 1};
     
     % Enable two terminal cable length compensation.
-% overwrite_defaults{:,end+1} = {'cable_length'; 1};
+% overwrite_defaults(:,end+1) = {'cable_length'; 1};
 
     % Enable high-pass filter.
-% overwrite_defaults{:,end+1} = {'AC'; 0};
+% overwrite_defaults(:,end+1) = {'AC'; 0};
 
     % Enable 50ohm output impedance. Disabled state is 10M ohm.
-% overwrite_defaults{:,end+1} = {'imp50ohm'; 0};
+% overwrite_defaults(:,end+1) = {'imp50ohm'; 0};
 
     % Enable auto range.
-% overwrite_defaults{:,end+1} = {'auto_range'; 0};
+% overwrite_defaults(:,end+1) = {'auto_range'; 0};
 
     % Current range.
-% overwrite_defaults{:,end+1} = {'current_range'; 10e-6};
+% overwrite_defaults(:,end+1) = {'current_range'; 10e-6};
 
     % Voltage range.
-% overwrite_defaults{:,end+1} = {'voltage_range'; 3};
+% overwrite_defaults(:,end+1) = {'voltage_range'; 3};
 
     % Sweep timeout.
-% overwrite_defaults{:,end+1} = {'timeout'; 120};
+% overwrite_defaults(:,end+1) = {'timeout'; 120};
 
     % Fetch data during the sweep.
-% overwrite_defaults{:,end+1} = {'intermediate_read'; 0};
+% overwrite_defaults(:,end+1) = {'intermediate_read'; 0};
 
     % Perform one single sweep.
-% overwrite_defaults{:,end+1} = {'loopcount'; 1};
+% overwrite_defaults(:,end+1) = {'loopcount'; 1};
 
     % Logarithmic sweep mode.
-% overwrite_defaults{:,end+1} = {'xmapping'; 0};
+% overwrite_defaults(:,end+1) = {'xmapping'; 0};
 
     % Binary scan type.
-% overwrite_defaults{:,end+1} = {'scan'; 1};
+% overwrite_defaults(:,end+1) = {'scan'; 1};
 
     % The value used for the Sweeper's 'settling/inaccuracy' parameter: This
     % defines the settling time the sweeper should wait before changing a sweep
@@ -103,28 +103,28 @@ additional_settings = struct; % don't touch
     % Note: The actual time the sweeper waits before
     % recording data is the maximum time specified by settling/time and
     % defined by settling/inaccuracy.
-%overwrite_defaults{:,end+1} = {'sweep_inaccuracy'; 0.001};
+%overwrite_defaults(:,end+1) = {'sweep_inaccuracy'; 0.001};
 
     % We don't require a fixed settling/time since there is no DUT involved
     % in this example's setup (only a simple feedback cable) so set this to
     % zero. We need only wait for the filter response to settle, specified via
     % settling/inaccuracy.
-% overwrite_defaults{:,end+1} = {'settling_time'; 0};
+% overwrite_defaults(:,end+1) = {'settling_time'; 0};
 
     % Minimum time to record and average data is 50 time constants.	
-% overwrite_defaults{:,end+1} = {'averaging_time_constant'; 50};
+% overwrite_defaults(:,end+1) = {'averaging_time_constant'; 50};
 
     % Minimal number of samples that we want to record and average is 100. Note,
     % the number of samples used for averaging will be the maximum number of
     % samples specified by either averaging/tc or averaging/sample.
-% overwrite_defaults{:,end+1} = {'averaging_samples'; 100};
+% overwrite_defaults(:,end+1) = {'averaging_samples'; 100};
 
     % Use automatic bandwidth control for each measurement.
     % For fixed bandwidth, set bandwidthcontrol to 1 and specify a bandwidth.
     % For manual bandwidth control, set  bandwidthcontrol to 2. bandwidth must also be set
     % to a value > 0 although it is ignored. Otherwise Auto control is automatically chosen (for backwards compatibility reasons).
     % ziDAQ('set', h, 'bandwidth', 100);
-% overwrite_defaults{:,end+1} = {'bandwidth_control'; 2};
+% overwrite_defaults(:,end+1) = {'bandwidth_control'; 2};
 
     % Sets the bandwidth overlap mode (default 0). If enabled, the bandwidth of a
     % sweep point may overlap with the frequency of neighboring sweep points. The
@@ -132,13 +132,13 @@ additional_settings = struct; % don't touch
     % omega suppression. As a result, the bandwidth is independent of the number
     % of sweep points. For frequency response analysis bandwidth overlap should be
     % enabled to achieve maximal sweep speed (default: 0). 0 = Disable, 1 = Enable.
-% overwrite_defaults{:,end+1} = {'bandwidth_overlap'; 0};
+% overwrite_defaults(:,end+1) = {'bandwidth_overlap'; 0};
 
     %Demodulator time constant.
-% overwrite_defaults{:,end+1} = {'demod_time_constant'; 0.007};
+% overwrite_defaults(:,end+1) = {'demod_time_constant'; 0.007};
 
     %Demodulator rate.
-% overwrite_defaults{:,end+1} = {'demod_rate'; 13e3};
+% overwrite_defaults(:,end+1) = {'demod_rate'; 13e3};
 
     % Define device channels.
 % additional_settings.channels.demod_c = '0'; % demod channel, for paths on the device

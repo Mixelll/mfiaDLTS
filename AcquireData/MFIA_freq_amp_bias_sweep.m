@@ -84,7 +84,7 @@ p.addParameter('demod_time_constant', 0.007, @isnumeric);
 p.addParameter('demod_rate', 13e3, @isnumeric);
 
 p.parse(varargin{:});
-
+UsingDefaults = p.UsingDefaults;
 unmatched_vars = [fieldnames(p.Unmatched), struct2cell(p.Unmatched)];
 unmatched_vars = unmatched_vars.';
 
@@ -185,7 +185,7 @@ if p.Results.two_terminal
     if major.disp, fprintf('High-pass filter for two terminal set to %s.\n', AC4T); end
 else
     ziDAQ('setInt', ['/' device '/imps/' imp_c '/ac'], p.Results.AC);
-    if ziDAQ('getInt', ['/' device '/imps/' imp_c '/ac']])
+    if ziDAQ('getInt', ['/' device '/imps/' imp_c '/ac'])
         AC4T = 'ENABLED';
     else
         AC4T = 'DISABLED';
