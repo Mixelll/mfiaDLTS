@@ -62,8 +62,11 @@ p.addParameter('two_terminal', 1, @isnumeric);
 % Enable two terminal cable length compensation [m].
 p.addParameter('cable_length', 1, @isnumeric);
 
-% Enable four terminal high-pass filter.
+% Enable high-pass filter.
 p.addParameter('AC', 0, @isnumeric);
+
+% Enable four terminal high-pass filter.
+p.addParameter('imp50ohm', 0, @isnumeric);
 
 % Enable current auto range.
 p.addParameter('auto_range', 0, @isnumeric);
@@ -86,6 +89,7 @@ unmatched_vars = [fieldnames(p.Unmatched), struct2cell(p.Unmatched)];
 unmatched_vars = unmatched_vars.';
 
 %% Set default additional settings
+additional_settings_internal.enable_default = true;
 % Define device channels.
 additional_settings_internal.channels.demod_c = '0'; % demod channel, for paths on the device
 additional_settings_internal.channels.demod_idx = str2double(additional_settings_internal.channels.demod_c)+1; % 1-based indexing, to access the data
@@ -129,18 +133,15 @@ if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDoub
 ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], p.Results.voltage_range);
 if major.disp, fprintf('Signal in voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigins/' in_c '/range'])); end
 
-ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], 1);
+ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], p.Results.imp50ohm)
 if ziDAQ('getInt', ['/' device '/sigins/' in_c '/imp50'])
-    AC4T = 'ENABLED';
+impohm = '50';
 else
-    AC4T = 'DISABLED';
+impohm = '10M';
 end
-if major.disp, fprintf('Four terminal high-pass filter %s.\n', AC4T); end
+if major.disp, fprintf('Output impedance set to %s ohm.\n', impohm); end
 
 ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
-
-% ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/*'], 0);
-% ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/amplitudes/' out_mixer_c], p.Results.amplitude);
 
 ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1); 
 
@@ -175,9 +176,21 @@ if major.disp, fprintf('Measurement mode set to %s.\n', Tselect); end
 if p.Results.two_terminal
     ziDAQ('setInt', ['/' device '/system/impedance/calib/cablelength'], p.Results.cable_length);
     if major.disp, fprintf('Cable length compensation set to %g m.\n', ziDAQ('getInt', ['/' device '/system/impedance/calib/cablelength'])); end
+    ziDAQ('setInt', ['/' device '/sigins/' in_c '/ac'], p.Results.AC);
+    if ziDAQ('getInt', ['/' device '/sigins/' in_c '/ac'])
+        AC4T = 'ENABLED';
+    else
+        AC4T = 'DISABLED';
+    end
+    if major.disp, fprintf('High-pass filter for two terminal set to %s.\n', AC4T); end
 else
     ziDAQ('setInt', ['/' device '/imps/' imp_c '/ac'], p.Results.AC);
-    ziDAQ('setInt', ['/' device '/sigins/' in_c '/ac'], p.Results.AC);
+    if ziDAQ('getInt', ['/' device '/imps/' imp_c '/ac']])
+        AC4T = 'ENABLED';
+    else
+        AC4T = 'DISABLED';
+    end
+    if major.disp, fprintf('High-pass filter for four terminal set to %s.\n', AC4T); end
 end
 
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/inputrange'], p.Results.auto_range);

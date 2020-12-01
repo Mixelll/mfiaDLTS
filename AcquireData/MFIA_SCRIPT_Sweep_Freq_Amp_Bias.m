@@ -44,6 +44,11 @@ start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 function [overwrite_defaults, additional_settings] = settings()
 overwrite_defaults = {}; % don't touch
 additional_settings = struct; % don't touch
+
+    % BY SETTING THIS, THE INTERNAL SCRIPT DEFAULTS WILL OVERWRITE LABONE GUI INPUT
+    % THE INTERNAL DEFAULTS ARE INSIDE MFIA_freq_amp_bias_sweep.
+    % VALUES YOU UN-COMMENT BELOW WILL OVERWRITE REGARDLESS of "enable_default"
+% additional_settings_internal.enable_default = true;
     % Graphs
 % additional_settings.display.graph.disp = true;
 % additional_settings.display.graph.during_sweep = true;
@@ -58,8 +63,11 @@ additional_settings = struct; % don't touch
     % Enable two terminal cable length compensation.
 % overwrite_defaults{:,end+1} = {'cable_length'; 1};
 
-    % Enable four terminal high-pass filter.
+    % Enable high-pass filter.
 % overwrite_defaults{:,end+1} = {'AC'; 0};
+
+    % Enable 50ohm output impedance. Disabled state is 10M ohm.
+% overwrite_defaults{:,end+1} = {'imp50ohm'; 0};
 
     % Enable auto range.
 % overwrite_defaults{:,end+1} = {'auto_range'; 0};
