@@ -16,8 +16,6 @@ clear
 % MFIA ID
 device_id = 'dev5168';
 desired_order = {'frequency', 'amplitude', 'offset'};
-% Update MATLAB plot while sweep in progress
-intermediate_read = 0;
 % Selected data to read (grid = sweep parameter)
 % read_param_struct.demod.grid = true;
 read_param_struct.demod.r = true;
@@ -37,17 +35,23 @@ start_offset = 1; stop_offset = -1; pts_offset = 2; % V
     'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset); 
 [overwrite_defaults, additional_settings] = settings();
 
-[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, overwrite_defaults{:});
+[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
-[select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, sweep_pts, frequency_vec, amplitude_vec, offset_vec);
+[select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 
-select_data_struct_mat = reshape(select_data_struct_vec, 
 
 %% Overwite Defaults (uncomment and change value)
 function [overwrite_defaults, additional_settings] = settings()
 overwrite_defaults = {}; % don't touch
 additional_settings = struct; % don't touch
-
+    % Graphs
+% additional_settings.display.graph.disp = true;
+% additional_settings.display.graph.during_sweep = true;
+    % Text
+% additional_settings.display.text.major.disp = true;
+% additional_settings.display.text.major.each_sweep = true;
+% additional_settings.display.text.minor.disp = true;
+% additional_settings.display.text.minor.each_sweep = false;
     % Enable two terminal measurement.
 % overwrite_defaults{:,end+1} = {'two_terminal'; 1};
     
@@ -137,14 +141,6 @@ additional_settings = struct; % don't touch
 % additional_settings.channels.osc_c = '0'; % oscillator
 % additional_settings.channels.imp_c = '0'; % IA channel
 % additional_settings.channels.imp_index = 1; % IA, 1-based indexing, to access the data
-    % Graphs
-% additional_settings.display.graph.disp = true;
-% additional_settings.display.graph.during_sweep = false;
-    % Text
-% additional_settings.display.text.major.disp = true;
-% additional_settings.display.text.major.each_sweep = true;
-% additional_settings.display.text.minor.disp = true;
-% additional_settings.display.text.minor.each_sweep = false;
 end
 
 %% Sweep by
@@ -186,23 +182,3 @@ end
 % i.e., nexttimestamp - settimestamp corresponds roughly to the
 % demodulator filter settling time.
 
-
-
-function plot_data(frequencies, r, theta, amplitude, style)
-% Plot data
-clf
-subplot(2, 1, 1)
-s = semilogx(frequencies, 20*log10(r*2*sqrt(2)/amplitude), style);
-set(s, 'LineWidth', 1.5)
-set(s, 'Color', 'black');
-grid on
-xlabel('Frequency [Hz]')
-ylabel('Amplitude [dBV]')
-subplot(2, 1, 2)
-s = semilogx(frequencies, theta*180/pi, style);
-set(s, 'LineWidth', 1.5)
-set(s, 'Color', 'black');
-grid on
-xlabel('Frequency [Hz]')
-ylabel('Phase [deg]')
-end

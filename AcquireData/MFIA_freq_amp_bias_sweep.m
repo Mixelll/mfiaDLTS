@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, intermediate_read, varargin)
+function [select_data, full_data, varargout]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, varargin)
 % Perform a frequency/test_signal (amplitude)/bias_voltage (offset) sweep and gather demodulator data.
 %
 % NOTE Please ensure that the ziDAQ folders 'Driver' and 'Utils' are in your
@@ -44,7 +44,7 @@ apilevel_example = 6;
 ziApiServerVersionCheck();
 
 branches = ziDAQ('listNodes', ['/' device ], 0);
-if ~any(strcmp([branches], 'DEMODS'))
+if ~any(strcmpi([branches], 'DEMODS'))
   fprintf('\nThis example requires lock-in functionality which is not available on %s.\n', device);
   return
 end
@@ -145,10 +145,10 @@ ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
 ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1); 
 
 ziDAQ('setDouble', ['/' device '/demods/*/phaseshift'], 0);
-if major.disp, fprintf('Demod phase shift set to %g.\n', ziDAQ('getDouble', ['/' device '/demods/*/phaseshift'])); end
+if major.disp, fprintf('Demod phase shift set to %g.\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/phaseshift'])); end
 
 ziDAQ('setInt', ['/' device '/demods/*/order'], 4);
-if major.disp, fprintf('Demod order set to %g.\n', ziDAQ('getInt', ['/' device '/demods/*/order'])); end
+if major.disp, fprintf('Demod order set to %g.\n', ziDAQ('getInt', ['/' device '/demods/' demod_c '/order'])); end
 
 ziDAQ('setDouble', ['/' device '/demods/' demod_c '/rate'], p.Results.demod_rate);
 if major.disp, fprintf('Demod rate set to %g. Hz\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/rate'])); end
@@ -161,7 +161,7 @@ ziDAQ('setInt', ['/' device '/demods/*/oscselect'], str2double(osc_c));
 ziDAQ('setInt', ['/' device '/demods/*/adcselect'], str2double(in_c));
 
 ziDAQ('setDouble', ['/' device '/demods/*/timeconstant'], p.Results.demod_time_constant);
-if major.disp, fprintf('Demod time constant set to %g sec.\n', ziDAQ('getDouble', ['/' device '/demods/*/timeconstant'])); end
+if major.disp, fprintf('Demod time constant set to %g sec.\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/timeconstant'])); end
 
 
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], p.Results.two_terminal);
@@ -206,34 +206,33 @@ actual_amplitude_vec = zeros(1,length(amplitude_vec));
 actual_offset_vec = zeros(1,length(offset_vec));
 
 %% Sweep by
-figure(1); clf;
 for v = 1:max([lf,la,lo])
-    if any(strcmp(sweep_order(2:3), 'frequency'))
+    if any(strcmpi(sweep_order(2:3), 'frequency'))
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], frequency_vec(v))
         actual_frequency_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
         if major.disp, fprintf('IA frequency set to %g Hz.\n', actual_frequency_vec(v)); end
     end
-    if any(strcmp(sweep_order(2:3), 'amplitude'))
+    if any(strcmpi(sweep_order(2:3), 'amplitude'))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_vec(v))
         actual_amplitude_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/amplitude']);
         if major.disp, fprintf('IA test signal (amplitude) set to %g mV.\n', 1000*actual_amplitude_vec(v)); end
     end
-    if any(strcmp(sweep_order(2:3), 'offset'))
+    if any(strcmpi(sweep_order(2:3), 'offset'))
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_vec(v))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
         actual_offset_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
         if major.disp, fprintf('IA bias voltage (offset) set to %g V.\n', actual_offset_vec(v)); end
     end
     
-    [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings, sweep_order(1), sweep_range, pts, read_param_struct, intermediate_read, unmatched_vars{:});
+    [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
     if ~additional_settings_internal.display.text.major.each_sweep
         additional_settings_internal.display.text.major.disp = false;
-        fprintf('Major text display will not be shown henceforth')
+        fprintf('Major text display will not be shown henceforth.\n')
     end
     if ~additional_settings_internal.display.text.minor.each_sweep
         additional_settings_internal.display.text.minor.disp = false;
-        fprintf('Minor text display (settings) will not be shown henceforth')
+        fprintf('Minor text display (settings) will not be shown henceforth.\n')
     end
     
     for st = sweep_order(2:3)
@@ -275,23 +274,4 @@ end
 % i.e., nexttimestamp - settimestamp corresponds roughly to the
 % demodulator filter settling time.
 
-end
-
-function plot_data(frequencies, r, theta, amplitude, style)
-% Plot data
-clf
-subplot(2, 1, 1)
-s = semilogx(frequencies, 20*log10(r*2*sqrt(2)/amplitude), style);
-set(s, 'LineWidth', 1.5)
-set(s, 'Color', 'black');
-grid on
-xlabel('Frequency [Hz]')
-ylabel('Amplitude [dBV]')
-subplot(2, 1, 2)
-s = semilogx(frequencies, theta*180/pi, style);
-set(s, 'LineWidth', 1.5)
-set(s, 'Color', 'black');
-grid on
-xlabel('Frequency [Hz]')
-ylabel('Phase [deg]')
 end

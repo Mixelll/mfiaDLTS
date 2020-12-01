@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, intermediate_read, varargin)
+function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, varargin)
 varargout = {};
 % Define parameters relevant to this example. Default values specified by the
 % inputParser below are overwritten if specified as name-value pairs via the
@@ -73,10 +73,10 @@ if ~any([grid_search{:}])
 end
 if ~isempty(read_param_cell)
     for i = 1:size(read_param_cell,2)
+        read_param_cell{1,i} = ['select_data' read_param_cell{3,i}];
         for st = {'demod', 'imp'}
             locs = strfind(read_param_cell{1,i},'.');
             if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st{:})
-            read_param_cell{1,i} = ['select_data' read_param_cell{3,i}];
             read_param_cell{5,i} = ['sample_' node_dic(st{:}) read_param_cell{1,i}(locs(2):end)];
             read_param_cell{6,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
             end
@@ -131,7 +131,7 @@ if major.disp, fprintf('Device set to %s.\n', device); end
 % record the subscribed data for sweep_samplecount different frequencies).
 ziDAQ('set', h, 'samplecount', pts);
 
-if strcmp(sweep_param, 'frequency')
+if strcmpi(sweep_param, 'frequency')
     % Sweeping setting is the frequency of the output signal
     ziDAQ('set', h, 'gridnode', ['oscs/' osc_c '/freq']); 
     % Start frequency = 1 kHz
@@ -143,7 +143,7 @@ if strcmp(sweep_param, 'frequency')
     % Plot label
     lbl = 'Oscillator Frequency [Hz]';
 	if major.disp, fprintf('Frequency Sweep from %g Hz to %g Hz, %d pts.\n', ziDAQ('get', h, 'start').start, ziDAQ('get', h, 'stop').stop, ziDAQ('get', h, 'samplecount').samplecount); end
-elseif strcmp(sweep_param, 'amplitude')
+elseif strcmpi(sweep_param, 'amplitude')
     % Sweeping setting is the amplitude of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' out_c '/amplitudes/' out_mixer_c]);
     % Start test signal
@@ -155,7 +155,7 @@ elseif strcmp(sweep_param, 'amplitude')
     % Plot label
     lbl = 'Test Signal Amplitude [V]';
 	if major.disp, fprintf('Test Signal Sweep from %.2f mV to %.2f mV, %d pts.\n', 1000*ziDAQ('get', h, 'start').start, 1000*ziDAQ('get', h, 'stop').stop, ziDAQ('get', h, 'samplecount').samplecount); end
-elseif strcmp(sweep_param, 'offset')
+elseif strcmpi(sweep_param, 'offset')
     % Sweeping setting is the offset of the output signal
     ziDAQ('set', h, 'gridnode', ['sigouts/' osc_c '/offset']);
     % Start bias voltage
@@ -236,41 +236,38 @@ if major.disp, fprintf('Sweep Started\n'); end
 full_data = [];
 select_data = struct;
 
-figure(1); clf;
 t0 = tic;
 % Read and plot intermediate data until the sweep has finished.
 while ~ziDAQ('finished', h)
     pause(1);
-    if intermediate_read
-        tmp = ziDAQ('read', h);
         if major.disp, fprintf('Sweep progress %0.0f%%\n', ziDAQ('progress', h) * 100); end
+        % Plot data during sweep
+        if graph.disp && graph.during_sweep
+        tmp = ziDAQ('read', h);
         % Using intermediate reads we can plot a continuous refinement of the ongoing
         % measurement. If not required it can be removed.
-        if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
-            sample_demod = tmp.(device).demods(demod_idx).sample{1};
-            sample_impedance = tmp.(device).imps(imp_index).sample{1};
-            if ~isempty(sample_demod)
-                full_data = tmp;
-                % Get the desired parameters from the sweeper result.
-                i = 1;
-                for c = read_param_cell
-                    if ~isempty(c{5}) && c{2}
-                        eval(c{1})
-                        eval([varargout{i} '=' c{5} ';'])
-                        i=i+1;
+            if ziCheckPathInData(tmp, ['/' device '/demods/' demod_c '/sample'])
+                sample_demod = tmp.(device).demods(demod_idx).sample{1};
+                sample_impedance = tmp.(device).imps(imp_index).sample{1};
+                if ~isempty(sample_demod)
+                    full_data = tmp;
+                    % Get the desired parameters from the sweeper result.
+                    i = 1;
+                    for c = read_param_cell
+                        if ~isempty(c{5}) && c{2}
+                            eval([c{1} '=' c{5} ';'])
+                            eval(['varargout{i} =' c{1} ';'])
+                            i=i+1;
+                        end
                     end
-                end
-                % Plot data during sweep
-                if graph.disp && graph.during_sweep
-                % Sweep parameter values at which measurement points were taken
-                    sweep_param_arr = sample_impedance.grid;
-        %             valid = ~isnan(sweep_i);
-                     plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell{1,:})
-        %             drawnow;
+                    % Sweep parameter values at which measurement points were taken
+                        sweep_param_arr = sample_impedance.grid;
+            %             valid = ~isnan(sweep_i);
+                         plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell)
+            %             drawnow;
                 end
             end
         end
-    end
     if toc(t0) > p.Results.timeout
         ziDAQ('clear', h);
         error('Timeout: Sweeper failed to finish after %f seconds.', p.Results.timeout)
@@ -297,8 +294,8 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
             i = 1;
             for c = read_param_cell
                 if ~isempty(c{5}) && c{2}
-                    eval(c{1})
-                    eval([varargout{i} '=' c{5} ';'])
+                    eval([c{1} '=' c{5} ';'])
+                    eval(['varargout{i} =' c{1} ';'])
                     i=i+1;
                 end
             end
@@ -308,7 +305,7 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
         % Frequency values at which measurement points were taken
         sweep_param_arr = sample_impedance.grid;
         % Plot the final result
-        plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell{1,:})
+        plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell)
         end
     end
 
@@ -348,19 +345,18 @@ ziDAQ('clear', h);
 
 end
 
-function plot_data(plot_func, lbl, x, select_data, varargin)
+function plot_data(plot_func, lbl, x, select_data, read_param_cell)
 % Plot data
+figure(1)
 clf
-[subrow, subcol] = subplot_min_rectangle(length(varargin));
-i=1;
-for c = varargin
+[subrow, subcol] = subplot_min_rectangle(size(read_param_cell,2));
+for i = 1:size(read_param_cell,2)
     subplot(subrow, subcol, i)
-    s = plot_func(x, eval(c{:}));
+    s = plot_func(x, eval(read_param_cell{1,i}));
     set(s, 'LineWidth', 1.5)
     set(s, 'Color', 'black');
     grid on
     xlabel(lbl)
-    ylabel(c{:})
-    i = i+1;
+    ylabel(read_param_cell{4,i})
 end
 end
