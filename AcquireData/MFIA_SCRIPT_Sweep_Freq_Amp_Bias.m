@@ -57,8 +57,14 @@ additional_settings = struct; % don't touch
 % additional_settings.display.text.major.each_sweep = true;
 % additional_settings.display.text.minor.disp = true;
 % additional_settings.display.text.minor.each_sweep = false;
+
+    % Set IA parameter extraction model (from impedance). 0 - Rp Cp,
+    % 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 -D Cs, 5 - Qs Cs, 6 - D Ls,
+    % 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
+% overwrite_defaults(:,end+1) = {'model'; 0};
+
     % Enable two terminal measurement.
-overwrite_defaults(:,end+1) = {'two_terminal'; 1};
+% overwrite_defaults(:,end+1) = {'two_terminal'; 1};
     
     % Enable two terminal cable length compensation.
 % overwrite_defaults(:,end+1) = {'cable_length'; 1};
