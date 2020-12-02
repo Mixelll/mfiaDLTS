@@ -54,27 +54,28 @@ end
 % `varargin` input argument.
 p = inputParser;
 p.KeepUnmatched=true;
+isnumcalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 isnonnegscalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 
 % Set IA parameter extraction model (from impedance). 0 - Rp Cp,
 % 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 -D Cs, 5 - Qs Cs, 6 - D Ls,
 % 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
-p.addParameter('model', 0, @isnumeric);
+p.addParameter('model', 0, @isnumcalar);
 
 % Enable two terminal measurement.
-p.addParameter('two_terminal', 1, @isnumeric);
+p.addParameter('two_terminal', 1, @isnumcalar);
 
 % Enable two terminal cable length compensation [m].
-p.addParameter('cable_length', 1, @isnumeric);
+p.addParameter('cable_length', 1, @isnumcalar);
 
 % Enable high-pass filter.
-p.addParameter('AC', 0, @isnumeric);
+p.addParameter('AC', 0, @isnumcalar);
 
 % Enable four terminal high-pass filter.
-p.addParameter('imp50ohm', 0, @isnumeric);
+p.addParameter('imp50ohm', 0, @issnumcalar);
 
 % Enable current auto range.
-p.addParameter('auto_range', 0, @isnumeric);
+p.addParameter('auto_range', 0, isnumcalar);
 
 % Current manual range, [A].
 p.addParameter('current_range', 10e-6, @isnumeric);
