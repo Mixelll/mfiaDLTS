@@ -12,7 +12,7 @@
 % subfolders and run the Matlab function ziAddPath().
 % >>> ziAddPath;
 %
-clear
+% clear
 % MFIA ID
 device_id = 'dev5168';
 desired_order = {'frequency', 'amplitude', 'offset'};
@@ -25,8 +25,8 @@ read_param_struct.impedance.param0 = true;
 read_param_struct.impedance.param1 = true;
 
 % Sweep by Frequency and iterate over AC amplitude and offset
-sweep_order = {'frequency', 'amplitude', 'offset'};
-start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
+sweep_order = {'frequency','amplitude','offset'};
+start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
 start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 2; % V
 start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 
@@ -48,7 +48,7 @@ additional_settings = struct; % don't touch
     % BY SETTING THIS, THE INTERNAL SCRIPT DEFAULTS WILL OVERWRITE LABONE GUI INPUT
     % THE INTERNAL DEFAULTS ARE INSIDE MFIA_freq_amp_bias_sweep.
     % VALUES YOU UN-COMMENT BELOW WILL OVERWRITE REGARDLESS of "enable_default"
-% additional_settings_internal.enable_default = true;
+additional_settings_internal.enable_default = true;
     % Graphs
 % additional_settings.display.graph.disp = true;
 % additional_settings.display.graph.during_sweep = true;

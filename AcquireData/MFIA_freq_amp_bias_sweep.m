@@ -254,8 +254,8 @@ actual_offset_vec = zeros(1,length(offset_vec));
 %% Sweep by
 for v = 1:max([lf,la,lo])
     if any(strcmpi(sweep_order(2:3), 'frequency'))
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], frequency_vec(v))
-        actual_frequency_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_vec(v))
+        actual_frequency_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/freq']);
         if major.disp, fprintf('IA frequency set to %g Hz.\n', actual_frequency_vec(v)); end
     end
     if any(strcmpi(sweep_order(2:3), 'amplitude'))
@@ -271,9 +271,10 @@ for v = 1:max([lf,la,lo])
         if major.disp, fprintf('IA bias voltage (offset) set to %g V.\n', actual_offset_vec(v)); end
     end
     
-    [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
+    [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings_internal, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
     if ~additional_settings_internal.display.text.major.each_sweep
         additional_settings_internal.display.text.major.disp = false;
+        major.disp = false;
         fprintf('Major text display will not be shown henceforth.\n')
     end
     if ~additional_settings_internal.display.text.minor.each_sweep

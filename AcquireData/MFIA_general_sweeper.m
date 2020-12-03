@@ -124,7 +124,7 @@ graph.during_sweep = additional_settings_internal.display.graph.during_sweep;
 h = ziDAQ('sweep');
 % Device on which sweeping will be performed
 ziDAQ('set', h, 'device', device);
-if major.disp, fprintf('Device set to %s.\n', device); end
+if minor.disp, fprintf('Device set to %s.\n', device); end
 %% Set sweep parameters
 
 % Perform sweeps consisting of sweep_samplecount measurement points (i.e.,
