@@ -12,9 +12,13 @@
 % subfolders and run the Matlab function ziAddPath().
 % >>> ziAddPath;
 %
-% clear
+clear
 % MFIA ID
 device_id = 'dev5168';
+% Sample name
+sample_name = 'Test';
+% Save path
+save_path = 'C:\Users\IG_Ca\Desktop\Measurements\Gr-Si not implanted\MFIA';
 desired_order = {'frequency', 'amplitude', 'offset'};
 % Selected data to read (grid = sweep parameter)
 % read_param_struct.demod.grid = true;
@@ -26,20 +30,22 @@ read_param_struct.impedance.param1 = true;
 
 % Sweep by Frequency and iterate over AC amplitude and offset
 sweep_order = {'frequency','amplitude','offset'};
+freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
 start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 2; % V
 start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
-    'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset); 
+    'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset, freq_xmapping{:}); 
 [overwrite_defaults, additional_settings] = settings();
 
 [select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
 [select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 
-
+save([savepath '\' sample_name '_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
+save([savepath '\' sample_name '_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
 %% Overwite Defaults (uncomment and change value)
 function [overwrite_defaults, additional_settings] = settings()
 overwrite_defaults = {}; % don't touch
@@ -158,15 +164,6 @@ additional_settings_internal.enable_default = true;
 end
 
 %% Sweep by
-% if strcamp(sweep_param, 'osc_frequency')
-% 
-% elseif strcamp(sweep_param, 'test_signal')
-% 
-% elseif strcamp(sweep_param, 'bias_voltage')
-
-
-% for s = {[sweep_param '_i']}
-%     eval(['data.' s '=' s ';'])
 % end
 % Sweeper module returns a structure with following elements:
 % * timestamp -> Time stamp data [uint64]. Divide the timestamp by the
@@ -196,3 +193,10 @@ end
 % i.e., nexttimestamp - settimestamp corresponds roughly to the
 % demodulator filter settling time.
 
+function out = sweep_order_string(sw)
+out = [];
+for c = sw
+    out = [out c{:} '_'];
+end
+out(end) = [];
+end

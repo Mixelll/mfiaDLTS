@@ -126,6 +126,7 @@ for i = 1:size(channels_cell,2)
 end
 
 major.disp = additional_settings_internal.display.text.major.disp;
+minor.disp = additional_settings_internal.display.text.minor.disp;
 enable_default = additional_settings_internal.enable_default;
 
 % Create a base configuration: Disable all available outputs, awgs,
@@ -272,13 +273,14 @@ for v = 1:max([lf,la,lo])
     end
     
     [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings_internal, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
-    if ~additional_settings_internal.display.text.major.each_sweep
+    if major.disp && ~additional_settings_internal.display.text.major.each_sweep
         additional_settings_internal.display.text.major.disp = false;
         major.disp = false;
         fprintf('Major text display will not be shown henceforth.\n')
     end
-    if ~additional_settings_internal.display.text.minor.each_sweep
+    if minor.disp && ~additional_settings_internal.display.text.minor.each_sweep
         additional_settings_internal.display.text.minor.disp = false;
+        minor.disp = false;
         fprintf('Minor text display (settings) will not be shown henceforth.\n')
     end
     

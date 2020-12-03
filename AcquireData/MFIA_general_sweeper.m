@@ -16,7 +16,11 @@ p.addParameter('intermediate_read', 0, @isnumeric);
 % Perform one single sweep.
 p.addParameter('loopcount', 1, isnonnegscalar);
 % Logarithmic sweep mode.
-p.addParameter('xmapping', 0, @isnumeric);
+if strcmpi(sweep_param, 'frequency')
+    p.addParameter('xmapping', 1, @isnumeric);
+else
+    p.addParameter('xmapping', 0, @isnumeric);
+end
 % Binary scan type.
 p.addParameter('scan', 1, @isnumeric);
 
