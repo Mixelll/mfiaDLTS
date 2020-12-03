@@ -18,7 +18,7 @@ device_id = 'dev5168';
 % Sample name
 sample_name = 'Test';
 % Save path
-save_path = 'C:\Users\IG_Ca\Desktop\Measurements\Gr-Si not implanted\MFIA';
+save_path = 'C:\Users\IG_Ca\Desktop\Measurements\Gr-Si not implanted\MFIA\Test';
 desired_order = {'frequency', 'amplitude', 'offset'};
 % Selected data to read (grid = sweep parameter)
 % read_param_struct.demod.grid = true;
@@ -54,7 +54,7 @@ additional_settings = struct; % don't touch
     % BY SETTING THIS, THE INTERNAL SCRIPT DEFAULTS WILL OVERWRITE LABONE GUI INPUT
     % THE INTERNAL DEFAULTS ARE INSIDE MFIA_freq_amp_bias_sweep.
     % VALUES YOU UN-COMMENT BELOW WILL OVERWRITE REGARDLESS of "enable_default"
-additional_settings_internal.enable_default = true;
+additional_settings.enable_default = true;
     % Graphs
 % additional_settings.display.graph.disp = true;
 % additional_settings.display.graph.during_sweep = true;
