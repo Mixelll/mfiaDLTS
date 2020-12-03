@@ -9,10 +9,6 @@ isnonnegscalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 
 %Sweep timeout.
 p.addParameter('timeout', 120, isnonnegscalar);
-
-%Fetch data during the sweep.
-p.addParameter('intermediate_read', 0, @isnumeric);
-
 % Perform one single sweep.
 p.addParameter('loopcount', 1, isnonnegscalar);
 % Logarithmic sweep mode.
@@ -24,45 +20,50 @@ end
 % Binary scan type.
 p.addParameter('scan', 1, @isnumeric);
 
-
-% The value used for the Sweeper's 'settling/inaccuracy' parameter: This
-% defines the settling time the sweeper should wait before changing a sweep
-% parameter and recording the next sweep data point. The settling time is
-% calculated from the specified proportion of a step response function that
-% should remain. The value provided here, 0.001, is appropriate for fast and
-% reasonably accurate amplitude measurements. For precise noise measurements
-% it should be set to ~100n.
-% Note: The actual time the sweeper waits before
-% recording data is the maximum time specified by settling/time and
-% defined by settling/inaccuracy.
-p.addParameter('sweep_inaccuracy', 0.001, @isnumeric);
-% We don't require a fixed settling/time since there is no DUT involved
-% in this example's setup (only a simple feedback cable) so set this to
-% zero. We need only wait for the filter response to settle, specified via
-% settling/inaccuracy.
+% Minimum wait time in seconds between a sweep parameter change and the recording of the next sweep point. This
+% parameter can be used to define the required settling time of the experimental setup. The effective wait time
+% is the maximum of this value and the demodulator filter settling time determined from the Inaccuracy value specified
 p.addParameter('settling_time', 0, @isnumeric);
-% Minimum time to record and average data is 50 time constants.
-p.addParameter('averaging_time_constant', 50, @isnumeric);
-% Minimal number of samples that we want to record and average is 100. Note,
-% the number of samples used for averaging will be the maximum number of
-% samples specified by either averaging/tc or averaging/sample.
-p.addParameter('averaging_samples', 100, isnonnegscalar);
+% Demodulator filter settling inaccuracy defining the wait time between a sweep parameter change and
+% recording of the next sweep point. The settling time is calculated as the time required to attain the specified
+% remaining proportion [1e-13,0.1] of an incoming step function. Typical inaccuracy the number of filter time
+% constants the sweeper has to wait. The maximum between this value and the settling time is taken as wait time until the
+% next sweep point is recorded values: 10 m for highest sweep speed for large signals, 100 u for precise amplitude
+% measurements, 100 n for precise noise measurements. Depending on the order the settling accuracy will define
+p.addParameter('sweep_inaccuracy', 0.001, @isnumeric);
+% Sets the number of data samples per sweeper parameter point that is considered in the measurement. The maximum
+% between samples, time and number of time constants is taken as effective calculation time.
+p.addParameter('averaging_samples', 20, isnonnegscalar);
+% Sets the time during which data samples are processed. The maximum between samples, time and number
+% of time constants is taken as effective calculation time
+p.addParameter('averaging_time', 0.1, @isnumeric);
+% Sets the effective measurement time per sweeper parameter point that is considered in the
+% measurement. The maximum between samples, time and number of time constants is
+% taken as effective calculation time.
+p.addParameter('averaging_time_constant', 15, @isnumeric);
 
-
-
-% Use automatic bandwidth control for each measurement.
-% For fixed bandwidth, set bandwidthcontrol to 1 and specify a bandwidth.
-% For manual bandwidth control, set  bandwidthcontrol to 2. bandwidth must also be set
-% to a value > 0 although it is ignored. Otherwise Auto control is automatically chosen (for backwards compatibility reasons).
-% ziDAQ('set', h, 'bandwidth', 100);
+% Automatically is recommended in particular for logarithmic sweeps and assures the whole spectrum is covered.
+% Auto: All bandwidth settings of the chosen demodulators are automatically adjusted. For logarithmic sweeps the
+% measurement bandwidth is adjusted throughout the measurement.
+% Fixed: Define a certain bandwidth which is taken for all chosen demodulators for the course of the measurement.
+% Manual: The sweeper module leaves the demodulator bandwidth settings entirely untouched.
 p.addParameter('bandwidth_control', 2, @isnumeric);
-% Sets the bandwidth overlap mode (default 0). If ENABLED, the bandwidth of a
-% sweep point may overlap with the frequency of neighboring sweep points. The
-% effective bandwidth is only limited by the maximal bandwidth setting and
-% omega suppression. As a result, the bandwidth is independent of the number
-% of sweep points. For frequency response analysis bandwidth overlap should be
-% ENABLED to achieve maximal sweep speed (default: 0). 0 = Disable, 1 = Enable.
-p.addParameter('bandwidth_overlap', 0, @isnumeric);
+% If enabled the bandwidth of a sweep point may overlap with the frequency of neighboring sweep points.
+% The effective bandwidth is only limited by the maximal bandwidth setting and omega suppression. As a result, the bandwidth is independent of
+% the number of sweep points. For frequency response analysis bandwidth overlap should be enabled to achieve maximal sweep speed.
+p.addParameter('bandwidth_overlap', 1, @isnumeric);
+% NEP [Hz] Defines the measurement bandwidth for Fixed bandwidth sweep mode, and corresponds to either noise
+% equivalent power bandwidth (NEP), time constant (TC) or 3 dB bandwidth (3 dB) depending on selection. 
+p.addParameter('bandwidth', 10, @isnumeric);
+% [Hz] Limit of the maximum bandwidth used on the demodulator filter. Values above 1 kHz can heavily
+% diminish measurement accuracy in the highfrequency region where the amplitude is no more constant over frequency.
+p.addParameter('max_bandwidth', 100, @isnumeric);
+% [dB] Suppression of the omega and 2-omega components. Small omega suppression can diminish measurements of
+% very low or high impedance because the DC component can become dominant. Large omega suppression will have
+% a significant impact on sweep time especially for low filter orders.
+p.addParameter('omega_suppression', 80, @isnumeric);
+% Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct.
+p.addParameter('sweep_LFP_order', 8, isnonnegscalar);
 
 p.parse(varargin{:});
 
@@ -197,17 +198,22 @@ switch ziDAQ('get', h, 'scan').scan
 end
 if minor.disp, fprintf('Scan type set to %s.\n', scan); end
 
+
 ziDAQ('set', h, 'settling/time', p.Results.settling_time);
 if minor.disp, fprintf('settling/time set to %g sec.\n', ziDAQ('get', h, 'settling/time').settling.time); end
 
 ziDAQ('set', h, 'settling/inaccuracy', p.Results.sweep_inaccuracy);
 if minor.disp, fprintf('Sweep inaccuracy set to %g.\n', ziDAQ('get', h, 'settling/inaccuracy').settling.inaccuracy); end
 
+ziDAQ('set', h, 'averaging/sample', p.Results.averaging_samples);
+if minor.disp, fprintf('Minimum averaging set to %g samples.\n', ziDAQ('get', h, 'averaging/sample').averaging.sample); end
+
+ziDAQ('set', h, 'averaging/time', p.Results.averaging_time);
+if minor.disp, fprintf('Minimum time to record and average data set to %g sec.\n', ziDAQ('get', h, 'averaging/time').averaging.time); end
+
 ziDAQ('set', h, 'averaging/tc', p.Results.averaging_time_constant);
 if minor.disp, fprintf('Minimum time to record and average data set to %g time constants.\n', ziDAQ('get', h, 'averaging/tc').averaging.tc); end
 
-ziDAQ('set', h, 'averaging/sample', p.Results.averaging_samples);
-if minor.disp, fprintf('Averaging set to %g samples.\n', ziDAQ('get', h, 'averaging/sample').averaging.sample); end
 
 ziDAQ('set', h, 'bandwidthcontrol', p.Results.bandwidth_control);
 switch ziDAQ('get', h, 'bandwidthcontrol').bandwidthcontrol
@@ -228,6 +234,17 @@ else
 end
 if minor.disp, fprintf('Bandwidth overlap set to %s.\n', bandwidth_overlap); end
 
+ziDAQ('set', h, 'bandwidth', p.Results.bandwidth);
+if minor.disp, fprintf('Bandwidth set to %g [Hz].\n', ziDAQ('get', h, 'bandwidth').bandwidth); end
+
+ziDAQ('set', h, 'maxbandwidth', p.Results.max_bandwidth);
+if minor.disp, fprintf('Max bandwidth [Hz] set to %g [Hz].\n', ziDAQ('get', h, 'maxbandwidth').maxbandwidth); end
+
+ziDAQ('set', h, 'omegasuppression', p.Results.omega_suppression);
+if minor.disp, fprintf('Omega suppression set to %g [dB].\n', ziDAQ('get', h, 'omegasuppression').omegasuppression); end
+
+ziDAQ('set', h, 'order', p.Results.sweep_LFP_order);
+if minor.disp, fprintf('Sweeper demodulator LPF filter set to order %g.\n', ziDAQ('get', h, 'order').order); end
 
 % Subscribe to the node from which data will be recorded.
 ziDAQ('subscribe', h, ['/' device '/demods/' demod_c '/sample']);

@@ -57,6 +57,10 @@ p.KeepUnmatched=true;
 isnumcalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 isnonnegscalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 
+% IA precision -> measurement speed: 0 - low->fast, 1 - high->medium,
+% 2 - very high->slow
+p.addParameter('IA_precision', 1, @isnumcalar);
+
 % Set IA parameter extraction model (from impedance). 0 - Rp Cp,
 % 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 -D Cs, 5 - Qs Cs, 6 - D Ls,
 % 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
@@ -86,8 +90,11 @@ p.addParameter('voltage_range', 3, @isnumeric);
 % demod time constant, [s].
 p.addParameter('demod_time_constant', 0.007, @isnumeric);
 
-% demod rate, [Hz].
-p.addParameter('demod_rate', 13e3, @isnumeric);
+% demod data transfer rate, [Sa/sec].
+p.addParameter('demod_rate', 13.39e3, @isnumeric);
+
+% For IA:  Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct.
+p.addParameter('demod_LFP_order', 8, isnonnegscalar);
 
 p.parse(varargin{:});
 UsingDefaults = p.UsingDefaults;
@@ -136,6 +143,19 @@ ziDisableEverything(device);
 %% Configure the device ready for this experiment.
 
 if enable_default && any(strcmpi(UsingDefaults, 'voltage_range'))
+    ziDAQ('setInt', ['/' device '/system/impedance/precision'], p.Results.IA_precision);
+    switch ziDAQ('getInt', ['/' device '/system/impedance/precision'])
+    case 0
+        IA_precision = 'low->fast';
+    case 1
+        IA_precision = 'high->medium';
+    case 2
+        IA_precision = 'very high->slow';
+    end
+    if major.disp, fprintf('Signal out voltage range set to %g V.\n', IA_precision); end
+end
+
+if enable_default && any(strcmpi(UsingDefaults, 'voltage_range'))
     ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], p.Results.voltage_range);
     if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigouts/' out_c '/range'])); end
 
@@ -160,12 +180,9 @@ ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1);
 ziDAQ('setDouble', ['/' device '/demods/*/phaseshift'], 0);
 if major.disp, fprintf('Demod phase shift set to %g.\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/phaseshift'])); end
 
-ziDAQ('setInt', ['/' device '/demods/*/order'], 4);
-if major.disp, fprintf('Demod order set to %g.\n', ziDAQ('getInt', ['/' device '/demods/' demod_c '/order'])); end
-
 if enable_default && any(strcmpi(UsingDefaults, 'demod_rate'))
     ziDAQ('setDouble', ['/' device '/demods/' demod_c '/rate'], p.Results.demod_rate);
-    if major.disp, fprintf('Demod rate set to %g. Hz\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/rate'])); end
+    if major.disp, fprintf('Demod data transfer rate set to %g Sa/sec. \n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/rate'])); end
 end
 
 ziDAQ('setInt', ['/' device '/demods/' demod_c '/harmonic'], 1);
@@ -215,6 +232,8 @@ else
         if major.disp, fprintf('High-pass filter for four terminal set to %s.\n', AC4T); end
     end
 end
+ziDAQ('setInt', ['/' device '/imps/' imp_c '/demod/order'], demod_LFP_order);
+if major.disp, fprintf('IA Demod LFP order set to %g.\n', ziDAQ('getInt', ['/' device '/imps/' imp_c '/demod/order'])); end
 
 if enable_default && any(strcmpi(UsingDefaults, 'auto_range'))
     ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/inputrange'], p.Results.auto_range);
