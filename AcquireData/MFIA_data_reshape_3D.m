@@ -1,6 +1,12 @@
 function [data_desired_order_3D, data_sweep_order_3D] = MFIA_data_reshape_3D(data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec)
 data_desired_order_3D = [];
 data_sweep_order_3D = [];
+axes_desired_order_3D = [];
+axes_sweep_order_3D = [];
+
+out_desired_order_3D = [];
+out_sweep_order_3D = [];
+
 pos = cellfun(@(c) find(strcmpi(c, sweep_order)),desired_order);
 data_in1 = data_sweep_order_struct_vec(1);
 read_param_cell = fn_struct2cell(data_in1);
@@ -25,16 +31,21 @@ for c = read_param_cell_s(3,:)
     tmp = nan(sweep_pts,l2*l3);
     tmpperm = [];
     for i = 1:size(tmp,2)
-        tmp(:,i) = eval(['data_sweep_order_struct_vec(i)' c{:} '.''']);
+        tmp(:,i) = eval(['axes_sweep_order_struct_vec(i)' c{:} '.''']);
     end
     
-    eval(['data_sweep_order_3D' c{:} '= reshape(tmp, sweep_pts, l2, l3);'])
+    eval(['axes_sweep_order_3D' c{:} '= reshape(tmp, sweep_pts, l2, l3);'])
     tmpperm = permute(eval(['data_sweep_order_3D' c{:}]), pos);
-    eval(['data_desired_order_3D' c{:} '= tmpperm;'])
+    eval(['axes_desired_order_3D' c{:} '= tmpperm;'])
 end
 c = read_param_cell(:,contains(read_param_cell(1,:),'grid','IgnoreCase',true));
 c = c(:,1);
-eval(['data_sweep_order_3D.' sweep_order{1} '=data_sweep_order_3D' c{3,:} ';'])
-eval(['data_desired_order_3D.' sweep_order{1} '=data_desired_order_3D' c{3,:} ';'])
+eval(['axes_desired_order_3D.' sweep_order{1} '=axes _desired_order_3D' c{3,:} ';'])
+eval(['axes_sweep_order_3D.' sweep_order{1} '=axes_sweep_order_3D' c{3,:} ';'])
+
+out_desired_order_3D.data = data_desired_order_3D;
+out_desired_order_3D.axes = axes_desired_order_3D;
+out_sweep_order_3D.data = data_sweep_order_3D;
+out_sweep_order_3D.axes = axes_sweep_order_3D;
 end
 

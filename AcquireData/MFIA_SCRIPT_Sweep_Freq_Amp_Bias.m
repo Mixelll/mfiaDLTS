@@ -20,6 +20,9 @@ sample_name = 'Test';
 % Save path
 save_path = 'C:\Users\IG_Ca\Desktop\Measurements\Gr-Si not implanted\MFIA\Test';
 desired_order = {'frequency', 'amplitude', 'offset'};
+img_freq = [];
+img_amp = [];
+img_off = [];
 % Selected data to read (grid = sweep parameter)
 % read_param_struct.demod.grid = true;
 read_param_struct.demod.r = true;
@@ -35,20 +38,11 @@ start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
 start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 2; % V
 start_offset = 1; stop_offset = -1; pts_offset = 2; % V
 
-[sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
-    'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
-    'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset, freq_xmapping{:}); 
-[overwrite_defaults, additional_settings] = settings();
+plot_desired_order = true;
+plot_sweep_order = true;
 
-[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
-
-[select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
-
-save([save_path '\' sample_name '_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
-save([save_
-path '\' sample_name '_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
 %% Overwite Defaults (uncomment and change value)
-function [overwrite_defaults, additional_settings] = settings()
+
 overwrite_defaults = {}; % don't touch
 additional_settings = struct; % don't touch
 
@@ -135,7 +129,7 @@ additional_settings.enable_default = true;
     % Match sweeper accuracy and averaging settings to same settings in the IA
 sweep_precision = struct('sweep_inaccuracy',0.01, 'averaging_sample',20, 'averaging_time',0.1, ... % don't touch
 'averaging_time_constant',15, 'bandwidth',10, 'max_bandwidth',100, 'omega_suppression', 80); % don't touch
-if any(strcmpi(overwrite_defaults(1,:), 'IA_precision'))
+if any(strcmpi(overwrite_defaults, 'IA_precision'))
     switch overwrite_defaults{2, strcmpi(overwrite_defaults, 'IA_precision')}
     case 0
         sweep_precision.sweep_inaccuracy = 0.01;
@@ -222,9 +216,31 @@ end
     % For sweeper: Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct.
 % overwrite_defaults(:,end+1) = {'sweep_LFP_order'; 8};
 
+%% Run Measurement extract and reshape data
+% override defaults set in MFIA_freq_amp_bias_value_pairs_withParser. 
+[sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
+    'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
+    'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset, freq_xmapping{:});
+[overwrite_defaults, additional_settings] = settings();
 
+[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
+
+[select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
+
+save([save_path '\' sample_name '_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
+save([save_path '\' sample_name '_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
+
+gen_order = {'frequency', 'amplitude', 'offset'};
+img_ax = {img_freq, img_amp, img_off};
+pos_desired = cellfun(@(c) find(strcmpi(c, {'frequency', 'amplitude', 'offset'})),desired_order);
+pos_sweep = cellfun(@(c) find(strcmpi(c, {'frequency', 'amplitude', 'offset'})),sweep_order);
+if plot_desired_order
+    plot_data3D(select_data_desired_order_3D, img_ax{pos_desired});
 end
-
+if plot_sweep_order
+    plot_data3D(select_data_sweep_order_3D, img_ax{pos_sweep});
+end
+%%
 % end
 % Sweeper module returns a structure with following elements:
 % * timestamp -> Time stamp data [uint64]. Divide the timestamp by the
@@ -260,4 +276,24 @@ for c = sw
     out = [out c{:} '_'];
 end
 out(end) = [];
+end
+
+function plot_data3D(struct, slx, sly, slz)
+% Plot data
+data = struct.data;
+axes = struct.axes;
+data_cell = fn_struct2cell(data);
+axes_cell = fn_struct2cell(axes);
+figure
+clf
+[subrow, subcol] = subplot_min_rectangle(size(read_param_cell,2));
+for i = 1:size(read_param_cell,2)
+    subplot(subrow, subcol, i)
+    slice(axes_cell{2,1},axes_cell{2,2},axes_cell{2,3}, read_param_cell{2,i}, slx, sly, slz);
+    grid on
+    xlabel(axes_cell{4,1})
+    ylabel(axes_cell{4,2})
+    zlabel(axes_cell{4,3})
+    title(read_param_cell{4,i})
+end
 end
