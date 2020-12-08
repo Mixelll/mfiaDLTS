@@ -61,13 +61,15 @@ c = cn(:,1);
 
 eval(['axes_desired_order_3D.' sweep_order{1} '=data_desired_order_3D' c{3,:} ';'])
 eval(['axes_sweep_order_3D.' sweep_order{1} '=data_sweep_order_3D' c{3,:} ';'])
-eval(['acaxes_desired_order_3D.' sweep_order{1} '=axes_desired_order_3D' sweep_order{1} ';'])
-eval(['acaxes_sweep_order_3D.' sweep_order{1} '=axes_sweep_order_3D' sweep_order{1} ';'])
+eval(['acaxes_desired_order_3D.' sweep_order{1} '=axes_desired_order_3D.' sweep_order{1} ';'])
+eval(['acaxes_sweep_order_3D.' sweep_order{1} '=axes_sweep_order_3D.' sweep_order{1} ';'])
 
 % removes grid (X axis) from measured data
 for c = cn
-    eval(['data_desired_order_3D' strrep(c{3},'.grid','')]) = remfield(eval(['data_desired_order_3D' strrep(c{3},'.grid','')]), 'grid');
-    eval(['data_sweep_order_3D' strrep(c{3},'.grid','')]) = remfield(eval(['data_sweep_order_3D' strrep(c{3},'.grid','')]), 'grid');
+    v = rmfield(eval(['data_desired_order_3D' strrep(c{3},'.grid','')]), 'grid');
+    eval(['data_desired_order_3D' strrep(c{3},'.grid','') '=v;'])
+    v = rmfield(eval(['data_sweep_order_3D' strrep(c{3},'.grid','')]), 'grid');
+    eval(['data_sweep_order_3D' strrep(c{3},'.grid','') '=v;'])
 end
 
 % give frequency in log10 values
