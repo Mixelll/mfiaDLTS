@@ -12,17 +12,23 @@
 % subfolders and run the Matlab function ziAddPath().
 % >>> ziAddPath;
 %
-clear
+% clear
 % MFIA ID
 device_id = 'dev5168';
+
 % Sample name
 sample_name = 'Test';
+
 % Save path
-save_path = 'C:\Users\IG_Ca\Desktop\Measurements\Gr-Si not implanted\MFIA\Test';
+save_path = 'C:\Users\Public\Documents\MATLAB\mfiaDLTS\AcquireData\vars';
 desired_order = {'frequency', 'amplitude', 'offset'};
-img_freq = [];
-img_amp = [];
-img_off = [];
+
+% create slice planes 
+slice_planes = {};
+slice_planes(:,end+1) = {'frequency'; [100 400e3]};
+slice_planes(:,end+1) = {'amplitude'; []}; 
+slice_planes(:,end+1) = {'offset'; [-0.5]}; 
+
 % Selected data to read (grid = sweep parameter)
 % read_param_struct.demod.grid = true;
 read_param_struct.demod.r = true;
@@ -35,12 +41,13 @@ read_param_struct.impedance.param1 = true;
 sweep_order = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
-start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 2; % V
-start_offset = 1; stop_offset = -1; pts_offset = 2; % V
+start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 5; % V
+start_offset = 1; stop_offset = -1; pts_offset = 10; % V
 
+plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
 plot_sweep_order = true;
-
+plt_color_cmds = {'colorbar(''eastoutside'')'};
 %% Overwite Defaults (uncomment and change value)
 
 overwrite_defaults = {}; % don't touch
@@ -64,9 +71,9 @@ additional_settings.enable_default = true;
     % 2 - very high->slow
 % overwrite_defaults(:,end+1) = {'IA_precision'; 1};
 
-    % Set IA parameter extraction model (from impedance). 0 - Rp Cp,
-    % 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 -D Cs, 5 - Qs Cs, 6 - D Ls,
-    % 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
+    % Set IA parameter extraction model (from impedance). 
+    % 0 - Rp Cp, 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 - D Cs,
+    % 5 -  Qs Cs, 6 - D Ls, 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
 % overwrite_defaults(:,end+1) = {'model'; 0};
 
     % Enable two terminal measurement.
@@ -221,24 +228,25 @@ end
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
     'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset, freq_xmapping{:});
-[overwrite_defaults, additional_settings] = settings();
 
 [select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
 [select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 
-save([save_path '\' sample_name '_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
-save([save_path '\' sample_name '_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
+save([save_path '\' sample_name '_desired_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
+save([save_path '\' sample_name '_sweep_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
 
-gen_order = {'frequency', 'amplitude', 'offset'};
-img_ax = {img_freq, img_amp, img_off};
-pos_desired = cellfun(@(c) find(strcmpi(c, {'frequency', 'amplitude', 'offset'})),desired_order);
-pos_sweep = cellfun(@(c) find(strcmpi(c, {'frequency', 'amplitude', 'offset'})),sweep_order);
+if plt_log_freq
+    desired_order{contains(desired_order, 'frequency')} = 'log_frequency';
+    sweep_order{contains(sweep_order, 'frequency')} = 'log_frequency';
+    slice_planes(:,contains(slice_planes(1,:), 'frequency')) = {'log_frequency'; log10(slice_planes{2,contains(slice_planes(1,:), 'frequency')})};
+end
+    
 if plot_desired_order
-    plot_data3D(select_data_desired_order_3D, img_ax{pos_desired});
+    plot_data3D(select_data_desired_order_3D, desired_order, slice_planes, plt_color_cmds);
 end
 if plot_sweep_order
-    plot_data3D(select_data_sweep_order_3D, img_ax{pos_sweep});
+    plot_data3D(select_data_sweep_order_3D, sweep_order, slice_planes, plt_color_cmds);
 end
 %%
 % end
@@ -278,22 +286,39 @@ end
 out(end) = [];
 end
 
-function plot_data3D(struct, slx, sly, slz)
 % Plot data
+function plot_data3D(struct, order, slic, plt_color_cmds)
 data = struct.data;
 axes = struct.axes;
 data_cell = fn_struct2cell(data);
 axes_cell = fn_struct2cell(axes);
+
+X = axes_cell{2,strcmpi(axes_cell(4,:), order{1})};
+Y = axes_cell{2,strcmpi(axes_cell(4,:), order{2})};
+Z = axes_cell{2,strcmpi(axes_cell(4,:), order{3})};
+
+units = {'frequency','log_frequency' 'amplitude', 'offset';' [Hz]', ' [log(Hz)]', ' [V]', ' [V]'};
+Xlbl = [strrep(order{1},'_','\_') units{2,strcmpi(units(1,:), order{1})}];
+Ylbl = [strrep(order{2},'_','\_') units{2,strcmpi(units(1,:), order{2})}];
+Zlbl = [strrep(order{3},'_','\_') units{2,strcmpi(units(1,:), order{3})}];
+
+Xsl = slic{2,strcmpi(slic(1,:), order{1})};
+Ysl = slic{2,strcmpi(slic(1,:), order{2})};
+Zsl = slic{2,strcmpi(slic(1,:), order{3})};
+
 figure
 clf
-[subrow, subcol] = subplot_min_rectangle(size(read_param_cell,2));
-for i = 1:size(read_param_cell,2)
+[subrow, subcol] = subplot_min_rectangle(size(data_cell,2));
+for i = 1:size(data_cell,2)
     subplot(subrow, subcol, i)
-    slice(axes_cell{2,1},axes_cell{2,2},axes_cell{2,3}, read_param_cell{2,i}, slx, sly, slz);
+    slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
     grid on
-    xlabel(axes_cell{4,1})
-    ylabel(axes_cell{4,2})
-    zlabel(axes_cell{4,3})
-    title(read_param_cell{4,i})
+    xlabel(Ylbl)
+    ylabel(Xlbl)
+    zlabel(Zlbl)
+    title(data_cell{4,i})
+    for c = plt_color_cmds
+        eval(c{:});
+    end
 end
 end
