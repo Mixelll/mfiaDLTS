@@ -47,8 +47,8 @@ start_offset = 0; stop_offset = -1; pts_offset = 20; % V
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
 plot_sweep_order = true;
-plt_color_cmds = {'colorbar(''eastoutside'')'};
-plt_color_cmds = {};
+plt_cmds = {'colorbar(''eastoutside'')'};
+plt_cmds = {};
 %% Overwite Defaults (uncomment and change value)
 
 overwrite_defaults = {}; % don't touch
@@ -244,10 +244,10 @@ if plt_log_freq
 end
     
 if plot_desired_order
-    plot_data3D(select_data_desired_order_3D, desired_order, slice_planes, plt_color_cmds);
+    plot_data3D(select_data_desired_order_3D, desired_order, slice_planes, plt_cmds);
 end
 if plot_sweep_order
-    plot_data3D(select_data_sweep_order_3D, sweep_order, slice_planes, plt_color_cmds);
+    plot_data3D(select_data_sweep_order_3D, sweep_order, slice_planes, plt_cmds);
 end
 %%
 % end
@@ -288,7 +288,7 @@ out(end) = [];
 end
 
 % Plot data
-function plot_data3D(struct, order, slic, plt_color_cmds)
+function plot_data3D(struct, order, slic, plt_cmds)
 data = struct.data;
 axes = struct.axes;
 data_cell = fn_struct2cell(data);
@@ -318,7 +318,7 @@ for i = 1:size(data_cell,2)
     ylabel(Xlbl)
     zlabel(Zlbl)
     title(data_cell{4,i})
-    for c = plt_color_cmds
+    for c = plt_cmds
         eval(c{:});
     end
 end
