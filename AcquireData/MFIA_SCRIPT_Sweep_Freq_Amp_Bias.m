@@ -12,7 +12,7 @@
 % subfolders and run the Matlab function ziAddPath().
 % >>> ziAddPath;
 %
-% clear
+clear
 % MFIA ID
 device_id = 'dev5168';
 
@@ -25,7 +25,7 @@ desired_order = {'frequency', 'amplitude', 'offset'};
 
 % create slice planes 
 slice_planes = {};
-slice_planes(:,end+1) = {'frequency'; [100 400e3]};
+slice_planes(:,end+1) = {'frequency'; [100 10000 500e3]};
 slice_planes(:,end+1) = {'amplitude'; []}; 
 slice_planes(:,end+1) = {'offset'; [-0.5]}; 
 
@@ -40,14 +40,15 @@ read_param_struct.impedance.param1 = true;
 % Sweep by Frequency and iterate over AC amplitude and offset
 sweep_order = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
-start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
-start_amplitude = 0.05; stop_amplitude = 0.3; pts_amplitude = 5; % V
-start_offset = 1; stop_offset = -1; pts_offset = 10; % V
+start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
+start_amplitude = 0.05; stop_amplitude = 0.2; pts_amplitude = 20; % V
+start_offset = 0; stop_offset = -1; pts_offset = 20; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
 plot_sweep_order = true;
 plt_color_cmds = {'colorbar(''eastoutside'')'};
+plt_color_cmds = {};
 %% Overwite Defaults (uncomment and change value)
 
 overwrite_defaults = {}; % don't touch
@@ -92,7 +93,7 @@ additional_settings.enable_default = true;
 % overwrite_defaults(:,end+1) = {'auto_range'; 0};
 
     % Current range.
-% overwrite_defaults(:,end+1) = {'current_range'; 10e-6};
+overwrite_defaults(:,end+1) = {'current_range'; 1e-3};
 
     % Voltage range.
 % overwrite_defaults(:,end+1) = {'voltage_range'; 3};
