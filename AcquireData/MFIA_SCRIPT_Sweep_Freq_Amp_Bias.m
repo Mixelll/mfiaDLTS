@@ -17,7 +17,7 @@ clear
 device_id = 'dev5168';
 
 % Sample name
-sample_name = 'Test';
+sample_name = 'B5 b5 150um 14 C';
 
 % Save path
 save_path = 'C:\Users\Public\Documents\MATLAB\mfiaDLTS\AcquireData\vars';
@@ -38,11 +38,11 @@ read_param_struct.impedance.param0 = true;
 read_param_struct.impedance.param1 = true;
 
 % Sweep by Frequency and iterate over AC amplitude and offset
-sweep_order = {'offset', 'frequency','amplitude'};
+sweep_order = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
-start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
-start_amplitude = 0.05; stop_amplitude = 0.2; pts_amplitude = 2; % V
-start_offset = 0; stop_offset = -1; pts_offset = 2; % V
+start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
+start_amplitude = 0.05; stop_amplitude = 0.2; pts_amplitude = 20; % V
+start_offset = 0; stop_offset = -1; pts_offset = 20; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;

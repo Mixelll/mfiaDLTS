@@ -321,8 +321,9 @@ for v = 1:max([lf,la,lo])
     %% Perform Parameter (=sweep_order{1}) Sweep and save fig if enabled
     [select_data_one, full_data_one, sw_plot] = MFIA_general_sweeper(device, additional_settings_internal, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
     if additional_settings_internal.display.graph.save.if
-        title(sw_plot, title_params)
-        saveas(sw_plot,[additional_settings_internal.display.graph.save.path '\' title_params] ,'png');
+        title(title_params);
+        saveas(sw_plot,[additional_settings_internal.display.graph.save.path '\' title_params '.png']);
+        title_params = '';
     end
     %%
     % Disable repetitive text display
