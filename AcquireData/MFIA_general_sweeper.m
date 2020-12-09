@@ -74,17 +74,15 @@ node_dic = containers.Map(keys,values);
 read_param_cell = fn_struct2cell(read_param_struct);
 grid_search = strfind(read_param_cell(1,:), 'grid');
 if ~any([grid_search{:}])
-    read_param_cell = [{'read_param_struct.demod.grid'; true} read_param_cell];
+    read_param_cell = [{'read_param_struct.demod.grid'; true; '.demod.grid'; grid} read_param_cell];
 end
-if ~isempty(read_param_cell)
-    for i = 1:size(read_param_cell,2)
-        read_param_cell{1,i} = ['select_data' read_param_cell{3,i}];
-        for st = {'demod', 'imp'}
-            locs = strfind(read_param_cell{1,i},'.');
-            if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st{:})
-            read_param_cell{5,i} = ['sample_' node_dic(st{:}) read_param_cell{1,i}(locs(2):end)];
-            read_param_cell{6,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
-            end
+for i = 1:size(read_param_cell,2)
+    read_param_cell{1,i} = ['select_data' read_param_cell{3,i}];
+    for st = {'demod', 'imp'}
+        locs = strfind(read_param_cell{1,i},'.');
+        if contains(read_param_cell{1,i}(locs(1)+1:locs(2)-1),st{:})
+        read_param_cell{5,i} = ['sample_' node_dic(st{:}) read_param_cell{1,i}(locs(2):end)];
+        read_param_cell{6,i} = regexprep(read_param_cell{1,i}(8:end), {'\.' '(' ')'},{'_', '' ''});
         end
     end
 end
@@ -370,14 +368,24 @@ function plot_data(plot_func, lbl, x, select_data, read_param_cell)
 % Plot data
 figure(1)
 clf
-[subrow, subcol] = subplot_min_rectangle(size(read_param_cell,2));
-for i = 1:size(read_param_cell,2)
-    subplot(subrow, subcol, i)
-    s = plot_func(x, eval(read_param_cell{1,i}));
-    set(s, 'LineWidth', 1.5)
-    set(s, 'Color', 'black');
-    grid on
-    xlabel(lbl)
-    ylabel(read_param_cell{4,i})
+subp_size = 0;
+for c = read_param_cell(2,:)
+    if c{:}
+        subp_size = subp_size+1;
+    end
+end
+[subrow, subcol] = subplot_min_rectangle(subp_size);
+i=1;
+for c = read_param_cell
+    if c{2}
+        subplot(subrow, subcol, i)
+        s = plot_func(x, eval(c{1}));
+        set(s, 'LineWidth', 1.5)
+        set(s, 'Color', 'black');
+        grid on
+        xlabel(lbl)
+        ylabel(c{4})
+        i=i+1;
+    end
 end
 end

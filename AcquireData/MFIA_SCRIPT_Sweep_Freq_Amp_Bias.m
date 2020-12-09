@@ -17,11 +17,11 @@ clear
 device_id = 'dev5168';
 
 % Sample name
-sample_name = 'Test';
+sample_name = 'B5 b5 150um 9 A';
 
 % Save path
 save_path = 'C:\Users\Public\Documents\MATLAB\mfiaDLTS\AcquireData\vars';
-desired_order = {'frequency', 'amplitude', 'offset'};
+desired_order = {'offset','frequency', 'amplitude'};
 
 % create slice planes 
 slice_planes = {};
@@ -31,8 +31,8 @@ slice_planes(:,end+1) = {'offset'; [-0.5]};
 
 % Selected data to read (grid = sweep parameter)
 % read_param_struct.demod.grid = true;
-read_param_struct.demod.r = true;
-read_param_struct.demod.phase = true;
+read_param_struct.demod.r = false;
+read_param_struct.demod.phase = false;
 read_param_struct.impedance.grid = true;
 read_param_struct.impedance.param0 = true;
 read_param_struct.impedance.param1 = true;
