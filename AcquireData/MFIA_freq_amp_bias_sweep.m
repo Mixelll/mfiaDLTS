@@ -135,8 +135,7 @@ major.disp = additional_settings_internal.display.text.major.disp;
 minor.disp = additional_settings_internal.display.text.minor.disp;
 enable_default = additional_settings_internal.enable_default;
 
-% Create a base configuration: Disable all available outputs, awgs,
-% demods, scopes,...
+% Create a base configuration: Disable all available outputs, awgs, demods, scopes,...
 ziDisableEverything(device);
 
 %% Configure the device ready for this experiment.
@@ -340,6 +339,8 @@ for v = 1:max([lf,la,lo])
     full_data(v) = full_data_one;
 end
 
+% Disable everything when the run is finished
+ziDisableEverything(device);
 
 % Sweeper module returns a structure with following elements:
 % * timestamp -> Time stamp data [uint64]. Divide the timestamp by the

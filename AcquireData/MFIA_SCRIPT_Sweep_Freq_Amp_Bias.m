@@ -47,8 +47,9 @@ start_offset = 0; stop_offset = -1; pts_offset = 20; % V
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
 plot_sweep_order = true;
-plt_cmds = {'colorbar(''eastoutside'')'};
 plt_cmds = {};
+% plt_cmds{end+1} = 'grid on';
+plt_cmds{end+1} = 'colorbar(''eastoutside'')';
 %% Overwite Defaults (uncomment and change value)
 
 overwrite_defaults = {}; % don't touch
@@ -234,8 +235,9 @@ end
 
 [select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 
-save([save_path '\' sample_name '_desired_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
-save([save_path '\' sample_name '_sweep_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
+save([save_path '\' sample_name '_struct_3D_desired_order_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
+save([save_path '\' sample_name '_struct_3D_sweep_order_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
+save([save_path '\' sample_name '_struct_vec_sweep_order_' sweep_order_string(sweep_order)], 'select_data_sweep_order_struct_vec');
 
 if plt_log_freq
     desired_order{contains(desired_order, 'frequency')} = 'log_frequency';
