@@ -17,7 +17,7 @@ clear
 device_id = 'dev5168';
 
 % Sample name
-sample_name = 'B5 b5 150um 9 A';
+sample_name = 'Test';
 
 % Save path
 save_path = 'C:\Users\Public\Documents\MATLAB\mfiaDLTS\AcquireData\vars';

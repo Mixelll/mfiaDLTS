@@ -38,7 +38,7 @@ stop2 = eval(['p.Results.stop_' sw2]);
 pts2 = eval(['p.Results.pts_' sw2]);
 vec2 = linspace(start2,stop2,pts2);
 if strcmpi(sw2, 'frequency') && p.Results.freq_xmapping
-    vec2 = linspace(log10(start2),log10(stop2),pts2);
+    vec2 = logspace(log10(start2),log10(stop2),pts2);
 end
 
 
@@ -48,7 +48,7 @@ stop3 = eval(['p.Results.stop_' sw3]);
 pts3 = eval(['p.Results.pts_' sw3]);   
 vec3 = linspace(start3,stop3,pts3);
 if strcmpi(sw3, 'frequency') && p.Results.freq_xmapping
-    vec3 = linspace(log10(start3),log10(stop3),pts3);
+    vec3 = logspace(log10(start3),log10(stop3),pts3);
 end
 
 [mat3, mat2] = meshgrid(vec3,vec2);
