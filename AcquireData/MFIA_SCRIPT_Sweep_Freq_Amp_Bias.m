@@ -38,11 +38,11 @@ read_param_struct.impedance.param0 = true;
 read_param_struct.impedance.param1 = true;
 
 % Sweep by Frequency and iterate over AC amplitude and offset
-sweep_order = {'frequency','amplitude','offset'};
+sweep_order = {'offset', 'frequency','amplitude'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
-start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
-start_amplitude = 0.05; stop_amplitude = 0.2; pts_amplitude = 20; % V
-start_offset = 0; stop_offset = -1; pts_offset = 20; % V
+start_frequency = 100; stop_frequency = 500e3; pts_frequency = 10; % Hz
+start_amplitude = 0.05; stop_amplitude = 0.2; pts_amplitude = 2; % V
+start_offset = 0; stop_offset = -1; pts_offset = 2; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
@@ -295,16 +295,16 @@ data = struct.data;
 axes = struct.axes;
 data_cell = fn_struct2cell(data);
 axes_cell = fn_struct2cell(axes);
-
+% Frequency, amplitude and offset grid 
 X = axes_cell{2,strcmpi(axes_cell(4,:), order{1})};
 Y = axes_cell{2,strcmpi(axes_cell(4,:), order{2})};
 Z = axes_cell{2,strcmpi(axes_cell(4,:), order{3})};
-
+% Axis labels
 units = {'frequency','log_frequency' 'amplitude', 'offset';' [Hz]', ' [log(Hz)]', ' [V]', ' [V]'};
 Xlbl = [strrep(order{1},'_','\_') units{2,strcmpi(units(1,:), order{1})}];
 Ylbl = [strrep(order{2},'_','\_') units{2,strcmpi(units(1,:), order{2})}];
 Zlbl = [strrep(order{3},'_','\_') units{2,strcmpi(units(1,:), order{3})}];
-
+% Slice planes
 Xsl = slic{2,strcmpi(slic(1,:), order{1})};
 Ysl = slic{2,strcmpi(slic(1,:), order{2})};
 Zsl = slic{2,strcmpi(slic(1,:), order{3})};
@@ -315,7 +315,6 @@ clf
 for i = 1:size(data_cell,2)
     subplot(subrow, subcol, i)
     slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
-    grid on
     xlabel(Ylbl)
     ylabel(Xlbl)
     zlabel(Zlbl)

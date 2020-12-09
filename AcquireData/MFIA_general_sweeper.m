@@ -377,7 +377,7 @@ end
 [subrow, subcol] = subplot_min_rectangle(subp_size);
 i=1;
 for c = read_param_cell
-    if c{2}
+    if c{2} && ~contains(c{1}, 'grid')
         subplot(subrow, subcol, i)
         s = plot_func(x, eval(c{1}));
         set(s, 'LineWidth', 1.5)

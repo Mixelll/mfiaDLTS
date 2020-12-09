@@ -1,4 +1,4 @@
-function fn_plot_data3D(struct, order, range, slic, plt_cmds)
+function fn_plot_data3D(struct, order, range, slic, plt_select_data, plt_cmds)
 data = struct.data;
 axes = struct.axes;
 data_cell = fn_struct2cell(data);
@@ -38,10 +38,12 @@ Z = reshape(Z(Ir), xl,yl,zl);
 % plot
 figure
 clf
+if ~isempty(plt_select_data)
+    data_cell = data_cell(:,cellfun(@(c) contains(c,plt_select_data),data_cell(1,:)));
+end
 [subrow, subcol] = subplot_min_rectangle(size(data_cell,2));
 for i = 1:size(data_cell,2)
     subplot(subrow, subcol, i)
-    data_cell{2,i}(Xr & Yr & Zr)
     slice(Y,X,Z, reshape(data_cell{2,i}(Ir), xl,yl,zl), Ysl, Xsl, Zsl);
     xlabel(Ylbl)
     ylabel(Xlbl)
