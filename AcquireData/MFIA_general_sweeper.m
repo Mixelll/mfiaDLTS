@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, varargin)
+function [select_data, full_data, sw_plot varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, varargin)
 varargout = {};
 % Define parameters relevant to this example. Default values specified by the
 % inputParser below are overwritten if specified as name-value pairs via the
@@ -281,8 +281,7 @@ while ~ziDAQ('finished', h)
                     end
                     % Sweep parameter values at which measurement points were taken
                         sweep_param_arr = sample_impedance.grid;
-            %             valid = ~isnan(sweep_i);
-                         plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell)
+                         sw_plot = plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell);
             %             drawnow;
                 end
             end
@@ -324,7 +323,7 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
         % Frequency values at which measurement points were taken
         sweep_param_arr = sample_impedance.grid;
         % Plot the final result
-        plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell)
+        sw_plot = plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell);
         end
     end
 
@@ -364,7 +363,7 @@ ziDAQ('clear', h);
 
 end
 
-function plot_data(plot_func, lbl, x, select_data, read_param_cell)
+function s = plot_data(plot_func, lbl, x, select_data, read_param_cell)
 % Plot data
 figure(1)
 clf

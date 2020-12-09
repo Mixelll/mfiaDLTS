@@ -57,6 +57,7 @@ p.KeepUnmatched=true;
 isnumcalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 isnonnegscalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 
+
 % IA precision -> measurement speed: 0 - low->fast, 1 - high->medium,
 % 2 - very high->slow
 p.addParameter('IA_precision', 1, @isnumcalar);
@@ -115,6 +116,8 @@ additional_settings_internal.channels.imp_index = str2double(additional_settings
 % Graphs
 additional_settings_internal.display.graph.disp = true;
 additional_settings_internal.display.graph.during_sweep = false;
+additional_settings_internal.display.graph.save.if = false;
+additional_settings_internal.display.graph.save.path = '';
 % Text
 additional_settings_internal.display.text.major.disp = true;
 additional_settings_internal.display.text.major.each_sweep = true;
@@ -291,6 +294,7 @@ end
 actual_frequency_vec = zeros(1,length(frequency_vec));
 actual_amplitude_vec = zeros(1,length(amplitude_vec));
 actual_offset_vec = zeros(1,length(offset_vec));
+title_params = '';
 
 %% Sweep by
 for v = 1:max([lf,la,lo])
@@ -298,21 +302,30 @@ for v = 1:max([lf,la,lo])
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_vec(v))
         actual_frequency_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/freq']);
         if major.disp, fprintf('IA frequency set to %g Hz.\n', actual_frequency_vec(v)); end
+        title_params = [' Freq = ' num2str(actual_frequency_vec(v))];
     end
     if any(strcmpi(sweep_order(2:3), 'amplitude'))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_vec(v))
         actual_amplitude_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/amplitude']);
         if major.disp, fprintf('IA test signal (amplitude) set to %g mV.\n', 1000*actual_amplitude_vec(v)); end
+        title_params = [title_params ' amp = ' num2str(actual_amplitude_vec(v))];
     end
     if any(strcmpi(sweep_order(2:3), 'offset'))
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_vec(v))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
         actual_offset_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
         if major.disp, fprintf('IA bias voltage (offset) set to %g V.\n', actual_offset_vec(v)); end
+        title_params = [title_params ' bias = ' num2str(actual_offset_vec(v))];
     end
-    
-    [select_data_one, full_data_one] = MFIA_general_sweeper(device, additional_settings_internal, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
+    %% Perform Parameter (=sweep_order{1}) Sweep and save fig if enabled
+    [select_data_one, full_data_one, sw_plot] = MFIA_general_sweeper(device, additional_settings_internal, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
+    if additional_settings_internal.display.graph.save.if
+        title(sw_plot, title_params)
+        saveas(sw_plot,[additional_settings_internal.display.graph.save.path '\' title_params] ,'png');
+    end
+    %%
+    % Disable repetitive text display
     if major.disp && ~additional_settings_internal.display.text.major.each_sweep
         additional_settings_internal.display.text.major.disp = false;
         major.disp = false;
