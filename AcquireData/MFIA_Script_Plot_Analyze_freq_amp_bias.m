@@ -7,10 +7,10 @@ str_before_order = 'order_'; % input the string just before the first parameter
 order = MFIA_get_order_from_path(path, str_before_order);
 title = path(sum(find(path=='\', 1, 'last'))+1:sum(strfind(path, '_struct'))-1);
 
-% Select data to plot (leave empty to plot all data in 3D struct)
+% Select data to plot (leave empty to plot all data in 3D struct) and define plot aliases (from IA parametric model)
 plt_select_data = {};
-plt_select_data{end+1} = 'param0';
-plt_select_data{end+1} = 'param1';
+% plt_select_data(:,end+1) = {'param0'; 'Resistance [ohm]'};
+plt_select_data(:,end+1) = {'param1'; 'Capacitance [F]'};
 
 % Select plot range
 range = {};
@@ -22,7 +22,7 @@ range(:,end+1) = {'offset'; [-inf inf]};
 slice_planes = {};
 slice_planes(:,end+1) = {'frequency'; [1e2 1e3 1e4 1e5 5e5]};
 slice_planes(:,end+1) = {'amplitude'; []}; 
-slice_planes(:,end+1) = {'offset'; [0 -0.5 -1]};
+slice_planes(:,end+1) = {'offset'; [0 -0.1 -0.2 -0.5 -1]};
 
 % Add plot formatting commands
 plt_cmds = {};

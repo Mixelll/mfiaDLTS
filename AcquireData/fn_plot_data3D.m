@@ -8,10 +8,10 @@ X = axes_cell{2,strcmpi(axes_cell(4,:), order{1})};
 Y = axes_cell{2,strcmpi(axes_cell(4,:), order{2})};
 Z = axes_cell{2,strcmpi(axes_cell(4,:), order{3})};
 % Axis labels
-units = {'frequency','log_frequency' 'amplitude', 'offset';' [Hz]', ' [log(Hz)]', ' [V]', ' [V]'};
-Xlbl = [strrep(order{1},'_','\_') units{2,strcmpi(units(1,:), order{1})}];
-Ylbl = [strrep(order{2},'_','\_') units{2,strcmpi(units(1,:), order{2})}];
-Zlbl = [strrep(order{3},'_','\_') units{2,strcmpi(units(1,:), order{3})}];
+axes_lbls = {'frequency','log_frequency' 'amplitude', 'offset';'Test Signal Frequency [Hz]', 'Test Signal Frequency [log(Hz)]', 'Test Signal Amplitude [V]', 'Bias on Si [V]'};
+Xlbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{1})};
+Ylbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{2})};
+Zlbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{3})};
 % Slice planes
 Xsl = slic{2,strcmpi(slic(1,:), order{1})};
 Ysl = slic{2,strcmpi(slic(1,:), order{2})};
@@ -39,7 +39,7 @@ Z = reshape(Z(Ir), xl,yl,zl);
 figure
 clf
 if ~isempty(plt_select_data)
-    data_cell = data_cell(:,cellfun(@(c) contains(c,plt_select_data),data_cell(1,:)));
+    data_cell = data_cell(:,cellfun(@(c) contains(c,plt_select_data(1,:)),data_cell(1,:)));
 end
 [subrow, subcol] = subplot_min_rectangle(size(data_cell,2));
 for i = 1:size(data_cell,2)
@@ -48,7 +48,7 @@ for i = 1:size(data_cell,2)
     xlabel(Ylbl)
     ylabel(Xlbl)
     zlabel(Zlbl)
-    title(data_cell{4,i})
+    title(plt_select_data(2,strcmpi(plt_select_data(1,:),data_cell{4,i})))
     for c = plt_cmds
         eval(c{:});
     end

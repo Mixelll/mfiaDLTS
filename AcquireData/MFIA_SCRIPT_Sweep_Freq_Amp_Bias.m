@@ -305,7 +305,7 @@ X = axes_cell{2,strcmpi(axes_cell(4,:), order{1})};
 Y = axes_cell{2,strcmpi(axes_cell(4,:), order{2})};
 Z = axes_cell{2,strcmpi(axes_cell(4,:), order{3})};
 % Axis labels
-units = {'frequency','log_frequency' 'amplitude', 'offset';' [Hz]', ' [log(Hz)]', ' [V]', ' [V]'};
+units = {'Frequency','Log_frequency' 'Amplitude', 'Offset';' [Hz]', ' [log(Hz)]', ' [V]', ' [V]'};
 Xlbl = [strrep(order{1},'_','\_') units{2,strcmpi(units(1,:), order{1})}];
 Ylbl = [strrep(order{2},'_','\_') units{2,strcmpi(units(1,:), order{2})}];
 Zlbl = [strrep(order{3},'_','\_') units{2,strcmpi(units(1,:), order{3})}];
