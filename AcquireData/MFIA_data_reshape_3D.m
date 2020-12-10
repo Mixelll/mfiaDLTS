@@ -69,7 +69,7 @@ for c = cn
     grid_field = strrep(c{3},'.grid','');
     v = rmfield(eval(['data_desired_order_3D' grid_field]), 'grid'); 
     k = rmfield(eval(['data_sweep_order_3D' grid_field]), 'grid');
-    if isempty(fiendnames(v))
+    if isempty(fieldnames(v))
         data_desired_order_3D = rmfield(data_desired_order_3D, grid_field(2:end));
         data_sweep_order_3D = rmfield(data_sweep_order_3D, grid_field(2:end));
     else

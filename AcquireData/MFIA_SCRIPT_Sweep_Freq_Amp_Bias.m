@@ -1,7 +1,4 @@
-%
-% USAGE DATA = EXAMPLE_SWEEPER(DEVICE_ID)
-%
-% Perform a frequency/test_signal (amplitude)/bias_voltage (offset) sweep and gather demodulator data.
+%% Perform a frequency/test_signal (amplitude)/bias_voltage (offset) sweep and gather demodulator data.
 %
 % Note that there are two name sets depending on context: 
 % impedance analyzer context (sweeper context) - frequency (frequency), test_signal (amplitude), bias_voltage (offset)
