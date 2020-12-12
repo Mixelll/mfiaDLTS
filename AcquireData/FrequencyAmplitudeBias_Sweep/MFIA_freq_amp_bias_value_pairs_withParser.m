@@ -18,8 +18,8 @@ p.addParameter('pts_frequency', 100, isnonnegscalar);
 p.addParameter('freq_xmapping', 1, isnonnegscalar);
 
 p.addParameter('start_amplitude', 0.05, @isnumeric);
-p.addParameter('stop_amplitude', 0.3, @isnumeric);
-p.addParameter('pts_amplitude', 20, isnonnegscalar);
+p.addParameter('stop_amplitude', 0.2, @isnumeric);
+p.addParameter('pts_amplitude', 21, isnonnegscalar);
 
 p.addParameter('start_offset', 1, @isnumeric);
 p.addParameter('stop_offset', -1, @isnumeric);
