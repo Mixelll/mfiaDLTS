@@ -1,4 +1,4 @@
-function fn_plot_data3D(struct, order, range, slic, plt_select_data, plt_cmds)
+function plot_struct_data3D(struct, order, range, slic, plt_select_data, plt_cmds)
 data = struct.data;
 axes = struct.axes;
 data_cell = fn_struct2cell(data);
@@ -43,15 +43,17 @@ if ~isempty(plt_select_data)
 end
 [subrow, subcol] = subplot_min_rectangle(size(data_cell,2));
 for i = 1:size(data_cell,2)
-    subplot(subrow, subcol, i)
+    s = subplot(subrow, subcol, i);
     slice(Y,X,Z, reshape(data_cell{2,i}(Ir), xl,yl,zl), Ysl, Xsl, Zsl);
     xlabel(Ylbl)
     ylabel(Xlbl)
     zlabel(Zlbl)
     title(plt_select_data(2,strcmpi(plt_select_data(1,:),data_cell{4,i})))
-    for c = plt_cmds
+
+    for c = plt_cmds(2,strcmpi(plt_cmds(1,:),data_cell{4,i}) | cellfun(@(c) isempty(c),plt_cmds(1,:)))
         eval(c{:});
     end
+
 end
 end
 

@@ -1,5 +1,5 @@
 % Load data file (struct 3D format) and get axes order
-path = 'B5 b5 150um 4 A_struct_3D_desired_order_frequency_amplitude_offset';
+path = 'vars\B5 b5 150um 4 A_struct_3D_desired_order_frequency_amplitude_offset';
 data = load(path);
 varname = fieldnames(data);
 data = data.(varname{1});
