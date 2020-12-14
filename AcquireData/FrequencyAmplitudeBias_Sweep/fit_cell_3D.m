@@ -61,9 +61,9 @@ for cd = data_cell
                 end
                 if isfield(p.Results.plot_fit, 'savepath')
                     if ~isempty(OutFitFunc)
-                        RealSavePath = [p.Results.plot_fit.savepath '\' cd{4} '\' StrFitUscore '\success' ];
+                        RealSavePath = [p.Results.plot_fit.savepath '\' cd{4} '\' p.Results.title '\' StrFitUscore '\success' ];
                     else
-                        RealSavePath = [p.Results.plot_fit.savepath '\' cd{4} '\' StrFitUscore '\fail' ];
+                        RealSavePath = [p.Results.plot_fit.savepath '\' cd{4} '\' p.Results.title '\' StrFitUscore '\fail' ];
                     end
                     if ~exist(RealSavePath, 'dir')
                         mkdir(RealSavePath)
