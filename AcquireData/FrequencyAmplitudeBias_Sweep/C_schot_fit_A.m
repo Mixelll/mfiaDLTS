@@ -153,6 +153,9 @@ if ~isempty(fitt)
     fun = @(V) A.*sqrt(q.*es.*e0.*N./(2.*n.*(n.*(Vb-k*T)-V)));
     span = [min(x), min(max(x), Vb-2*k*T)];
 else
+    if coefficients{end} == 'c' && ~isempty(sym_factors)
+        coefficients = [sym_factors(1) coefficients];
+    end
     str = ['Complex Values Computed.' newline 'Fitting aborted'];
     fun = [];
     span = [];
