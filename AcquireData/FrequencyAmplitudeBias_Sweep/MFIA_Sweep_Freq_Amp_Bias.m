@@ -67,7 +67,8 @@ additional_settings.enable_default = true;
 % additional_settings.display.text.minor.each_sweep = false;
 %% Saving the plot of the sweeper output (can be hundreds of images)
 additional_settings.display.graph.save.if = true;
-mkdir(['C:\Users\Public\Documents\MATLAB\mfiaDLTS\AcquireData\vars\' sample_name])
+each_graph_savepath = [save_path '\' sample_name];
+mkdir(each_graph_savepath)
 additional_settings.display.graph.save.path = ['C:\Users\Public\Documents\MATLAB\mfiaDLTS\AcquireData\vars\' sample_name];
 %% 
 %% MF and IA settings
