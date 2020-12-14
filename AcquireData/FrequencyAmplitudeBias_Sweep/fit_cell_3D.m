@@ -37,8 +37,8 @@ for cd = data_cell
     cd_mat = cd{2};
     for j=1:size(cd_mat, 2)
         for k=1:size(cd_mat, 3)
-            [fit_str, fit_func, span, fit_cell] = fit_func(FitAxMat(:,j,k), cd_mat(:,j,k));
-            fit_progress = ['j = ' num2str(j) ' ' axes_cell{3,2} ' = ' num2str(AxJ(j,1)) ' k = ' num2str(k) ' ' axes_cell{3,3} ' = ' num2str(AxK(j,k))];
+            [fit_str, OutFitFunc, span, fit_cell] = fit_func(FitAxMat(:,j,k), cd_mat(:,j,k));
+            fit_progress = ['jk = ' num2str(j) num2str(k) ' ' axes_cell{4,2} ' = ' num2str(AxJ(j,1),3) ' ' axes_cell{4,3} ' = ' num2str(AxK(j,k),3)];
             if contains(fit_str, 'complex','IgnoreCase',true)
                 disp(fit_progress)
             end
@@ -48,16 +48,18 @@ for cd = data_cell
                 else
                     plot_func = @plot;
                 end
-                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{3} ' ' fit_progress], fit_str, '', axes_cell{3,1}, cd{3}, 15, plot_func);
-                if ~isempty(fit_func)
+                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} ' ' strrep(fit_progress,'_','\_')], fit_str, '', axes_cell{3,1}, cd{3}, 10, plot_func);
+                if ~isempty(OutFitFunc)
                     hold(ax(1),'on');
-                    fplot(fit_func, span)
+                    fplot(OutFitFunc, span)
                     hold(ax(1),'off');
                 end
                 if isfield(p.Results.plot_fit, 'savepath')
-                    RealSavePath = [p.Results.plot_fit.savepath '\' cd{3} '\' [fit_cell{1,:}]];
-                    mkdir(RealSavePath);
-                    saveas([RealSavePath '\' [p.Results.title ' ' cd{3} ' ' fit_progress] '.png']);
+                    RealSavePath = [p.Results.plot_fit.savepath '\' cd{4} '\' [fit_cell{1,:}]];
+                    if ~exist(RealSavePath, 'dir')
+                        mkdir(RealSavePath)
+                    end
+                    saveas(ax(1), [RealSavePath '\' [p.Results.title ' ' cd{4} ' ' fit_progress] '.png']);
                 end
             end
             for f=1:fmax

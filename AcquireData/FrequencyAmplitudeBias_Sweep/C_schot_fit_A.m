@@ -151,7 +151,7 @@ if ~isempty(fitt)
     str = [str ' R^{2}=' num2str(gof.rsquare,3) ];
     FittedVarsCell(:, end+1) = {'R2'; gof.rsquare; 'R^{2}'};
     fun = @(V) A.*sqrt(q.*es.*e0.*N./(2.*n.*(n.*(Vb-k*T)-V)));
-    span = [min(x), min(max(x), Vb-6*k*T)];
+    span = [min(x), min(max(x), Vb-2*k*T)];
 else
     str = ['Complex Values Computed.' newline 'Fitting aborted'];
     fun = [];

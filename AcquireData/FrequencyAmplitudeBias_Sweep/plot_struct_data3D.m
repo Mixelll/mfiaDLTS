@@ -63,6 +63,7 @@ axes_cell{3,1} = Xlbl;
 axes_cell{3,2} = Ylbl;
 axes_cell{3,3} = Zlbl;
 axes_cell = axes_cell(1:3,1:3);
+axes_cell(4,:) = axes_cell(1,:);
 %%
 % plot
 figure
@@ -91,6 +92,6 @@ for i = 1:size(data_cell,2)
     end
 
 end
-data_cell = data_cell(1:3,:);
+data_cell(4,:) = cellfun(@(c) c(1:(sum(find(c==' ', 1, 'last'))+isempty(find(c==' ', 1, 'last'))*length(c))-1), data_cell(3,:), 'UniformOutput', false);
 end
 
