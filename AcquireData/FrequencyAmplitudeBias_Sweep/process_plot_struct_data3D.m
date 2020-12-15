@@ -1,4 +1,4 @@
-function [sbp, data_cell, axes_cell]  = plot_struct_data3D(struct, order, slic, varargin)
+function [fig, sbp, data_cell, axes_cell]  = process_plot_struct_data3D(struct, order, slic, varargin)
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
@@ -64,9 +64,20 @@ axes_cell{3,2} = Ylbl;
 axes_cell{3,3} = Zlbl;
 axes_cell = axes_cell(1:3,1:3);
 axes_cell(4,:) = axes_cell(1,:);
-%%
-% plot
-figure
+%% Process
+data_cell(1,:) = data_cell(4,:);
+for i = 1:size(data_cell,2)
+    data_cell{2,i} = reshape(data_cell{2,i}(Ir), xl,yl,zl);
+    if ~isempty(p.Results.plt_select_data(2,strcmpi(p.Results.plt_select_data(1,:),data_cell{1,i})))
+        data_cell(3,i) = p.Results.plt_select_data(2,strcmpi(p.Results.plt_select_data(1,:),data_cell{1,i}));
+    else
+        data_cell(3,i) = data_cell(1,:);
+    end
+end
+data_cell(4,:) = cellfun(@(c) c(1:(sum(find(c==' ', 1, 'last'))+isempty(find(c==' ', 1, 'last'))*length(c))-1), data_cell(3,:), 'UniformOutput', false);
+
+%% Plot
+fig = figure;
 if ~isempty(p.Results.plt_select_data)
     data_cell = data_cell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:)),data_cell(1,:)));
 end
@@ -75,23 +86,19 @@ end
 for i = 1:size(data_cell,2)
     s =  subplot(subrow, subcol, i);
     sbp(subrow, subcol) = s;
-    data_cell{2,i} = reshape(data_cell{2,i}(Ir), xl,yl,zl);
     slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
     xlabel(Ylbl)
     ylabel(Xlbl)
     zlabel(Zlbl)
-    data_cell(1,i) = data_cell(4,i);
-    data_cell(3,i) = p.Results.plt_select_data(2,strcmpi(p.Results.plt_select_data(1,:),data_cell{4,i}));
     if ~isempty(p.Results.title)
         title([p.Results.title ' ' data_cell{3,i}])
     else
         title(data_cell{3,i})
     end
-    for c = p.Results.plt_cmds(2,strcmpi(p.Results.plt_cmds(1,:),data_cell{4,i}) | cellfun(@(c) isempty(c),p.Results.plt_cmds(1,:)))
+    for c = p.Results.plt_cmds(2,strcmpi(p.Results.plt_cmds(1,:),data_cell{1,i}) | cellfun(@(c) isempty(c),p.Results.plt_cmds(1,:)))
         eval(c{:});
     end
-
 end
-data_cell(4,:) = cellfun(@(c) c(1:(sum(find(c==' ', 1, 'last'))+isempty(find(c==' ', 1, 'last'))*length(c))-1), data_cell(3,:), 'UniformOutput', false);
+set(fig,'Position',get(0,'Screensize'));
 end
 

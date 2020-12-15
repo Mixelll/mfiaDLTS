@@ -1,4 +1,4 @@
-function [sbp] = fit_cell_3D(data_cell, axes_cell, fit_func, fit_axis, varargin)
+function [fig, sbp, OutSavePath, StrFitUscore] = fit_cell_3D(data_cell, axes_cell, fit_func, fit_axis, varargin)
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
@@ -22,7 +22,8 @@ AxK = shiftdim(mean(axes_cell{2,3}));
 FitOut = zeros(size(FitAxMat, [2 3]));
 
 if ~isempty(p.Results.plt_select_data)
-    data_cell = data_cell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:)),data_cell(1,:)));
+    data_cell = data_cell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:),'IgnoreCase',true), data_cell(1,:))...
+        | cellfun(@(c) contains(c,p.Results.plt_select_data(1,:),'IgnoreCase',true), data_cell(3,:)));
 end
 
 cd_mat = data_cell{2,1};
@@ -61,14 +62,14 @@ for cd = data_cell
                 end
                 if isfield(p.Results.plot_fit, 'savepath')
                     if ~isempty(OutFitFunc)
-                        RealSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '\' StrFitUscore '\success' ];
+                        RealSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore '\success' ];
                     else
-                        RealSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '\' StrFitUscore '\fail' ];
+                        RealSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore '\fail' ];
                     end
                     if ~exist(RealSavePath, 'dir')
                         mkdir(RealSavePath)
                     end
-                    saveas(ax(1), [RealSavePath '\' [p.Results.title ' ' cd{4} ' ' fit_progress] '.png']);
+                    saveas(ax(1), [RealSavePath '\' p.Results.title ' ' cd{4} ' ' fit_progress '.png']);
                 end
             end
             for f=1:fmax
@@ -95,6 +96,7 @@ for cd = data_cell
             end
         end
     end
-end          
+end
+OutSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore];
 end
 
