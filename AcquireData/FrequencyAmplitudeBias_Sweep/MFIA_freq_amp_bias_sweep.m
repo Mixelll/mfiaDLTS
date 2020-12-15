@@ -297,6 +297,11 @@ actual_offset_vec = zeros(1,length(offset_vec));
 title_params = '';
 
 %% Sweep by
+if additional_settings_internal.display.graph.save.if
+    dt = now;
+    SavePath = [additional_settings_internal.display.graph.save.path '\sweeps ' datestr(dt, 'yyyy-MM-dd HH-mm')];
+    mkdir(SavePath)
+end
 for v = 1:max([lf,la,lo])
     if any(strcmpi(sweep_order(2:3), 'frequency'))
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_vec(v))
@@ -322,7 +327,7 @@ for v = 1:max([lf,la,lo])
     [select_data_one, full_data_one, sw_plot] = MFIA_general_sweeper(device, additional_settings_internal, sweep_order(1), sweep_range, pts, read_param_struct, unmatched_vars{:});
     if additional_settings_internal.display.graph.save.if
         title(title_params);
-        saveas(sw_plot,[additional_settings_internal.display.graph.save.path '\' title_params '.png']);
+        saveas(sw_plot,[SavePath '\' title_params '.png']);
         title_params = '';
     end
     %%
