@@ -14,10 +14,11 @@ clear
 device_id = 'dev5168';
 
 % Sample name
-sample_name = 'B5 b5 150um 14 C';
+SampleName = 'B5 b5 150um 14 C';
 
 % Save path
-save_path = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars']';
+SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars']';
+RealSavePath = [SavePath '\' SampleName];
 desired_order = {'offset','frequency', 'amplitude'};
 
 % create slice planes 
@@ -67,8 +68,7 @@ additional_settings.enable_default = true;
 % additional_settings.display.text.minor.each_sweep = false;
 %% Saving the plot of the sweeper output (can be hundreds of images)
 additional_settings.display.graph.save.if = true;
-each_graph_savepath = [save_path '\' sample_name];
-additional_settings.display.graph.save.path = [save_path '\' sample_name];
+additional_settings.display.graph.save.path = RealSavePath;
 %% 
 %% MF and IA settings
     % IA precision -> measurement speed: 0 - low->fast, 1 - high->medium,
@@ -237,9 +237,15 @@ end
 
 [select_data_desired_order_3D, select_data_sweep_order_3D] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, desired_order, sweep_order, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 
-save([save_path '\' sample_name '\' sample_name '_struct_3D_desired_order_' sweep_order_string(desired_order)], 'select_data_desired_order_3D');
-save([save_path '\' sample_name '\' sample_name '_struct_3D_sweep_order_' sweep_order_string(sweep_order)], 'select_data_sweep_order_3D');
-save([save_path '\' sample_name '\' sample_name '_struct_vec_sweep_order_' sweep_order_string(sweep_order)], 'select_data_sweep_order_struct_vec');
+eval(['select_data_sweep_order_3D_' sweep_order_string(sweep_order) '=select_data_sweep_order_3D']);
+eval(['select_data_desired_order_3D_' sweep_order_string(desired_order) '=select_data_desired_order_3D']);
+eval(['full_struct_vec_' sweep_order_string(desired_order) '=full_data_sweep_order_struct_vec']);
+
+if ~exist(RealSavePath, 'dir')
+    mkdir(RealSavePath)
+end
+save([RealSavePath '\' SampleName ' ' datestr(dt, 'yyyy-MM-dd HH-mm')], ['select_data_sweep_order_3D_' sweep_order_string(sweep_order)],...
+    ['select_data_desired_order_3D_' sweep_order_string(desired_order)], ['full_struct_vec_' sweep_order_string(desired_order)]);
 
 if plt_log_freq
     desired_order{contains(desired_order, 'frequency')} = 'log_frequency';
