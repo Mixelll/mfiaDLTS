@@ -1,4 +1,4 @@
-function [fig, sbp, OutFitCell, DataCell, AxesCell, OutSavePath, StrFitUscore] = fit_cell_3D(DataCell, AxesCell, fit_func, fit_axis, varargin)
+function [fig, sbp, OutFitCell, DataCell, AxesCell, OutAppendPath, StrFitUscore] = fit_cell_3D(DataCell, AxesCell, fit_func, fit_axis, varargin)
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
@@ -8,6 +8,16 @@ p.addParameter('plt_cmds', {}, @iscell);
 p.addParameter('title', '', CharOrString);
 p.addParameter('plot_fit', []);
 p.parse(varargin{:});
+
+if ~isempty(p.Results.plot_fit)
+    if isfield(p.Results.plot_fit, 'func')
+        plot_func = p.Results.plot_fit.func;
+    else
+        plot_func = @plot;
+    end
+end
+
+StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
 
 d123 = 1:3;
 ftAxPos = strcmpi(AxesCell(1,:),fit_axis);
@@ -51,11 +61,6 @@ for cd = DataCell
                 disp(fit_progress)
             end
             if ~isempty(p.Results.plot_fit)
-                if isfield(p.Results.plot_fit, 'func')
-                    plot_func = p.Results.plot_fit.func;
-                else
-                    plot_func = @plot;
-                end
                 ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} ' ' strrep(fit_progress,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 10, plot_func);
                 if ~isempty(OutFitFunc)
                     hold(ax(1),'on');
@@ -63,10 +68,11 @@ for cd = DataCell
                     hold(ax(1),'off');
                 end
                 if isfield(p.Results.plot_fit, 'savepath')
+                    SavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
                     if ~isempty(OutFitFunc)
-                        RealSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore '\success' ];
+                        RealSavePath = [SavePath '\success' ];
                     else
-                        RealSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore '\fail' ];
+                        RealSavePath = [SavePath '\fail' ];
                     end
                     if ~exist(RealSavePath, 'dir')
                         mkdir(RealSavePath)
@@ -102,6 +108,6 @@ for cd = DataCell
     end
     OutFitCell(:,OutFitInd) = {[cd{4} '-' fit_axis ' ' StrFitUscore]; OutFitCellInner; [cd{3} '-' fit_axis ' ' strrep(StrFitUscore,'_', ', ')]};
 end
-OutSavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore];
+OutAppendPath = [p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
 end
 

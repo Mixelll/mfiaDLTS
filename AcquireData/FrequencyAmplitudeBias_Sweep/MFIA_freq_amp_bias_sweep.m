@@ -298,8 +298,8 @@ title_params = '';
 
 %% Sweep by
 if additional_settings_internal.display.graph.save.if
-    dt = now;
-    SavePath = [additional_settings_internal.display.graph.save.path '\sweeps ' datestr(dt, 'yyyy-MM-dd HH-mm')];
+    StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
+    SavePath = [additional_settings_internal.display.graph.save.path '\sweeps ' StartTime];
     mkdir(SavePath)
 end
 for v = 1:max([lf,la,lo])
