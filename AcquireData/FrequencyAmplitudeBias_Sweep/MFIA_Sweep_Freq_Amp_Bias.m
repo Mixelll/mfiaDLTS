@@ -16,7 +16,7 @@ device_id = 'dev5168';
 % Sample name and measurement number
 SampleName = 'B5 b5 150um 14';
 CurrentMeasID = 'D';
-StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
+StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
 
 % Save path
 SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars']';

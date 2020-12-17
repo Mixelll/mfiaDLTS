@@ -17,7 +17,7 @@ if ~isempty(p.Results.plot_fit)
     end
 end
 
-StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
+StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
 
 d123 = 1:3;
 ftAxPos = strcmpi(AxesCell(1,:),fit_axis);

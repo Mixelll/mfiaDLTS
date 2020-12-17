@@ -298,7 +298,7 @@ title_params = '';
 
 %% Sweep by
 if additional_settings_internal.display.graph.save.if
-    StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
+    StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
     SavePath = [additional_settings_internal.display.graph.save.path '\sweeps ' StartTime];
     mkdir(SavePath)
 end
