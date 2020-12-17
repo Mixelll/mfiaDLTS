@@ -15,11 +15,12 @@ device_id = 'dev5168';
 
 % Sample name and measurement number
 SampleName = 'B5 b5 150um 14';
-CurrentMeasID = 'A'
+CurrentMeasID = 'D';
+StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
 
 % Save path
 SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars']';
-RealSavePath = [SavePath '\' SampleName];
+RealSavePath = [SavePath '\' SampleName '\' SampleName ' ' CurrentMeasID];
 desired_order = {'offset','frequency', 'amplitude'};
 
 % create slice planes 
@@ -228,8 +229,27 @@ end
     % For sweeper: Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct.
 % overwrite_defaults(:,end+1) = {'sweep_LFP_order'; 8};
 
-%% Run Measurement extract and reshape data
-StartTime = datestr(now, 'yyyy-MM-dd HH-mm');
+%% Check Directory, Run Measurement extract and reshape data
+if isnumeric(CurrentMeasID)
+    CurrentMeasID = num2str(CurrentMeasID);
+end
+if exist(RealSavePath, 'dir') && sum([dir(RealSavePath).bytes])>0
+    RealSavePathOld = RealSavePath;
+    MeasIDold = CurrentMeasID;
+    id = 0;
+    while true
+        tPath = [RealSavePathOld num2str(id)];
+        if ~(exist(tPath, 'dir') && sum([dir(tPath).bytes])>0)
+            RealSavePath = tPath;
+            CurrentMeasID = [MeasIDold num2str(id)];
+            if strcmp(additional_settings.display.graph.save.path, RealSavePathOld)
+                additional_settings.display.graph.save.path = RealSavePath;
+            end
+            break
+        end
+    end
+    fprintf('Sample %s already has a measurement ID = %s on the supplied path:\n%s\nRenaming measurement ID to %s and the path to:\n%s',SampleName,MeasIDold,RealSavePathOld,CurrentMeasID,RealSavePath);
+end
 % override defaults set in MFIA_freq_amp_bias_value_pairs_withParser. 
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(sweep_order, 'start_frequency', start_frequency,...
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
@@ -246,7 +266,9 @@ eval(['full_struct_vec_' sweep_order_string(desired_order) '=full_data_sweep_ord
 if ~exist(RealSavePath, 'dir')
     mkdir(RealSavePath)
 end
-save([RealSavePath '\' SampleName ' ' StartTime], ['select_data_sweep_order_3D_' sweep_order_string(sweep_order)],...
+save(RealSavePath, ['select_data_sweep_order_3D_' sweep_order_string(sweep_order)],...
+    ['select_data_desired_order_3D_' sweep_order_string(desired_order)], ['full_struct_vec_' sweep_order_string(desired_order)]);
+save([RealSavePath '\' SampleName ' ' CurrentMeasID ' ' StartTime], ['select_data_sweep_order_3D_' sweep_order_string(sweep_order)],...
     ['select_data_desired_order_3D_' sweep_order_string(desired_order)], ['full_struct_vec_' sweep_order_string(desired_order)]);
 
 if plt_log_freq

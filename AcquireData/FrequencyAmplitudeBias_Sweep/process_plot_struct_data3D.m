@@ -3,6 +3,7 @@ CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
 p.addParameter('range', {}, @iscell);
+p.addParameter('omit', {}, @iscell);
 p.addParameter('plt_select_data', {}, @iscell);
 p.addParameter('plt_cmds', {}, @iscell);
 p.addParameter('title', '', CharOrString);
