@@ -68,7 +68,7 @@ for cd = DataCell
                     hold(ax(1),'off');
                 end
                 if isfield(p.Results.plot_fit, 'savepath')
-                    SavePath = [p.Results.plot_fit.savepath '\' p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
+                    SavePath = [p.Results.plot_fit.savepath '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
                     if ~isempty(OutFitFunc)
                         RealSavePath = [SavePath '\success' ];
                     else
@@ -77,7 +77,7 @@ for cd = DataCell
                     if ~exist(RealSavePath, 'dir')
                         mkdir(RealSavePath)
                     end
-                    saveas(ax(1), [RealSavePath '\' p.Results.title ' ' cd{4} ' ' fit_progress '.png']);
+                    saveas(ax(1), [RealSavePath '\' fit_progress '.png']);
                 end
             end
             for f=1:fmax
@@ -89,7 +89,7 @@ for cd = DataCell
     for f=1:fmax
         figure(fig);
         s = subplot(subrow, subcol, i);
-        sbp(subrow, subcol) = s;
+        sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
         i=i+1;
         surf(AxJ, AxK, FitOut(:,:,f));
         OutFitCellInner(:,f) = {fit_cell{1,f}; FitOut(:,:,f); FitTitles{f}};
@@ -108,6 +108,6 @@ for cd = DataCell
     end
     OutFitCell(:,OutFitInd) = {[cd{4} '-' fit_axis ' ' StrFitUscore]; OutFitCellInner; [cd{3} '-' fit_axis ' ' strrep(StrFitUscore,'_', ', ')]};
 end
-OutAppendPath = [p.Results.title '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
+OutAppendPath = [cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
 end
 
