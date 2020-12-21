@@ -19,7 +19,7 @@ CurrentMeasID = 'A';
 StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
 
 % Save path
-SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars']';
+SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars'];
 RealSavePath = [SavePath '\' SampleName '\' SampleName ' ' CurrentMeasID];
 DesiredOrder = {'offset','frequency', 'amplitude'};
 
@@ -238,7 +238,7 @@ end
 if exist(RealSavePath, 'dir') && sum([dir(RealSavePath).bytes])>0
     RealSavePathOld = RealSavePath;
     MeasIDold = CurrentMeasID;
-    id = 0;
+    id = 1;
     while true
         tPath = [RealSavePathOld num2str(id)];
         if ~(exist(tPath, 'dir') && sum([dir(tPath).bytes])>0)
@@ -250,7 +250,7 @@ if exist(RealSavePath, 'dir') && sum([dir(RealSavePath).bytes])>0
             break
         end
     end
-    fprintf('Sample %s already has a measurement ID = %s on the supplied path:\n%s\nRenaming measurement ID to %s and the path to:\n%s',SampleName,MeasIDold,RealSavePathOld,CurrentMeasID,RealSavePath);
+    fprintf('Sample %s already has a measurement ID = %s on the supplied path:\n%s\nRenaming measurement ID to %s and the path to:\n%s\n',SampleName,MeasIDold,RealSavePathOld,CurrentMeasID,RealSavePath);
 end
 % override defaults set in MFIA_freq_amp_bias_value_pairs_withParser. 
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(SweepOrder, 'start_frequency', start_frequency,...

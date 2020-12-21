@@ -31,6 +31,14 @@ sw1 = sweep_order{1};
 eval(['sweep_range=[p.Results.start_' sw1 ' p.Results.stop_' sw1 '];'])
 eval(['sweep_pts=p.Results.pts_' sw1 ';'])
 
+start1 = eval(['p.Results.start_' sw1]);
+stop1 = eval(['p.Results.stop_' sw1]);
+pts1 = eval(['p.Results.pts_' sw1]);
+vec1 = linspace(start1,stop1,pts1);
+if strcmpi(sw1, 'frequency') && p.Results.freq_xmapping
+    vec1 = logspace(log10(start1),log10(stop1),pts1);
+end
+
 
 sw2 = sweep_order{2};
 start2 = eval(['p.Results.start_' sw2]);
@@ -52,6 +60,7 @@ if strcmpi(sw3, 'frequency') && p.Results.freq_xmapping
 end
 
 [mat3, mat2] = meshgrid(vec3,vec2);
+eval([sw1 '_vec=vec1'';'])
 eval([sw2 '_vec=mat2(:);'])
 eval([sw3 '_vec=mat3(:);'])
 end
