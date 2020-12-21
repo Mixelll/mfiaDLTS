@@ -1,4 +1,4 @@
-function [select_data, full_data, varargout]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, varargin)
+function [select_data, full_data]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, varargin)
 % Perform a frequency/test_signal (amplitude)/bias_voltage (offset) sweep and gather demodulator data.
 %
 % NOTE Please ensure that the ziDAQ folders 'Driver' and 'Utils' are in your
@@ -28,7 +28,7 @@ if ~exist('device_id', 'var')
 end
 
 % Check the ziDAQ MEX (DLL) and Utility functions can be found in Matlab's path.
-if ~(exist('ziDAQ') == 3) && ~(exist('ziCreateAPISession', 'file') == 2)
+if ~(exist('ziDAQ', 'file') == 3) && ~(exist('ziCreateAPISession', 'file') == 2)
     fprintf('Failed to either find the ziDAQ mex file or ziDevices() utility.\n')
     fprintf('Please configure your path using the ziDAQ function ziAddPath().\n')
     fprintf('This can be found in the API subfolder of your LabOne installation.\n');
@@ -44,7 +44,7 @@ apilevel_example = 6;
 ziApiServerVersionCheck();
 
 branches = ziDAQ('listNodes', ['/' device ], 0);
-if ~any(strcmpi([branches], 'DEMODS'))
+if ~any(strcmpi(branches, 'DEMODS'))
   fprintf('\nThis example requires lock-in functionality which is not available on %s.\n', device);
   return
 end
@@ -56,7 +56,6 @@ p = inputParser;
 p.KeepUnmatched=true;
 isnumscalar = @(x) isnumeric(x) && isscalar(x);
 isnonnegscalar = @(x) isnumeric(x) && isscalar(x) && (x > 0);
-
 
 % IA precision -> measurement speed: 0 - low->fast, 1 - high->medium,
 % 2 - very high->slow
@@ -103,12 +102,14 @@ unmatched_vars = unmatched_vars.';
 
 %% Set default additional settings
 additional_settings_internal.enable_default = true;
+% Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude/2
+additional_settings_internal.output.DLCP = false;
 % Define device channels.
 additional_settings_internal.channels.demod_c = '0'; % demod channel, for paths on the device
 additional_settings_internal.channels.demod_idx = str2double(additional_settings_internal.channels.demod_c)+1; % 1-based indexing, to access the data
 additional_settings_internal.channels.out_c = '0'; % signal output channel
 % Get the value of the instrument's default Signal Output mixer channel.
-additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2num(additional_settings_internal.channels.out_c)));
+additional_settings_internal.channels.out_mixer_c = num2str(ziGetDefaultSigoutMixerChannel(props, str2double(additional_settings_internal.channels.out_c)));
 additional_settings_internal.channels.in_c = '0'; % signal input channel
 additional_settings_internal.channels.osc_c = '0'; % oscillator
 additional_settings_internal.channels.imp_c = '0'; % IA channel
@@ -303,21 +304,27 @@ if additional_settings_internal.display.graph.save.if
     mkdir(SavePath)
 end
 for v = 1:max([lf,la,lo])
+    frequency_val = frequency_vec(v);
+    amplitude_val = amplitude_vec(v);
+    offset_val = offset_vec(v);
+    if p.Results.DLCP
+        offset_val = offset_val - amplitude_val/2;
+    end
     if any(strcmpi(sweep_order(2:3), 'frequency'))
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_vec(v))
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_val)
         actual_frequency_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/freq']);
         if major.disp, fprintf('IA frequency set to %g Hz.\n', actual_frequency_vec(v)); end
         title_params = [' Freq = ' num2str(actual_frequency_vec(v))];
     end
     if any(strcmpi(sweep_order(2:3), 'amplitude'))
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_vec(v))
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_val)
         actual_amplitude_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/amplitude']);
         if major.disp, fprintf('IA test signal (amplitude) set to %g mV.\n', 1000*actual_amplitude_vec(v)); end
         title_params = [title_params ' amp = ' num2str(actual_amplitude_vec(v))];
     end
     if any(strcmpi(sweep_order(2:3), 'offset'))
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_vec(v))
+        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_val)
         ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
         actual_offset_vec(v) = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
         if major.disp, fprintf('IA bias voltage (offset) set to %g V.\n', actual_offset_vec(v)); end
@@ -343,16 +350,14 @@ for v = 1:max([lf,la,lo])
         fprintf('Minor text display (settings) will not be shown henceforth.\n')
     end
     
-    for st = sweep_order(2:3)
-        st = st{:};
+    for stc = sweep_order(2:3)
+        st = stc{:};
         eval(['select_data_one.actualVals.' st '=actual_' st '_vec(v);'])
         eval(['full_data_one.actualVals.' st '=actual_' st '_vec(v);'])
+        eval(['select_data_one.inputVals.' st '=' st '_val;'])
+        eval(['full_data_one.inputVals.' st '=' st '_val;'])
     end
-        for st = sweep_order(2:3)
-        st = st{:};
-        eval(['select_data_one.setVals.' st '=' st '_vec(v);'])
-        eval(['full_data_one.setVals.' st '=' st '_vec(v);'])
-    end
+
     
     select_data(v) = select_data_one;
     full_data(v) = full_data_one;
@@ -360,33 +365,5 @@ end
 
 % Disable everything when the run is finished
 ziDisableEverything(device);
-
-% Sweeper module returns a structure with following elements:
-% * timestamp -> Time stamp data [uint64]. Divide the timestamp by the
-% device's clockbase in order to get seconds, the clockbase can be obtained
-% via: clockbase = double(ziDAQ('getInt', ['/' device '/clockbase']));
-% * x -> Demodulator x value in volt [double]
-% * y -> Demodulator y value in volt [double]
-% * r -> Demodulator r value in Vrms [double]
-% * phase ->  Demodulator theta value in rad [double]
-% * xstddev -> Standard deviation of demodulator x value [double]
-% * ystddev -> Standard deviation of demodulator x value [double]
-% * rstddev -> Standard deviation of demodulator r value [double]
-% * phasestddev -> Standard deviation of demodulator theta value [double]
-% * grid ->  Values of sweeping setting (frequency values at which
-% demodulator samples where recorded) [double]
-% * bandwidth ->  Filter bandwidth for each measurement point [double].
-% * tc ->  Filter time constant for each measurement point [double].
-% * settling ->  Waiting time for each measurement point [double]
-% * frequency ->  Oscillator frequency for each measurement point [double]
-% (in his case same as grid).
-% * frequencystddev -> Standard deviation of oscillator frequency
-% * realbandwidth -> The actual bandwidth set
-% Assuming we're doing a frequency sweep:
-% * settimestamp -> The time at which we verify that the frequency for the
-% current sweep point was set on the device (by reading back demodulator data)
-% * nexttimestamp -> The time at which we can get the data for that sweep point.
-% i.e., nexttimestamp - settimestamp corresponds roughly to the
-% demodulator filter settling time.
 
 end

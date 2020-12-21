@@ -2,7 +2,7 @@ function [fig, sbp, OutFitCell, DataCell, AxesCell, OutAppendPath, StrFitUscore]
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
-% p.addParameter('range', {}, @iscell);
+p.addParameter('val_range', {}, @iscell);
 p.addParameter('plt_select_data', {}, @iscell);
 p.addParameter('plt_cmds', {}, @iscell);
 p.addParameter('title', '', CharOrString);
@@ -56,12 +56,12 @@ for cd = DataCell
     for j=1:size(cd_mat, 2)
         for k=1:size(cd_mat, 3)
             [fit_str, OutFitFunc, span, fit_cell] = fit_func(FitAxMat(:,j,k), cd_mat(:,j,k));
-            fit_progress = ['j-k = ' num2str(j) '-' num2str(k) ' ' AxesCell{4,2} ' = ' num2str(AxJ(j,1),3) ' ' AxesCell{4,3} ' = ' num2str(AxK(j,k),3)];
+            fit_progress = ['j-k=' num2str(j) '-' num2str(k) ' ' AxesCell{4,2} '=' num2str(AxJ(j,1),3) ' ' AxesCell{4,3} '=' num2str(AxK(j,k),3)];
             if contains(fit_str, 'complex','IgnoreCase',true)
                 disp(fit_progress)
             end
             if ~isempty(p.Results.plot_fit)
-                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} ' ' strrep(fit_progress,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 10, plot_func);
+                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} newline strrep(fit_progress,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 13, plot_func);
                 if ~isempty(OutFitFunc)
                     hold(ax(1),'on');
                     fplot(OutFitFunc, span)
@@ -87,12 +87,17 @@ for cd = DataCell
     end
     OutFitCellInner = cell(3,f);
     for f=1:fmax
+        RangedFitOut = FitOut(:,:,f);
+        if any(strcmpi(p.Results.val_range(1,:),fit_cell{1,f}))
+        	val_range = p.Results.val_range{2,strcmpi(p.Results.val_range(1,:),fit_cell{1,f})};
+            RangedFitOut(RangedFitOut<val_range(1) | RangedFitOut>val_range(2)) = NaN;
+        end
         figure(fig);
         s = subplot(subrow, subcol, i);
         sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
         i=i+1;
-        surf(AxJ, AxK, FitOut(:,:,f));
-        OutFitCellInner(:,f) = {fit_cell{1,f}; FitOut(:,:,f); FitTitles{f}};
+        surf(AxJ, AxK, RangedFitOut);
+        OutFitCellInner(:,f) = {fit_cell{1,f}; RangedFitOut; FitTitles{f}};
         xlabel(AxesCell{3,2})
         ylabel(AxesCell{3,3})
         if ~isempty(p.Results.title)
@@ -109,5 +114,6 @@ for cd = DataCell
     OutFitCell(:,OutFitInd) = {[cd{4} '-' fit_axis ' ' StrFitUscore]; OutFitCellInner; [cd{3} '-' fit_axis ' ' strrep(StrFitUscore,'_', ', ')]};
 end
 OutAppendPath = [cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
+set(fig,'Position',get(0,'Screensize'));
 end
 

@@ -2,7 +2,8 @@ function [fig, sbp, data_cell, axes_cell]  = process_plot_struct_data3D(struct, 
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
-p.addParameter('range', {}, @iscell);
+p.addParameter('ax_range', {}, @iscell);
+p.addParameter('val_range', {}, @iscell);
 p.addParameter('omit', {}, @iscell);
 p.addParameter('plt_select_data', {}, @iscell);
 p.addParameter('plt_cmds', {}, @iscell);
@@ -29,22 +30,27 @@ Zlbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{3})};
 Xsl = slic{2,strcmpi(slic(1,:), order{1})};
 Ysl = slic{2,strcmpi(slic(1,:), order{2})};
 Zsl = slic{2,strcmpi(slic(1,:), order{3})};
-%% Plot range
-if ~isempty(p.Results.range)
-    % Get upper and lower range
-    xr = p.Results.range{2,strcmpi(p.Results.range(1,:), order{1})};
-    yr = p.Results.range{2,strcmpi(p.Results.range(1,:), order{2})};
-    zr = p.Results.range{2,strcmpi(p.Results.range(1,:), order{3})};
-else
-    xr = [-inf inf];
-    yr = [-inf inf];
-    zr = [-inf inf];
+%% Limit by ax_range
+xr = [-inf inf];
+yr = [-inf inf];
+zr = [-inf inf];    
+if ~isempty(p.Results.ax_range)
+    % Get upper and lower ax_range
+    if any(strcmpi(p.Results.ax_range(1,:), order{1}))
+        xr = p.Results.ax_range{2,strcmpi(p.Results.ax_range(1,:), order{1})};
+    end
+    if any(strcmpi(p.Results.ax_range(1,:), order{2}))
+        yr = p.Results.ax_range{2,strcmpi(p.Results.ax_range(1,:), order{2})};
+    end
+    if any(strcmpi(p.Results.ax_range(1,:), order{3}))
+        zr = p.Results.ax_range{2,strcmpi(p.Results.ax_range(1,:), order{3})}; 
+    end
 end
 % Compute length in each dimension
 xl = sum(X(:,1,1)>=xr(1) & X(:,1,1)<=xr(2));
 yl = sum(Y(1,:,1)>=yr(1) & Y(1,:,1)<=yr(2));
 zl = sum(Z(1,1,:)>=zr(1) & Z(1,1,:)<=zr(2));
-% Pick elements within range (inner box)
+% Pick elements within ax_range (inner box)
 Xr = X>=xr(1) & X<=xr(2); 
 Yr = Y>=yr(1) & Y<=yr(2);
 Zr = Z>=zr(1) & Z<=zr(2);
@@ -65,12 +71,16 @@ axes_cell{3,2} = Ylbl;
 axes_cell{3,3} = Zlbl;
 axes_cell = axes_cell(1:3,1:3);
 axes_cell(4,:) = axes_cell(1,:);
-%% Process
+%% Process and limit by val_range
 data_cell(1,:) = data_cell(4,:);
 for i = 1:size(data_cell,2)
     data_cell{2,i} = reshape(data_cell{2,i}(Ir), xl,yl,zl);
-    if ~isempty(p.Results.plt_select_data(2,strcmpi(p.Results.plt_select_data(1,:),data_cell{1,i})))
+    if any(strcmpi(p.Results.plt_select_data(1,:),data_cell{1,i}))
         data_cell(3,i) = p.Results.plt_select_data(2,strcmpi(p.Results.plt_select_data(1,:),data_cell{1,i}));
+        if any(strcmpi(p.Results.val_range(1,:),data_cell{1,i}))
+            val_range = p.Results.val_range{2,strcmpi(p.Results.val_range(1,:),data_cell{1,i})};
+            data_cell{2,i}(data_cell{2,i}<val_range(1) | data_cell{2,i}>val_range(2)) = NaN;
+        end
     else
         data_cell(3,i) = data_cell(1,:);
     end

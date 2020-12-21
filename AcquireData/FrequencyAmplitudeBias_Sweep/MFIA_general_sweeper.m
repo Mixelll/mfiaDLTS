@@ -1,4 +1,4 @@
-function [select_data, full_data, sw_plot varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, varargin)
+function [select_data, full_data, sw_plot, varargout]  = MFIA_general_sweeper(device, additional_settings, sweep_param, sweep_range, pts, read_param_struct, varargin)
 varargout = {};
 % Define parameters relevant to this example. Default values specified by the
 % inputParser below are overwritten if specified as name-value pairs via the
@@ -368,8 +368,8 @@ function s = plot_data(plot_func, lbl, x, select_data, read_param_cell)
 figure(1)
 clf
 subp_size = 0;
-for c = read_param_cell(2,:)
-    if c{:}
+for c = read_param_cell
+    if c{2} && ~contains(c{1}, 'grid')
         subp_size = subp_size+1;
     end
 end
