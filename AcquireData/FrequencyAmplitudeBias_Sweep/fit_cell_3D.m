@@ -98,6 +98,7 @@ for cd = DataCell
         if any(strcmpi(p.Results.val_range(1,:),fit_cell{1,f}))
         	val_range = p.Results.val_range{2,strcmpi(p.Results.val_range(1,:),fit_cell{1,f})};
             RangedFitOut(RangedFitOut<val_range(1) | RangedFitOut>val_range(2)) = NaN;
+            eval(['OutStruct.metadata.' fit_cell{1,f} '_range = val_range;'])
         end
         figure(fig);
         s = subplot(subrow, subcol, i);
