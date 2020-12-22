@@ -1,4 +1,4 @@
-function [fig, sbp, OutFitCell, DataCell, AxesCell, OutAppendPath, StrFitUscore] = fit_cell_3D(DataCell, AxesCell, fit_func, fit_axis, varargin)
+function [fig, sbp, OutStructArray, DataCell, AxesCell, OutAppendPath, StrFitUscore] = fit_cell_3D(DataCell, AxesCell, fit_func, fit_axis, varargin)
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
@@ -91,6 +91,8 @@ for cd = DataCell
             end            
         end
     end
+    OutStruct.name = [cd{4} '_' fit_axis '_' StrFitUscore];
+    OutStruct.title = [cd{3} '-' fit_axis ' ' strrep(StrFitUscore,'_', ', ')];
     OutFitCellInner = cell(3,f);
     for f=1:fmax
         RangedFitOut = FitOut(:,:,f);
@@ -103,7 +105,7 @@ for cd = DataCell
         sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
         i=i+1;
         surf(AxJ, AxK, RangedFitOut);
-        OutFitCellInner(:,f) = {fit_cell{1,f}; RangedFitOut; FitTitles{f}};
+        OutFitCellInner = {fit_cell{1,f}; RangedFitOut; FitTitles{f}};
         xlabel(AxesCell{3,2})
         ylabel(AxesCell{3,3})
         if ~isempty(p.Results.title)
@@ -117,7 +119,10 @@ for cd = DataCell
             end
         end
     end
-    OutFitCell(:,OutFitInd) = {[cd{4} '-' fit_axis ' ' StrFitUscore]; OutFitCellInner; [cd{3} '-' fit_axis ' ' strrep(StrFitUscore,'_', ', ')]};
+    OutStruct.data = OutFitCellInner;
+    OutStruct.axes = AxesCell(2,2:3);
+    OutStruct.order = AxesCell(1,2:3);
+    OutStructArray = [OutStructArray OutStruct];
 end
 OutAppendPath = [cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
 set(fig,'Position',get(0,'Screensize'));
