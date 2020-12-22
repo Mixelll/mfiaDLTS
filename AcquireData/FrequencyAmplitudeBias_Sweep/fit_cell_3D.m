@@ -22,7 +22,7 @@ if ~isempty(p.Results.plot_fit)
     end
 end
 
-StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
+StartTime = datestr(now, 'yyyy-mm-dd HH-MM-SS');
 
 d123 = 1:3;
 ftAxPos = strcmpi(AxesCell(1,:),fit_axis);
@@ -55,6 +55,7 @@ FitTitles = fit_cell(3,:);
 [subrow, subcol] = subplot_min_rectangle(size(DataCell,2)*fmax);
 fig = figure;
 i=1;
+OutStructArray = [];
 for cd = DataCell
     cd_mat = cd{2};
     for j=1:size(cd_mat, 2)

@@ -309,7 +309,7 @@ for v = 1:lpairs
     amplitude_val = amplitude_vec(min(v,la));
     offset_val = offset_vec(min(v,lo));
     if additional_settings_internal.output.DLCP
-        offset_val = offset_val - amplitude_val/2;
+        offset_val = offset_val - amplitude_val;
     end
     if any(strcmpi(sweep_order(2:3), 'frequency'))
         ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_val)
