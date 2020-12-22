@@ -269,10 +269,12 @@ eval(['full_struct_vec_' sweep_order_string(DesiredOrder) '=full_data_sweep_orde
 if ~exist(RealSavePath, 'dir')
     mkdir(RealSavePath)
 end
-save(RealSavePath, ['select_data_sweep_order_3D_' sweep_order_string(SweepOrder)],...
-    ['select_data_desired_order_3D_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
-save([RealSavePath '\' SampleName ' ' CurrentMeasID ' ' StartTime], ['select_data_sweep_order_3D_' sweep_order_string(SweepOrder)],...
-    ['select_data_desired_order_3D_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
+%%
+save(RealSavePath, ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
+    ['select_data_3D_desired_order_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
+save([RealSavePath '\' SampleName ' ' CurrentMeasID ' ' StartTime], ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
+    ['select_data_3D_desired_order_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
+%%
 
 if plt_log_freq
     DesiredOrder{contains(DesiredOrder, 'frequency')} = 'log_frequency';

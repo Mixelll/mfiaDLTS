@@ -15,6 +15,11 @@ if ~isempty(p.Results.plot_fit)
     else
         plot_func = @plot;
     end
+    if isfield(p.Results.plot_fit, 'visible')
+        plot_visible = p.Results.plot_fit.visible;
+    else
+        plot_visible = false;
+    end
 end
 
 StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
@@ -61,7 +66,7 @@ for cd = DataCell
                 disp(fit_progress)
             end
             if ~isempty(p.Results.plot_fit)
-                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} newline strrep(fit_progress,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 13, plot_func);
+                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} newline strrep(fit_progress,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 13, plot_func, ~plot_visible);
                 if ~isempty(OutFitFunc)
                     hold(ax(1),'on');
                     fplot(OutFitFunc, span)
