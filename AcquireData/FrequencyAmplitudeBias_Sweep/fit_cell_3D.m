@@ -62,11 +62,12 @@ for cd = DataCell
         for k=1:size(cd_mat, 3)
             [fit_str, OutFitFunc, span, fit_cell] = fit_func(FitAxMat(:,j,k), cd_mat(:,j,k));
             fit_progress = ['j-k=' num2str(j) '-' num2str(k) ' ' AxesCell{4,2} '=' num2str(AxJ(j,1),3) ' ' AxesCell{4,3} '=' num2str(AxK(j,k),3)];
+            fit_progress_title = ['j-k=' num2str(j) '-' num2str(k) newline AxesCell{4,2} '=' num2str(AxJ(j,1),3) ' ' AxesCell{4,3} '=' num2str(AxK(j,k),3)];
             if contains(fit_str, 'complex','IgnoreCase',true)
                 disp(fit_progress)
             end
             if ~isempty(p.Results.plot_fit)
-                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} newline strrep(fit_progress,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 13, plot_func, ~plot_visible);
+                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), '', [p.Results.title ' ' cd{4} newline strrep(fit_progress_title,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 15, plot_func, ~plot_visible);
                 if ~isempty(OutFitFunc)
                     hold(ax(1),'on');
                     fplot(OutFitFunc, span)
