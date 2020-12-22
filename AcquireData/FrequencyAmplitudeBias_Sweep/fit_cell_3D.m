@@ -55,7 +55,6 @@ FitTitles = fit_cell(3,:);
 [subrow, subcol] = subplot_min_rectangle(size(DataCell,2)*fmax);
 fig = figure;
 i=1;
-OutFitInd = 1;
 for cd = DataCell
     cd_mat = cd{2};
     for j=1:size(cd_mat, 2)
@@ -122,6 +121,9 @@ for cd = DataCell
     OutStruct.data = OutFitCellInner;
     OutStruct.axes = AxesCell(2,2:3);
     OutStruct.order = AxesCell(1,2:3);
+    OutStruct.metadata.span = num2str(span,3);
+    OutStruct.metadata.fitParams = StrFitUscore;
+    OutStruct.metadata.fitNames = FitTitles;
     OutStructArray = [OutStructArray OutStruct];
 end
 OutAppendPath = [cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
