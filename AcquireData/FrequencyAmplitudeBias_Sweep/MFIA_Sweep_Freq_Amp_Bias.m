@@ -14,8 +14,8 @@ clear
 device_id = 'dev5168';
 
 % Sample name and measurement number
-SampleName = 'B5 b5 150um 14';
-CurrentMeasID = 'A';
+SampleName = 'IB3 5E14 H-annealed TL 100um 2';
+CurrentMeasID = 'B';
 StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
 
 % Save path
@@ -235,7 +235,7 @@ end
 if isnumeric(CurrentMeasID)
     CurrentMeasID = num2str(CurrentMeasID);
 end
-if exist(RealSavePath, 'dir') && sum([dir(RealSavePath).bytes])>0
+if exist(RealSavePath, 'dir') && sum([dir(RealSavePath).bytes])>40
     RealSavePathOld = RealSavePath;
     MeasIDold = CurrentMeasID;
     id = 1;

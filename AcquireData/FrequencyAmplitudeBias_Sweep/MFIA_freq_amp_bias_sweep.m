@@ -14,6 +14,7 @@ function [select_data, full_data]  = MFIA_freq_amp_bias_sweep(device_id, additio
 lf = length(frequency_vec);
 la = length(amplitude_vec);
 lo = length(offset_vec);
+lpairs = eval(['max(length(' sweep_order{2} '_vec),length(' sweep_order{3} '_vec))']);
 if ~(sum([lf la lo]>0)>=2 && (lf==la || lf==lo || lo==la))
     fprintf('sweep_order #2 and #3 vecs do not match in length');
     return
@@ -303,11 +304,11 @@ if additional_settings_internal.display.graph.save.if
     SavePath = [additional_settings_internal.display.graph.save.path '\sweeps ' StartTime];
     mkdir(SavePath)
 end
-for v = 1:max([lf,la,lo])
-    frequency_val = frequency_vec(v);
-    amplitude_val = amplitude_vec(v);
-    offset_val = offset_vec(v);
-    if p.Results.DLCP
+for v = 1:lpairs
+    frequency_val = frequency_vec(min(v,lf));
+    amplitude_val = amplitude_vec(min(v,la));
+    offset_val = offset_vec(min(v,lo));
+    if additional_settings_internal.output.DLCP
         offset_val = offset_val - amplitude_val/2;
     end
     if any(strcmpi(sweep_order(2:3), 'frequency'))
