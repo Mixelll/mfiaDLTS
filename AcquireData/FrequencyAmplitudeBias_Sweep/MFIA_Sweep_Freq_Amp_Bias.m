@@ -15,7 +15,7 @@ device_id = 'dev5168';
 
 % Sample name and measurement number
 SampleName = 'IB2 CR 100um 2';
-CurrentMeasID = 'DLCP1';
+CurrentMeasID = 'M1';
 StartTime = datestr(now, 'yyyy-mm-dd HH-MM');
 
 % Save path
@@ -61,7 +61,7 @@ additional_settings = struct; % don't touch
 additional_settings.enable_default = true;
 %% Experiment-dictated conditions on output
     % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude
-additional_settings.output.DLCP = true;
+additional_settings.output.DLCP = false;
 %% Graph and text display settings
     % Graphs
 % additional_settings.display.graph.disp = true;
@@ -263,9 +263,9 @@ end
 [select_data_3D_desired_order, select_data_3D_sweep_order] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, DesiredOrder, SweepOrder, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 select_data_3D_sweep_order.order = SweepOrder;
 select_data_3D_desired_order.order = DesiredOrder;
-eval(['select_data_3D_sweep_order_' sweep_order_string(SweepOrder) '=select_data_3D_sweep_order']);
-eval(['select_data_3D_desired_order_' sweep_order_string(DesiredOrder) '=select_data_3D_desired_order']);
-eval(['full_struct_vec_' sweep_order_string(DesiredOrder) '=full_data_sweep_order_struct_vec']);
+eval(['select_data_3D_sweep_order_' sweep_order_string(SweepOrder) '=select_data_3D_sweep_order;'])
+eval(['select_data_3D_desired_order_' sweep_order_string(DesiredOrder) '=select_data_3D_desired_order;'])
+eval(['full_struct_vec_' sweep_order_string(DesiredOrder) '=full_data_sweep_order_struct_vec;'])
 
 if ~exist(RealSavePath, 'dir')
     mkdir(RealSavePath)
@@ -284,10 +284,10 @@ if plt_log_freq
 end
     
 if plot_desired_order
-    plot_data3D(select_data_desired_order_3D, DesiredOrder, slice_planes, plt_cmds);
+    plot_data3D(select_data_3D_desired_order, DesiredOrder, slice_planes, plt_cmds);
 end
 if plot_sweep_order
-    plot_data3D(select_data_sweep_order_3D, SweepOrder, slice_planes, plt_cmds);
+    plot_data3D(select_data_3D_sweep_order, SweepOrder, slice_planes, plt_cmds);
 end
 %% Sweeper module returns a structure with following elements:
 % * timestamp -> Time stamp data [uint64]. Divide the timestamp by the
