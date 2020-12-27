@@ -14,9 +14,9 @@ clear
 device_id = 'dev5168';
 
 % Sample name and measurement number
-SampleName = 'IB3 5E14 H-annealed TL 100um 2';
-CurrentMeasID = 'B';
-StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
+SampleName = 'IB2 CR 100um 2';
+CurrentMeasID = 'DLCP1';
+StartTime = datestr(now, 'yyyy-mm-dd HH-MM');
 
 % Save path
 SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars'];
@@ -41,7 +41,7 @@ read_param_struct.impedance.param1 = true;
 SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
-start_amplitude = 0.05; stop_amplitude = 0.25; pts_amplitude = 21; % V
+start_amplitude = 0.25; stop_amplitude = 0.01; pts_amplitude = 25; % V
 start_offset = -1.5; stop_offset = 0; pts_offset = 21; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
@@ -60,8 +60,8 @@ additional_settings = struct; % don't touch
     % VALUES YOU UN-COMMENT BELOW WILL OVERWRITE REGARDLESS of "enable_default"
 additional_settings.enable_default = true;
 %% Experiment-dictated conditions on output
-    % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude/2
-additional_settings.output.DLCP = false;
+    % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude
+additional_settings.output.DLCP = true;
 %% Graph and text display settings
     % Graphs
 % additional_settings.display.graph.disp = true;
@@ -77,7 +77,7 @@ additional_settings.display.graph.save.path = RealSavePath;
 %% MF and IA settings
     % IA precision -> measurement speed: 0 - low->fast, 1 - high->medium,
     % 2 - very high->slow
-% overwrite_defaults(:,end+1) = {'IA_precision'; 1};
+overwrite_defaults(:,end+1) = {'IA_precision'; 2};
 
     % Set IA parameter extraction model (from impedance). 
     % 0 - Rp Cp, 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 - D Cs,
@@ -144,8 +144,8 @@ overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
     % Match sweeper accuracy and averaging settings to same settings in the IA
 sweep_precision = struct('sweep_inaccuracy',0.01, 'averaging_sample',20, 'averaging_time',0.1, ... % don't touch
 'averaging_time_constant',15, 'bandwidth',10, 'max_bandwidth',100, 'omega_suppression', 80); % don't touch
-if any(strcmpi(overwrite_defaults, 'IA_precision'))
-    switch overwrite_defaults{2, strcmpi(overwrite_defaults, 'IA_precision')}
+if any(strcmpi(overwrite_defaults(1,:), 'IA_precision'))
+    switch overwrite_defaults{2, strcmpi(overwrite_defaults(1,:), 'IA_precision')}
     case 0
         sweep_precision.sweep_inaccuracy = 0.01;
         sweep_precision.averaging_sample = 20;
@@ -155,6 +155,7 @@ if any(strcmpi(overwrite_defaults, 'IA_precision'))
         sweep_precision.max_bandwidth = 1000;
         sweep_precision.omega_suppression = 60;
     case 1
+        disp(1)
         sweep_precision.sweep_inaccuracy = 0.01;
         sweep_precision.averaging_sample = 20;
         sweep_precision.averaging_time = 0.1;
@@ -188,11 +189,11 @@ end
     % constants the sweeper has to wait. The maximum between this value and the settling time is taken as wait time until the
     % next sweep point is recorded values: 10 m for highest sweep speed for large signals, 100 u for precise amplitude
     % measurements, 100 n for precise noise measurements. Depending on the order the settling accuracy will define
-%overwrite_defaults(:,end+1) = {'sweep_inaccuracy'; sweep_precision.sweep_inaccuracy};
+overwrite_defaults(:,end+1) = {'sweep_inaccuracy'; sweep_precision.sweep_inaccuracy};
 
     % Sets the number of data samples per sweeper parameter point that is considered in the measurement. The maximum
     % between samples, time and number of time constants is taken as effective calculation time.
-% overwrite_defaults(:,end+1) = {'averaging_samples'; sweep_precision.averaging_sample};
+overwrite_defaults(:,end+1) = {'averaging_samples'; sweep_precision.averaging_sample};
 
     % Sets the time during which data samples are processed. The maximum between samples, time and number
     % of time constants is taken as effective calculation time
@@ -201,7 +202,7 @@ end
     % Sets the effective measurement time per sweeper parameter point that is considered in the
     % measurement. The maximum between samples, time and number of time constants is
     % taken as effective calculation time.
-% overwrite_defaults(:,end+1) = {'averaging_time_constant'; sweep_precision.averaging_time_constant};
+overwrite_defaults(:,end+1) = {'averaging_time_constant'; sweep_precision.averaging_time_constant};
 
     % Automatically is recommended in particular for logarithmic sweeps and assures the whole spectrum is covered.
     % Auto: All bandwidth settings of the chosen demodulators are automatically adjusted. For logarithmic sweeps the
@@ -217,16 +218,16 @@ end
 
     % NEP [Hz] Defines the measurement bandwidth for Fixed bandwidth sweep mode, and corresponds to either noise
     % equivalent power bandwidth (NEP), time constant (TC) or 3 dB bandwidth (3 dB) depending on selection. 
-% overwrite_defaults(:,end+1) = {'bandwidth'; sweep_precision.bandwidth};
+overwrite_defaults(:,end+1) = {'bandwidth'; sweep_precision.bandwidth};
 
     % [Hz] Limit of the maximum bandwidth used on the demodulator filter. Values above 1 kHz can heavily
     % diminish measurement accuracy in the highfrequency region where the amplitude is no more constant over frequency.
-% overwrite_defaults(:,end+1) = {'max_bandwidth'; sweep_precision.max_bandwidth};
+overwrite_defaults(:,end+1) = {'max_bandwidth'; sweep_precision.max_bandwidth};
 
     % [dB] Suppression of the omega and 2-omega components. Small omega suppression can diminish measurements of
     % very low or high impedance because the DC component can become dominant. Large omega suppression will have
     % a significant impact on sweep time especially for low filter orders.
-% overwrite_defaults(:,end+1) = {'omega_suppression'; sweep_precision.omega_suppression};
+overwrite_defaults(:,end+1) = {'omega_suppression'; sweep_precision.omega_suppression};
 
     % For sweeper: Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct.
 % overwrite_defaults(:,end+1) = {'sweep_LFP_order'; 8};
