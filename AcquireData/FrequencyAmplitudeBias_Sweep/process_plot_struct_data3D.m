@@ -26,10 +26,6 @@ axes_lbls = {'frequency','log_frequency' 'amplitude', 'offset';'Test Signal Freq
 Xlbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{1})};
 Ylbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{2})};
 Zlbl = axes_lbls{2,strcmpi(axes_lbls(1,:), order{3})};
-% Slice planes
-Xsl = slic{2,strcmpi(slic(1,:), order{1})};
-Ysl = slic{2,strcmpi(slic(1,:), order{2})};
-Zsl = slic{2,strcmpi(slic(1,:), order{3})};
 %% Limit by ax_range
 xr = [-inf inf];
 yr = [-inf inf];
@@ -59,6 +55,14 @@ Ir = Xr & Yr & Zr;
 X = reshape(X(Ir), xl,yl,zl);
 Y = reshape(Y(Ir), xl,yl,zl); 
 Z = reshape(Z(Ir), xl,yl,zl);
+
+% Slice planes
+Xs = slic{2,strcmpi(slic(1,:), order{1})};
+Xsl = Xs(Xs>=min(X,[],'all') & Xs<=max(X,[],'all'));
+Ys = slic{2,strcmpi(slic(1,:), order{2})};
+Ysl = Ys(Ys>=min(Y,[],'all') & Ys<=max(Y,[],'all'));
+Zs = slic{2,strcmpi(slic(1,:), order{3})};
+Zsl = Zs(Zs>=min(Z,[],'all') & Zs<=max(Z,[],'all'));
 
 axes_cell{1,1} = order{1};
 axes_cell{1,2} = order{2};
@@ -96,7 +100,7 @@ end
 
 for i = 1:size(data_cell,2)
     s =  subplot(subrow, subcol, i);
-    sbp(subrow, subcol) = s;
+    sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
     slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
     xlabel(Ylbl)
     ylabel(Xlbl)
