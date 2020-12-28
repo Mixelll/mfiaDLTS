@@ -355,8 +355,8 @@ for v = 1:lpairs
         st = stc{:};
         eval(['select_data_one.actualVals.' st '=actual_' st '_vec(v);'])
         eval(['full_data_one.actualVals.' st '=actual_' st '_vec(v);'])
-        eval(['select_data_one.inputVals.' st '=' st '_val;'])
-        eval(['full_data_one.inputVals.' st '=' st '_val;'])
+        eval(['select_data_one.inputVals.' st '=' st '_vec(v);'])
+        eval(['full_data_one.inputVals.' st '=' st '_vec(v);'])
     end
 
     

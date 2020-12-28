@@ -14,8 +14,8 @@ clear
 device_id = 'dev5168';
 
 % Sample name and measurement number
-SampleName = 'IB2 CR 100um 2';
-CurrentMeasID = 'M1';
+SampleName = 'B5 b5 150um 9';
+CurrentMeasID = 'DLCP';
 StartTime = datestr(now, 'yyyy-mm-dd HH-MM');
 
 % Save path
@@ -42,7 +42,7 @@ SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
 start_amplitude = 0.25; stop_amplitude = 0.01; pts_amplitude = 25; % V
-start_offset = -1.5; stop_offset = 0; pts_offset = 21; % V
+start_offset = -1; stop_offset = 0; pts_offset = 21; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
@@ -61,7 +61,7 @@ additional_settings = struct; % don't touch
 additional_settings.enable_default = true;
 %% Experiment-dictated conditions on output
     % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude
-additional_settings.output.DLCP = false;
+additional_settings.output.DLCP = true;
 %% Graph and text display settings
     % Graphs
 % additional_settings.display.graph.disp = true;
