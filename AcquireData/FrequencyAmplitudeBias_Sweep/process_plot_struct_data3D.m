@@ -1,4 +1,4 @@
-function [fig, sbp, data_cell, axes_cell]  = process_plot_struct_data3D(struct, order, slic, varargin)
+function [fig, sbp, OutStruct, data_cell, axes_cell]  = process_plot_struct_data3D(struct, order, slic, varargin)
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
@@ -114,6 +114,8 @@ for i = 1:size(data_cell,2)
         eval(c{:});
     end
 end
+OutStruct.data = data_cell;
+OutStruct.axes = axes_cell;
 set(fig,'Position',get(0,'Screensize'));
 end
 

@@ -1,4 +1,4 @@
-function [fig, sbp, OutStructArray, DataCell, AxesCell, OutAppendPath, StrFitUscore] = fit_cell_3D(DataCell, AxesCell, fit_func, fit_axis, varargin)
+function [fig, sbp, OutStructArray, OutAppendPath, StrFitUscore] = fit_cell_3D(DataCell, AxesCell, fit_func, fit_axis, varargin)
 CharOrString = @(s) ischar(s) || isstring(s);
 p = inputParser;
 p.KeepUnmatched=true;
@@ -7,6 +7,7 @@ p.addParameter('plt_select_data', {}, @iscell);
 p.addParameter('plt_cmds', {}, @iscell);
 p.addParameter('title', '', CharOrString);
 p.addParameter('plot_fit', []);
+p.addParameter('str', '', CharOrString);
 p.parse(varargin{:});
 
 if ~isempty(p.Results.plot_fit)
@@ -31,7 +32,6 @@ AxesCell(2,:) = cellfun(@(c) permute(c,perm_vec), AxesCell(2,:) , 'UniformOutput
 AxesCell(:,:) = AxesCell(:,perm_vec);
 DataCell(2,:) = cellfun(@(c) permute(c,perm_vec), DataCell(2,:) , 'UniformOutput', false);
 
-OutFitCell = cell(3,size(DataCell,2));
 
 FitAxMat = AxesCell{2,1};
 AxJ = shiftdim(mean(AxesCell{2,2}));
@@ -74,7 +74,7 @@ for cd = DataCell
                     hold(ax(1),'off');
                 end
                 if isfield(p.Results.plot_fit, 'savepath')
-                    SavePath = [p.Results.plot_fit.savepath '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
+                    SavePath = [p.Results.plot_fit.savepath '\' cd{4} '-' fit_axis '\' StrFitUscore ' ' p.Results.str StartTime];
                     if ~isempty(OutFitFunc)
                         RealSavePath = [SavePath '\success' ];
                     else
@@ -129,7 +129,7 @@ for cd = DataCell
     OutStruct.metadata.fitNames = FitTitles;
     OutStructArray = [OutStructArray OutStruct];
 end
-OutAppendPath = [cd{4} '-' fit_axis '\' StrFitUscore ' ' StartTime];
+OutAppendPath = [cd{4} '-' fit_axis '\' StrFitUscore ' ' p.Results.str StartTime];
 set(fig,'Position',get(0,'Screensize'));
 end
 

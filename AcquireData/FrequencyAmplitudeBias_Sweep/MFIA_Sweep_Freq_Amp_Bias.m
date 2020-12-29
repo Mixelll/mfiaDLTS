@@ -15,11 +15,12 @@ device_id = 'dev5168';
 
 % Sample name and measurement number
 SampleName = 'B5 b5 150um 9';
-CurrentMeasID = 'DLCP';
+CurrentMeasID = 'A';
 StartTime = datestr(now, 'yyyy-mm-dd HH-MM');
 
 % Save path
 SavePath = ['C:\Users\' getenv('USERNAME') '\MATLAB Drive\vars'];
+SavePath = 'C:\Users\admin2\Google Drive\MATLAB Drive\vars';
 RealSavePath = [SavePath '\' SampleName '\' SampleName ' ' CurrentMeasID];
 DesiredOrder = {'offset','frequency', 'amplitude'};
 
@@ -235,14 +236,27 @@ overwrite_defaults(:,end+1) = {'omega_suppression'; sweep_precision.omega_suppre
 %% Check Directory, Run Measurement, extract and reshape data
 if isnumeric(CurrentMeasID)
     CurrentMeasID = num2str(CurrentMeasID);
+    id = num2str(CurrentMeasID);
+    CurrentMeasIDstr = '';
+elseif ~isnan(str2double(CurrentMeasID(end)))
+    if ~isnan(str2double(CurrentMeasID(end-1:end)))
+        id = str2double(CurrentMeasID(end-1:end));
+        CurrentMeasIDstr = CurrentMeasID(1:end-2);
+    else
+        id = str2double(CurrentMeasID(end));
+        CurrentMeasIDstr = CurrentMeasID(1:end-1);
+    end
+else
+    CurrentMeasIDstr = CurrentMeasID;
 end
-if exist(RealSavePath, 'dir') && sum([dir(RealSavePath).bytes])>40
-    RealSavePathOld = RealSavePath;
-    MeasIDold = CurrentMeasID;
+
+if exist([RealSavePath '.mat'], 'file')
+    RealSavePathOld = [SavePath '\' SampleName '\' SampleName ' ' CurrentMeasIDstr];
+    MeasIDold = CurrentMeasIDstr;
     id = 1;
     while true
         tPath = [RealSavePathOld num2str(id)];
-        if ~(exist(tPath, 'dir') && sum([dir(tPath).bytes])>0)
+        if ~exist([RealSavePath '.mat'], 'file')
             RealSavePath = tPath;
             CurrentMeasID = [MeasIDold num2str(id)];
             if strcmp(additional_settings.display.graph.save.path, RealSavePathOld)

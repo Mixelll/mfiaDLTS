@@ -72,19 +72,26 @@ if SaveDataPlots
     close(f)
 end
 %         DataSubPlotHandles=figure('Position',get(0,'Screensize'));
+clear 'DataFigureHandles(k)'
+k = 0;
 for j = 1:size(SubPlots,2)
     for i = 1:size(SubPlots,1)
-        DataFigureHandle.fig = figure;
-        DataFigureHandle.p3D = subplot(1,3,1);
-
-%         copyobj(get(SubPlots(i,j), 'Children'),DataFigureHandle.p3D)
+        k = k+1;
+        DataFigureHandles(k).fig = figure;
+        DataFigureHandles(k).ax3D = subplot(1,3,1);
+        copyobj(get(SubPlots(i,j), 'Children'),DataFigureHandles(k).ax3D)
+        DataFigureHandles(k).ax3D = update_structure(DataFigureHandles(k).ax3D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', false);
+        DataFigureHandles(k).ax3D.Position = [0.05 DataFigureHandles(k).ax3D.Position(2:end)];
+        P3D = DataFigureHandles(k).ax3D.Position;
+        PopStrVal = {DataFigureHandles(k).ax3D.XLabel.String, DataFigureHandles(k).ax3D.YLabel.String, DataFigureHandles(k).ax3D.ZLabel.String; DataFigureHandles(k).ax3D.XLim, DataFigureHandles(k).ax3D.YLim, DataFigureHandles(k).ax3D.ZLim};
         
-        P3D = DataFigureHandle.p3D.Position;
-        DataFigureHandle.p3D = copy_fields(DataFigureHandle.p3D, SubPlots(i,j));
-        DataFigureHandle.s3D = uicontrol('Parent',DataFigureHandle,'Style','slider','Position',[P3D(1) P3D(2)-0.1 P3D(3) 0.05],...
-              'Units','normalized', 'value',zeta, 'min',0, 'max',1);
-        DataFigureHandle.p2D = subplot(1,3,2);
-        DataFigureHandle.p1D = subplot(1,3,3);
+        DataFigureHandles(k).p3D = uicontrol('Parent',DataFigureHandles(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1) P3D(2)-0.1 P3D(3) 0.05]);
+        
+        DataFigureHandles(k).s3D = uicontrol('Parent',DataFigureHandles(k).fig,'Style','slider','Position',[P3D(1) P3D(2)-0.1 P3D(3) 0.05],...
+               'Units','normalized', 'value',mean(PopStrVal{2,DataFigureHandles(k).p3D.Value}), 'min',PopStrVal{2,DataFigureHandles(k).p3D.Value}(1), 'max',PopStrVal{2,DataFigureHandles(k).p3D.Value}(2));
+        DataFigureHandles(k).s3D.callback = @(es,ed) updateSystem(h,DataFigureHandles(k).s3D.Value); 
+        DataFigureHandles(k).ax2D = subplot(1,3,2);
+        DataFigureHandles(k).ax1D = subplot(1,3,3);
     end
 end
 
