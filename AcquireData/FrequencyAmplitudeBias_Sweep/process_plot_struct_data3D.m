@@ -56,6 +56,16 @@ X = reshape(X(Ir), xl,yl,zl);
 Y = reshape(Y(Ir), xl,yl,zl); 
 Z = reshape(Z(Ir), xl,yl,zl);
 
+% Add axes vectors to struct
+OutStruct.axesvec.(order{1}).vec = shiftdim(X(:,1,1));
+OutStruct.axesvec.(order{2}).vec = shiftdim(Y(1,:,1));
+OutStruct.axesvec.(order{3}).vec = shiftdim(Z(1,1,:));
+% Addlabels
+OutStruct.axesvec.(order{1}).label = Xlbl;
+OutStruct.axesvec.(order{2}).label = Ylbl;
+OutStruct.axesvec.(order{3}).label = Zlbl;
+
+
 % Slice planes
 Xs = slic{2,strcmpi(slic(1,:), order{1})};
 Xsl = Xs(Xs>=min(X,[],'all') & Xs<=max(X,[],'all'));
@@ -75,8 +85,12 @@ axes_cell{3,2} = Ylbl;
 axes_cell{3,3} = Zlbl;
 axes_cell = axes_cell(1:3,1:3);
 axes_cell(4,:) = axes_cell(1,:);
+
 %% Process and limit by val_range
 data_cell(1,:) = data_cell(4,:);
+if ~isempty(p.Results.plt_select_data)
+    data_cell = data_cell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:)),data_cell(1,:)));
+end
 for i = 1:size(data_cell,2)
     data_cell{2,i} = reshape(data_cell{2,i}(Ir), xl,yl,zl);
     if any(strcmpi(p.Results.plt_select_data(1,:),data_cell{1,i}))
@@ -93,15 +107,14 @@ data_cell(4,:) = cellfun(@(c) c(1:(sum(find(c==' ', 1, 'last'))+isempty(find(c==
 
 %% Plot
 fig = figure;
-if ~isempty(p.Results.plt_select_data)
-    data_cell = data_cell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:)),data_cell(1,:)));
-end
 [subrow, subcol] = subplot_min_rectangle(size(data_cell,2));
-
+UserDataStruct.axesvec = OutStruct.axesvec;
 for i = 1:size(data_cell,2)
+    UserDataStruct.data = data_cell{2,i};
     s =  subplot(subrow, subcol, i);
-    sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
     slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
+    s.UserData = UserDataStruct;
+    sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
     xlabel(Ylbl)
     ylabel(Xlbl)
     zlabel(Zlbl)
