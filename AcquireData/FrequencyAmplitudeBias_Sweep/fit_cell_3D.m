@@ -36,7 +36,6 @@ DataCell(2,:) = cellfun(@(c) permute(c,perm_vec), DataCell(2,:) , 'UniformOutput
 FitAxMat = AxesCell{2,1};
 AxJ = shiftdim(mean(AxesCell{2,2}));
 AxK = shiftdim(mean(AxesCell{2,3}));
-FitOut = zeros(size(FitAxMat, [2 3]));
 
 if ~isempty(p.Results.plt_select_data)
     DataCell = DataCell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:),'IgnoreCase',true), DataCell(1,:))...
@@ -46,6 +45,7 @@ end
 cd_mat = DataCell{2,1};
 [~, ~, ~, fit_cell] = fit_func(FitAxMat(:,round(size(FitAxMat,2)/2),round(size(FitAxMat,3)/2)), cd_mat(:,round(size(FitAxMat,2)/2),round(size(FitAxMat,3)/2)));
 fmax = size(fit_cell,2);
+FitOut = zeros([size(FitAxMat, [2 3]) fmax]);
 StrFitUscore = [];
 for c = fit_cell(1,:)
     StrFitUscore = [StrFitUscore '_' c{:}];
