@@ -55,27 +55,28 @@ plt_cmds = {};
 plt_cmds{end+1} = 'colorbar(''eastoutside'')';
 
 %  ----- DC sweep (IV) -----
-DC_read_param_struct.demod.r = false; % Current [A]
+DC_read_param_struct.demod.r = true; % Current [A]
 DC_read_param_struct.impedance.grid = true; % Voltage [V]
 DC_read_param_struct.impedance.param0 = true; % Resistance [ohm]
 
 DC_sweep_range = [-1 1]; % Vbias [V]
-DC_pts = 200; % sweep points
+DC_pts = 10; % sweep points
 DC_hysteresis = true; % Include a reverse sweep
 
-%%  Overwite Defaults (uncomment and change values)
+%% CHANGE SETTINGS (uncomment and change values)
 
+% ==================== Overwite Defaults ====================
 overwrite_defaults = {}; % don't touch
 additional_settings = struct; % don't touch
 
     %  ----- BY SETTING THIS, THE INTERNAL SCRIPT DEFAULTS WILL OVERWRITE LABONE GUI INPUT
     % THE INTERNAL DEFAULTS ARE INSIDE MFIA_freq_amp_bias_sweep.
     % VALUES YOU UN-COMMENT BELOW WILL OVERWRITE REGARDLESS of "enable_default" -----
-additional_settings.enable_default = true;
-%%  Experiment-dictated conditions on output
+additional_settings.enable_default = true; % defaults set by Michael
+% ==================== Experiment-dictated conditions on output ====================
     % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude. -----
 additional_settings.output.DLCP = true;
-%%  Graph and text display settings
+% ==================== Graph and text display settings ====================
     %  ----- Graphs -----
 % additional_settings.display.graph.disp = true;
 % additional_settings.display.graph.during_sweep = true;
@@ -84,10 +85,10 @@ additional_settings.output.DLCP = true;
 % additional_settings.display.text.major.each_sweep = true;
 % additional_settings.display.text.minor.disp = true;
 % additional_settings.display.text.minor.each_sweep = false;
-%%  Saving the plot of the sweeper output (can be hundreds of images)
+% ==================== Saving the plot of the sweeper output (can be hundreds of images) ====================
 additional_settings.display.graph.save.if = true;
 additional_settings.display.graph.save.path = RealSavePath;
-%%  MF and IA settings
+% ==================== MF and IA settings ====================
     %  ----- IA precision -> measurement speed: 0 - low->fast, 1 - high->medium,
     % 2 - very high->slow -----
 overwrite_defaults(:,end+1) = {'IA_precision'; 2};
@@ -126,7 +127,7 @@ overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
 
     %  ----- For IA:  Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct. -----
 % overwrite_defaults(:,end+1) = {'demod_LFP_order'; 8};
-%%  Define device channels
+%  ==================== Define device channels ====================
 % additional_settings.channels.demod_c = '0'; % demod channel, for paths on the device
 % additional_settings.channels.demod_idx = str2double(demod_c)+1; % 1-based indexing, to access the data
 % additional_settings.channels.out_c = '0'; % signal output channel
@@ -135,7 +136,8 @@ overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
 % additional_settings.channels.osc_c = '0'; % oscillator
 % additional_settings.channels.imp_c = '0'; % IA channel
 % additional_settings.channels.imp_index = 1; % IA, 1-based indexing, to access the data
-%%  Sweeper settings
+
+%  ==================== Sweeper settings ====================
     %  ----- Sweep timeout. -----
 % overwrite_defaults(:,end+1) = {'timeout'; 120};
 
@@ -245,7 +247,7 @@ overwrite_defaults(:,end+1) = {'omega_suppression'; sweep_precision.omega_suppre
     %  ----- For sweeper: Selects the filter roll off to use for the sweep in fixed bandwidth mode. Range between 6 dB/oct and 48 dB/ oct. -----
 % overwrite_defaults(:,end+1) = {'sweep_LFP_order'; 8};
 
-%%  Check Directory, Run Measurement, extract and reshape data
+%%  Check Directory and rename if needed
 if isnumeric(CurrentMeasID)
     CurrentMeasID = num2str(CurrentMeasID);
     id = num2str(CurrentMeasID);
@@ -283,7 +285,7 @@ end
 if strcmp(additional_settings.display.graph.save.path,RealSavePathOld)
     additional_settings.display.graph.save.path = RealSavePath;
 end
-    
+%% RUN MEASUREMENT  
 %  ----- override defaults set in MFIA_freq_amp_bias_value_pairs_withParser. -----
 [sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec] = MFIA_freq_amp_bias_value_pairs_withParser(SweepOrder, 'start_frequency', start_frequency,...
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
@@ -293,8 +295,8 @@ end
 
 
 IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});
-save([RealSavePath ' IV'],IV_data)
 
+%%  EXTRACT AND RESHAPE DATA 
 [select_data_3D_desired_order, select_data_3D_sweep_order] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, DesiredOrder, SweepOrder, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 select_data_3D_sweep_order.order = SweepOrder;
 select_data_3D_desired_order.order = DesiredOrder;
@@ -305,12 +307,13 @@ eval(['full_struct_vec_' sweep_order_string(DesiredOrder) '=full_data_sweep_orde
 if ~exist(RealSavePath, 'dir')
     mkdir(RealSavePath)
 end
-%%  Save data
+%%  SAVE DATA
+save([RealSavePath ' IV'],'IV_data')
 save(RealSavePath, ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
     ['select_data_3D_desired_order_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
 save([RealSavePath '\' SampleName ' ' CurrentMeasID ' ' StartTime], ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
     ['select_data_3D_desired_order_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
-%%  Plot data
+%%  PLOT DATA
 
 if plt_log_freq
     DesiredOrder{contains(DesiredOrder, 'frequency')} = 'log_frequency';

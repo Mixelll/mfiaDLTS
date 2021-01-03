@@ -471,11 +471,11 @@ ziDAQ('clear', h);
 if hyst
     sweeph.V = select_data.impedance.grid;
     sweeph.R = select_data.impedance.param0;
-    sweeph.I = select_data.demod.R;
+    sweeph.I = select_data.demod.r;
 else
     sweep.V = select_data.impedance.grid;
     sweep.R = select_data.impedance.param0;
-    sweep.I = select_data.demod.R;
+    sweep.I = select_data.demod.r;
 end
 hyst = true;
 end
@@ -484,7 +484,7 @@ IV_data.sweep = sweep;
 if hyst
     IV_data.sweeph = sweeph;
 end
-save([SavePath '\IV'],IV_data) 
+save([SavePath '\IV'],'IV_data') 
 end
 
 function s = plot_data(plot_func, lbl, x, select_data, read_param_cell, Title, savepath)
@@ -513,7 +513,7 @@ for c = read_param_cell
 end
 title(Title);
 if ~isempty(savepath)
-    saveas(sw_plot,[savepath '\' Title '.png']);
-    saveas(sw_plot,[savepath '\' Title '.fig']);
+    saveas(s,[savepath '\' Title '.png']);
+    saveas(s,[savepath '\' Title '.fig']);
 end
 end
