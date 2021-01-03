@@ -184,6 +184,11 @@ end
 
 %% Configure the device ready for this experiment.
 
+ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], 0)
+freq = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/freq']);
+if major.disp, fprintf('IA frequency set to %g Hz.\n', freq); end
+
+
 if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'voltage_range'))
     ziDAQ('setInt', ['/' device '/system/impedance/precision'], p.Results.IA_precision);
     switch ziDAQ('getInt', ['/' device '/system/impedance/precision'])
