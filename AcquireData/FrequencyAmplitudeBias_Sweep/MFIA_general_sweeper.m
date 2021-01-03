@@ -280,9 +280,9 @@ while ~ziDAQ('finished', h)
                         end
                     end
                     % Sweep parameter values at which measurement points were taken
-                        sweep_param_arr = sample_impedance.grid;
-                         sw_plot = plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell);
-            %             drawnow;
+                    sweep_param_arr = sample_impedance.grid;
+                    sw_plot = plot_data(plot_func, lbl, sweep_param_arr, select_data, read_param_cell);
+%                     drawnow;
                 end
             end
         end
