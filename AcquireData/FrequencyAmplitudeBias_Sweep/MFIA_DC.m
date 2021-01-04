@@ -343,7 +343,10 @@ else
 end
 if minor.disp, fprintf('X axis mapping set to %s.\n', xmapping); end
 
-ziDAQ('set', h, 'scan', max(p.Results.scan, double(hysteresis)));
+if hysteresis
+    scan = 2;
+end
+ziDAQ('set', h, 'scan', max(p.Results.scan, scan));
 switch ziDAQ('get', h, 'scan').scan
     case 0 
         scan = 'Sequential';
@@ -472,7 +475,7 @@ if hysteresis
     sweeph.I = select_data.demod.r(pts+1:end);
 end
 
-IV_data.sweep = sweepfull;
+IV_data.sweepfull = sweepfull;
 IV_data.sweep = sweep;
 if hysteresis
     IV_data.sweeph = sweeph;
