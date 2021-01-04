@@ -8,12 +8,12 @@
 % Todd Karin
 % 02/14/2013
 
-%% Modified by George Nelson for Model 330
+%% Modified by Michael Leitsin for Model 350
 
 function installed = isLakeshoreInstalled()
 
 % Initialize communication to temperature controller.
-obj1 = instrfind('Type', 'gpib', 'BoardIndex', 0, 'PrimaryAddress', 12);
+obj1 = instrfind('port', 'ethernet', 'BoardIndex', 0, 'PrimaryAddress', 12);
 % Create the GPIB object if it does not exist
 % otherwise use the object that was found.
 if isempty(obj1)
@@ -31,7 +31,7 @@ fprintf(obj1, '*idn?');
 pause(.05);
 
 cut = 1:10;
-idnCheck = 'LSCI,MODEL330,0,032301';
+idnCheck = 'LSCI,MODEL350,0,032301';
 idn = fscanf(obj1);
 
 if strcmp(idn(cut),idnCheck(cut))
@@ -41,7 +41,7 @@ else
 end
 
 catch err
-    disp('Cannot connect to Lakeshore 335!')
+    disp('Cannot connect to Lakeshore 350!')
     disp(err.message)
     installed = 0;
 end
