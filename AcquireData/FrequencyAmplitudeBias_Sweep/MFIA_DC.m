@@ -306,11 +306,6 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'model'))) || any(strcmpi(var
     if major.disp, fprintf('IA parameter representation set to %s.\n', model); end
 end
 
-if hysteresis
-    sweep_range = [sweep_range' fliplr(sweep_range)'];
-end
-hyst = false;
-for sweep_range_in = sweep_range
 
 %% Sweeper settings
 % Create a thread for the sweeper
@@ -328,9 +323,9 @@ ziDAQ('set', h, 'samplecount', pts);
 % Sweeping setting is the offset of the output signal
 ziDAQ('set', h, 'gridnode', ['sigouts/' osc_c '/offset']);
 % Start bias voltage
-ziDAQ('set', h, 'start', sweep_range_in(1));
+ziDAQ('set', h, 'start', sweep_range(1));
 % Stop bias voltage
-ziDAQ('set', h, 'stop', sweep_range_in(2));
+ziDAQ('set', h, 'stop', sweep_range(2));
 % Plot function
 plot_func = @plot;
 % Plot label
@@ -348,7 +343,7 @@ else
 end
 if minor.disp, fprintf('X axis mapping set to %s.\n', xmapping); end
 
-ziDAQ('set', h, 'scan', p.Results.scan);
+ziDAQ('set', h, 'scan', max(p.Results.scan, double(hysteresis)));
 switch ziDAQ('get', h, 'scan').scan
     case 0 
         scan = 'Sequential';
@@ -388,10 +383,7 @@ if major.disp, fprintf('Sweep Started\n'); end
 
 full_data = [];
 select_data = struct;
-Title = [num2str(sweep_range_in(1)) ' to ' num2str(sweep_range_in(1))];
-if hyst
-    Title = [Title '(hysteresis)'];
-end
+Title = [num2str(sweep_range(1)) ' to ' num2str(sweep_range(1))];
 
 t0 = tic;
 % Read and plot intermediate data until the sweep has finished.
@@ -468,20 +460,21 @@ ziDAQ('unsubscribe', h, ['/' device, '/imps/' imp_c '/sample']);
 % Release module resources. Especially important if modules are created
 % inside a loop to prevent excessive resource consumption.
 ziDAQ('clear', h);
-if hyst
-    sweeph.V = select_data.impedance.grid;
-    sweeph.R = select_data.impedance.param0;
-    sweeph.I = select_data.demod.r;
-else
-    sweep.V = select_data.impedance.grid;
-    sweep.R = select_data.impedance.param0;
-    sweep.I = select_data.demod.r;
-end
-hyst = true;
+sweepfull.V = select_data.impedance.grid;
+sweepfull.R = select_data.impedance.param0;
+sweepfull.I = select_data.demod.r;
+sweep.V = select_data.impedance.grid(1:pts);
+sweep.R = select_data.impedance.param0(1:pts);
+sweep.I = select_data.demod.r(1:pts);
+if hysteresis
+    sweeph.V = select_data.impedance.grid(pts+1:end);
+    sweeph.R = select_data.impedance.param0(pts+1:end);
+    sweeph.I = select_data.demod.r(pts+1:end);
 end
 
+IV_data.sweep = sweepfull;
 IV_data.sweep = sweep;
-if hyst
+if hysteresis
     IV_data.sweeph = sweeph;
 end
 save([SavePath '\IV'],'IV_data') 
