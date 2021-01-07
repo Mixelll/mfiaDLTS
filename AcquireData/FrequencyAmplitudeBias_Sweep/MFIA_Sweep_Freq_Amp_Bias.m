@@ -67,6 +67,7 @@ DC_hysteresis = true; % Include a reverse sweep
 
 % ==================== Overwite Defaults ====================
 overwrite_defaults = {}; % don't touch
+SetByRange = {}; % don't touch
 additional_settings = struct; % don't touch
 
     %  ----- BY SETTING THIS, THE INTERNAL SCRIPT DEFAULTS WILL OVERWRITE LABONE GUI INPUT
@@ -115,6 +116,7 @@ overwrite_defaults(:,end+1) = {'IA_precision'; 2};
 
     %  ----- Current range. -----
 overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
+SetByRange(:,end+1) = {'current_range'; 'offset'; [-0.1 0.1] ; 1e-4};
 
     %  ----- Voltage range. -----
 % overwrite_defaults(:,end+1) = {'voltage_range'; 3};
@@ -170,7 +172,6 @@ if any(strcmpi(overwrite_defaults(1,:), 'IA_precision'))
         sweep_precision.max_bandwidth = 1000;
         sweep_precision.omega_suppression = 60;
     case 1
-        disp(1)
         sweep_precision.sweep_inaccuracy = 0.01;
         sweep_precision.averaging_sample = 20;
         sweep_precision.averaging_time = 0.1;
@@ -291,7 +292,7 @@ end
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
     'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset, freq_xmapping{:});
 
-[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec, MFIA_Settings] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, SweepOrder, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
+[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec, MFIA_Settings] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, SetByRange, SweepOrder, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
 
 IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});

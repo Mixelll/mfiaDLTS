@@ -1,5 +1,6 @@
 function DFH = MFIA_3D_PGUI(SubPlots)
 k = 0;
+Nsbp = numel(SubPlots);
 for j = 1:size(SubPlots,2)
     for i = 1:size(SubPlots,1)
         k = k+1;
@@ -12,8 +13,11 @@ for j = 1:size(SubPlots,2)
         DFH(k).ax3D = update_structure(DFH(k).ax3D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', true);
         DFH(k).ax2D.UserData.type = DFH(k).ax3D.UserData.type;
         DFH(k).ax1D.UserData.type = DFH(k).ax3D.UserData.type;
-        
-        DFH(k).ax3D.Position = [0.05 DFH(k).ax3D.Position(2:end)];
+        if Nsbp>2 || Nsbp==1
+            DFH(k).ax3D.Position = [0.05    0.11    0.304    0.815];
+        else
+            DFH(k).ax3D.Position = [0.05 DFH(k).ax3D.Position(2:end)];
+        end
         colorbar(DFH(k).ax3D, 'north')
         
         P3D = DFH(k).ax3D.Position;
@@ -21,30 +25,32 @@ for j = 1:size(SubPlots,2)
         Tempf = fieldnames(Temp)';
         ax_lbls = {Temp.(Tempf{1}).label Temp.(Tempf{2}).label Temp.(Tempf{3}).label};
         ax_ranges = {[min(Temp.(Tempf{1}).vec) max(Temp.(Tempf{1}).vec)] [min(Temp.(Tempf{2}).vec) max(Temp.(Tempf{2}).vec)] [min(Temp.(Tempf{3}).vec) max(Temp.(Tempf{3}).vec)]};
-        PopStrVal = [ax_lbls ; ax_ranges ; Tempf];
+        ax_lengths = {length(Temp.(Tempf{1}).vec) length(Temp.(Tempf{2}).vec) length(Temp.(Tempf{3}).vec)};
+        PopStrVal = [ax_lbls ; ax_ranges ; Tempf; ax_lengths];
         PopOne2D = PopStrVal{2,2};
         PopOne3D = PopStrVal{2,1};
+        SliderStep2 = 0.1;
         
         P2D = DFH(k).ax2D.Position;
         SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,DFH(k).ax1D,AxisString,DFH(k).ax2D);
         DFH(k).s2D = uicontrol('Parent',DFH(k).fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
-            'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2));
+            'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
         DFH(k).s2D.Position = [P2D(1) P2D(2)-0.08 P2D(3) 0.02];
         LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)-0.02 P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(1)) ,'FontSize',15);
         RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)+P2D(3) P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(2)) ,'FontSize',15);
         
         PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,DFH(k).s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
-        DFH(k).p2D = uicontrol('Parent',DFH(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'Units','normalized', 'Position', [P2D(1)+0.12 P2D(2)-0.09 0.10 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
+        DFH(k).p2D = uicontrol('Parent',DFH(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'Units','normalized', 'Position', [P2D(1)+0.08 P2D(2)-0.09 0.08 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
         
         SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,DFH(k).ax2D,AxisString,DFH(k).ax3D.UserData);
         DFH(k).s3D = uicontrol('Parent',DFH(k).fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
-            'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2));
+            'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2), 'SliderStep',[1/PopStrVal{4,1} SliderStep2]);
         DFH(k).s3D.Position = [P3D(1) P3D(2)-0.08 P3D(3) 0.02];
         LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.02 P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(1)) ,'FontSize',15);
         RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(2)) ,'FontSize',15);
         
-        PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,DFH(k).s3D,SliderCallFromPop2D,DFH(k).p2D,PopStrVal,LeftTxt3D,RightTxt3D);
-        DFH(k).p3D = uicontrol('Parent',DFH(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1)+0.12 P3D(2)-0.09 0.10 0.05], 'Callback',PopCall3D);
+        PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,DFH(k).s3D,SliderCallFromPop3D,DFH(k).p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
+        DFH(k).p3D = uicontrol('Parent',DFH(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1)+0.11 P3D(2)-0.09 0.08 0.05], 'Callback',PopCall3D);
          
     end
 end
@@ -105,7 +111,8 @@ end
 function popmenu_callback3D(src,cbdata,slider3D,SliderCall,Pop2D,Pop2D_call,value_cell,LeftTxt,RightTxt)
     SV = src.Value;
     AxBounds = value_cell{2,SV};
-    set(slider3D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{3,SV}))
+    set(slider3D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'SliderStep',[1/value_cell{4,SV} slider3D.SliderStep(2)],...
+        'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{3,SV}))
     set(LeftTxt, 'String', num2str(AxBounds(1)))
     set(RightTxt, 'String', num2str(AxBounds(2)))
     value_cell(:,SV) = [];
@@ -115,7 +122,8 @@ end
 function popmenu_callback2D(src,cbdata,slider2D,SliderCall,value_cell,LeftTxt,RightTxt)
     SV = src.Value;
     AxBounds = value_cell{2,SV};
-    set(slider2D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{1,SV}))
+    set(slider2D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2),  'SliderStep',[1/value_cell{4,SV} slider2D.SliderStep(2)],...
+        'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{1,SV}))
     set(LeftTxt, 'String', num2str(AxBounds(1)))
     set(RightTxt, 'String', num2str(AxBounds(2)))
 end
