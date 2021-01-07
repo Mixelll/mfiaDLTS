@@ -1,4 +1,5 @@
 %% Load data file (struct 3D format) and get axes order
+clear
 FolderPath = ['C:\Users\' getenv('USERNAME') '\Google Drive\MATLAB Drive\vars'];
 % FolderPath = 'D:\Google Drive\MATLAB Drive\vars';
 SampleName = 'B5 b5 150um 9';
@@ -90,27 +91,34 @@ for j = 1:size(SubPlots,2)
         P3D = DataFigureHandles(k).ax3D.Position;
         Temp = DataFigureHandles(k).ax3D.UserData.axesvec;
         Tempf = fieldnames(Temp)';
-        PopStrVal = [Tempf ; {[min(Temp.(Tempf{1}).vec) max(Temp.(Tempf{1}).vec)] [min(Temp.(Tempf{2}).vec) max(Temp.(Tempf{2}).vec)] [min(Temp.(Tempf{3}).vec) max(Temp.(Tempf{3}).vec)]}];
-        PopOne = PopStrVal{2,1};
-        
-        SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,DataFigureHandles(k).ax2D,AxisString,DataFigureHandles(k).ax3D.UserData);
-        SliderCallInit3D = @(source,callbackdata) SliderCallFromPop3D(source,callbackdata,PopStrVal{1});
-        DataFigureHandles(k).s3D = uicontrol('Parent',DataFigureHandles(k).fig,'Style','slider', 'Units','normalized', 'Callback', SliderCallInit3D,...
-            'value',mean(PopOne), 'min',PopOne(1), 'max',PopOne(2));
-        DataFigureHandles(k).s3D.Position = [P3D(1) P3D(2)-0.08 P3D(3) 0.02];
-        LeftTxt = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.02 P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne(1)) ,'FontSize',15);
-        RightTxt = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne(2)) ,'FontSize',15);
-        
-        PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,DataFigureHandles(k).s3D,PopStrVal,SliderCallFromPop3D,LeftTxt,RightTxt);
-        DataFigureHandles(k).p3D = uicontrol('Parent',DataFigureHandles(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1)+0.12 P3D(2)-0.09 0.10 0.05], 'Callback',PopCall3D);
-        
+        ax_lbls = {Temp.(Tempf{1}).label Temp.(Tempf{2}).label Temp.(Tempf{3}).label};
+        ax_ranges = {[min(Temp.(Tempf{1}).vec) max(Temp.(Tempf{1}).vec)] [min(Temp.(Tempf{2}).vec) max(Temp.(Tempf{2}).vec)] [min(Temp.(Tempf{3}).vec) max(Temp.(Tempf{3}).vec)]};
+        PopStrVal = [ax_lbls ; ax_ranges ; Tempf];
+        PopOne2D = PopStrVal{2,2};
+        PopOne3D = PopStrVal{2,1};
         
         P2D = DataFigureHandles(k).ax2D.Position;
         SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,DataFigureHandles(k).ax1D,AxisString,DataFigureHandles(k).ax2D);
-        SliderCallInit2D = @(source,callbackdata) SliderCallFromPop2D(source,callbackdata,PopStrVal{1});
-        DataFigureHandles(k).s2D = uicontrol('Parent',DataFigureHandles(k).fig,'Style','slider', 'Units','normalized', 'Callback', SliderCallInit2D,...
-            'value',mean(PopOne), 'min',PopOne(1), 'max',PopOne(2));
+        DataFigureHandles(k).s2D = uicontrol('Parent',DataFigureHandles(k).fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
+            'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2));
         DataFigureHandles(k).s2D.Position = [P2D(1) P2D(2)-0.08 P2D(3) 0.02];
+        LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)-0.02 P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(1)) ,'FontSize',15);
+        RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)+P2D(3) P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(2)) ,'FontSize',15);
+        
+        PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,DataFigureHandles(k).s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
+        DataFigureHandles(k).p2D = uicontrol('Parent',DataFigureHandles(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'Units','normalized', 'Position', [P2D(1)+0.12 P2D(2)-0.09 0.10 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
+        
+        SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,DataFigureHandles(k).ax2D,AxisString,DataFigureHandles(k).ax3D.UserData);
+        DataFigureHandles(k).s3D = uicontrol('Parent',DataFigureHandles(k).fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
+            'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2));
+        DataFigureHandles(k).s3D.Position = [P3D(1) P3D(2)-0.08 P3D(3) 0.02];
+        LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.02 P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(1)) ,'FontSize',15);
+        RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(2)) ,'FontSize',15);
+        
+        PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,DataFigureHandles(k).s3D,SliderCallFromPop2D,DataFigureHandles(k).p2D,PopStrVal,LeftTxt3D,RightTxt3D);
+        DataFigureHandles(k).p3D = uicontrol('Parent',DataFigureHandles(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1)+0.12 P3D(2)-0.09 0.10 0.05], 'Callback',PopCall3D);
+        
+        
         
     end
 end
@@ -124,6 +132,7 @@ CV_plot_fit = [];
 CV_plot_fit.func = @plot;
 CV_plot_fit.visible = 0;
 CV_plot_fit.savepath = SavePlotPath;
+CV_plot_fit.properties = {'Marker','o', 'LineStyle','none'};
 % CV_plot_fit = [];
 
 CV_fit_select = {'capacitance'};
@@ -164,6 +173,7 @@ DLCP_plot_fit = [];
 DLCP_plot_fit.func = @plot;
 DLCP_plot_fit.visible = 0;
 DLCP_plot_fit.savepath = SavePlotPath;
+DLCP_plot_fit.properties = {'Marker','o', 'LineStyle','none'};
 DLCP_plot_fit = [];
 
 DLCP_fit_select = {'capacitance'};  
@@ -204,12 +214,12 @@ order_ind = strfind(order_string, '_');
 order = {order_string(1:order_ind(1)-1), order_string(order_ind(1)+1:order_ind(2)-1), order_string(order_ind(2)+1:end)};
 end
 
-function slider_callback3D(source,callbackdata,target,SelectAxString,DataStruct)
+function slider_callback3D(src,cbdata,Plot2D,SelectAxString,DataStruct)
     Axes = DataStruct.axesvec;
     AxNames = fieldnames(Axes);
     SelectAxN = find(strcmpi(AxNames,SelectAxString));
     AxNames = AxNames(~strcmpi(AxNames,SelectAxString));
-    [~,SelectMinInd] = min(abs(Axes.(SelectAxString).vec - source.Value));
+    [~,SelectMinInd] = min(abs(Axes.(SelectAxString).vec - src.Value));
     switch SelectAxN
         case 1
             C = DataStruct.data(SelectMinInd,:,:);
@@ -226,39 +236,47 @@ function slider_callback3D(source,callbackdata,target,SelectAxString,DataStruct)
         end
     end
         
-    pcolor(Axes.(AxNames{2}).vec, Axes.(AxNames{1}).vec, C, 'Parent',target);
-    colormap(target, 'turbo')
-    colorbar(target, 'northoutside')
-    target.XLabel.String = Axes.(AxNames{2}).label;
-    target.YLabel.String = Axes.(AxNames{1}).label;
-    target.Title.String =[Axes.(SelectAxString).label ' = ' num2str(Axes.(SelectAxString).vec(SelectMinInd))];
+    pcolor(Axes.(AxNames{2}).vec, Axes.(AxNames{1}).vec, C, 'Parent',Plot2D);
+    colormap(Plot2D, 'turbo')
+    colorbar(Plot2D, 'northoutside')
+    Plot2D.XLabel.String = Axes.(AxNames{2}).label;
+    Plot2D.YLabel.String = Axes.(AxNames{1}).label;
+    Plot2D.Title.String =[Axes.(SelectAxString).label ' = ' num2str(Axes.(SelectAxString).vec(SelectMinInd))];
     
 end
 
-function slider_callback2D(source,callbackdata,target,AxisString,Plot2D)
-    
+function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D)
     P2DC = Plot2D.Children;
     P2DX = Plot2D.XLabel.String;
     P2DY = Plot2D.YLabel.String;
     if strcmpi(P2DX,AxisString)
-        [~,SelectMinInd] = min(abs(P2DC.XData - source.Value));
-        plot(P2DC.YData, dimshift(P2DC.CData(:,SelectMinInd)));
-        target.Title.String =[P2DX ' = ' num2str(P2DC.XData(SelectMinInd))];
-        target.XLabel.String = P2DY;
+        [~,SelectMinInd] = min(abs(P2DC.XData - src.Value));
+        plot(P2DC.YData, shiftdim(P2DC.CData(:,SelectMinInd)))
+        Plot1D.Title.String =[P2DX ' = ' num2str(P2DC.XData(SelectMinInd))];
+        Plot1D.XLabel.String = P2DY;
     elseif strcmpi(P2DY,AxisString)
-        [~,SelectMinInd] = min(abs(P2DC.YData - source.Value));
-        plot(P2DC.XData, dimshift(P2DC.CData(SelectMinInd,:)));
-        target.Title.String =[P2DY ' = ' num2str(P2DC.YData(SelectMinInd))];
-        target.XLabel.String = P2DX;
+        [~,SelectMinInd] = min(abs(P2DC.YData - src.Value));
+        plot(P2DC.XData, shiftdim(P2DC.CData(SelectMinInd,:)))
+        Plot1D.Title.String =[P2DY ' = ' num2str(P2DC.YData(SelectMinInd))];
+        Plot1D.XLabel.String = P2DX;
     end 
     
 end
 
-function popmenu_callback3D(source,callbackdata,target,value_cell,SliderCall,LeftTxt,RightTxt)
-    SV = source.Value;
+function popmenu_callback3D(src,cbdata,slider3D,SliderCall,Pop2D,Pop2D_call,value_cell,LeftTxt,RightTxt)
+    SV = src.Value;
     AxBounds = value_cell{2,SV};
-    SliderCallChanged = @(source,callbackdata) SliderCall(source,callbackdata,value_cell{1,SV});
-    set(target, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'Callback', SliderCallChanged)
+    set(slider3D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{3,SV}))
+    set(LeftTxt, 'String', num2str(AxBounds(1)))
+    set(RightTxt, 'String', num2str(AxBounds(2)))
+    value_cell(:,SV) = [];
+    set(Pop2D, 'string',value_cell(1,:), 'Callback',@(src,cbdata)Pop2D_call(src,cbdata,value_cell));
+end
+
+function popmenu_callback2D(src,cbdata,slider2D,SliderCall,value_cell,LeftTxt,RightTxt)
+    SV = src.Value;
+    AxBounds = value_cell{2,SV};
+    set(slider2D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{1,SV}))
     set(LeftTxt, 'String', num2str(AxBounds(1)))
     set(RightTxt, 'String', num2str(AxBounds(2)))
 end

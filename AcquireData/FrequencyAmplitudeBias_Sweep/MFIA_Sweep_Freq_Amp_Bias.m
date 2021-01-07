@@ -291,7 +291,7 @@ end
     'stop_frequency', stop_frequency, 'pts_frequency', pts_frequency, 'start_amplitude', start_amplitude, 'stop_amplitude', stop_amplitude,...
     'pts_amplitude', pts_amplitude, 'start_offset', start_offset, 'stop_offset', stop_offset, 'pts_offset', pts_offset, freq_xmapping{:});
 
-[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, SweepOrder, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
+[select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec, MFIA_Settings] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, SweepOrder, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
 
 IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});
@@ -300,6 +300,13 @@ IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_rea
 [select_data_3D_desired_order, select_data_3D_sweep_order] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, DesiredOrder, SweepOrder, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 select_data_3D_sweep_order.order = SweepOrder;
 select_data_3D_desired_order.order = DesiredOrder;
+
+select_data_3D_sweep_order.settings = MFIA_Settings;
+select_data_3D_desired_order.settings = MFIA_Settings;
+
+select_data_3D_sweep_order.model = MFIA_Settings.str.model;
+select_data_3D_desired_order.model = MFIA_Settings.str.model;
+
 eval(['select_data_3D_sweep_order_' sweep_order_string(SweepOrder) '=select_data_3D_sweep_order;'])
 eval(['select_data_3D_desired_order_' sweep_order_string(DesiredOrder) '=select_data_3D_desired_order;'])
 eval(['full_struct_vec_' sweep_order_string(DesiredOrder) '=full_data_sweep_order_struct_vec;'])

@@ -1,4 +1,4 @@
-function [select_data, full_data]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, varargin)
+function [select_data, full_data, OutSettings]  = MFIA_freq_amp_bias_sweep(device_id, additional_settings, sweep_order, sweep_range, pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, varargin)
 % Perform a frequency/test_signal (amplitude)/bias_voltage (offset) sweep and gather demodulator data.
 %
 % NOTE Please ensure that the ziDAQ folders 'Driver' and 'Utils' are in your
@@ -100,7 +100,7 @@ p.addParameter('demod_LFP_order', 8, isnonnegscalar);
 p.parse(varargin{:});
 unmatched_vars = [fieldnames(p.Unmatched), struct2cell(p.Unmatched)];
 unmatched_vars = unmatched_vars.';
-
+OutSettings.num = update_structure(p.Results,p.Unmatched);
 %% Set default additional settings
 additional_settings_internal.enable_default = true;
 % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude/2
@@ -139,13 +139,13 @@ end
 major.disp = additional_settings_internal.display.text.major.disp;
 minor.disp = additional_settings_internal.display.text.minor.disp;
 enable_default = additional_settings_internal.enable_default;
-
+OutSettings.additional = additional_settings_internal;
 % Create a base configuration: Disable all available outputs, awgs, demods, scopes,...
 ziDisableEverything(device);
 
 %% Configure the device ready for this experiment.
 
-if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'voltage_range'))
+if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'IA_precision'))
     ziDAQ('setInt', ['/' device '/system/impedance/precision'], p.Results.IA_precision);
     switch ziDAQ('getInt', ['/' device '/system/impedance/precision'])
     case 0
@@ -156,6 +156,7 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(str
         IA_precision = 'very high->slow';
     end
     if major.disp, fprintf('IA precision set to %s.\n', IA_precision); end
+    SettingsStr.IA_precision = IA_precision;
 end
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'voltage_range'))
@@ -174,6 +175,7 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'imp50ohm'))) || any(strcmpi(
     impohm = '10M';
     end
     if major.disp, fprintf('Output impedance set to %s ohm.\n', impohm); end
+    SettingsStr.impohm = impohm;
 end
 
 ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
@@ -203,12 +205,14 @@ end
 if (enable_default && any(strcmpi(p.UsingDefaults, 'two_terminal'))) || any(strcmpi(varargin, 'two_terminal'))
     ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], p.Results.two_terminal);
     if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
-        Tselect = 'Two (2) Terminal';
+        Terminals = 'Two (2) Terminal';
     else
-        Tselect = 'Four (4) Terminal';
+        Terminals = 'Four (4) Terminal';
     end
-    if major.disp, fprintf('Measurement mode set to %s.\n', Tselect); end
+    if major.disp, fprintf('Measurement mode set to %s.\n', Terminals); end
+    SettingsStr.Terminals = Terminals;
 end
+
 
 if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
     if (enable_default && any(strcmpi(p.UsingDefaults, 'cable_length'))) || any(strcmpi(varargin, 'cable_length'))
@@ -223,6 +227,7 @@ if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
             AC2T = 'DISABLED';
         end
         if major.disp, fprintf('High-pass filter for two terminal set to %s.\n', AC2T); end
+        SettingsStr.AC = AC2T;
     end
 else
     if (enable_default && any(strcmpi(p.UsingDefaults, 'AC'))) || any(strcmpi(varargin, 'AC'))
@@ -233,6 +238,7 @@ else
             AC4T = 'DISABLED';
         end
         if major.disp, fprintf('High-pass filter for four terminal set to %s.\n', AC4T); end
+        SettingsStr.AC = AC4T;
     end
 end
 ziDAQ('setInt', ['/' device '/imps/' imp_c '/demod/order'], p.Results.demod_LFP_order);
@@ -246,6 +252,7 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'auto_range'))) || any(strcmp
         auto_r = 'DISABLED';
     end
     if major.disp, fprintf('IA auto range set to %s.\n', auto_r); end
+    SettingsStr.auto_r = auto_r;
 end
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'current_range'))) || any(strcmpi(varargin, 'current_range'))
@@ -291,8 +298,9 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'model'))) || any(strcmpi(var
             model = 'D Cp';
     end
     if major.disp, fprintf('IA parameter representation set to %s.\n', model); end
+    SettingsStr.model = model;
 end
-
+OutSettings.str = SettingsStr;
 actual_frequency_vec = zeros(1,length(frequency_vec));
 actual_amplitude_vec = zeros(1,length(amplitude_vec));
 actual_offset_vec = zeros(1,length(offset_vec));
