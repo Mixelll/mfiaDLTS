@@ -110,6 +110,7 @@ fig = figure;
 [subrow, subcol] = subplot_min_rectangle(size(data_cell,2));
 UserDataStruct.axesvec = OutStruct.axesvec;
 for i = 1:size(data_cell,2)
+    UserDataStruct.type = data_cell{3,i};
     UserDataStruct.data = data_cell{2,i};
     s =  subplot(subrow, subcol, i);
     slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
