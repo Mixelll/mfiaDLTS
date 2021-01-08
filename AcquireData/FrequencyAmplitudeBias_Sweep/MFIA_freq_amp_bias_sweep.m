@@ -11,6 +11,7 @@ function [select_data, full_data, OutSettings]  = MFIA_freq_amp_bias_sweep(devic
 % >>> help ziDAQ
 % >>> doc ziDAQ
 % in the Matlab command window to obtain help on all available ziDAQ commands.
+vararginTOP = varargin;
 lf = length(frequency_vec);
 la = length(amplitude_vec);
 lo = length(offset_vec);
@@ -19,7 +20,7 @@ if ~(sum([lf la lo]>0)>=2 && (lf==la || lf==lo || lo==la))
     fprintf('sweep_order #2 and #3 vecs do not match in length');
     return
 end
-SetByRange(5,:) = true;   
+SetByRange(5,:) = {true};   
 clear ziDAQ;
 
 if ~exist('device_id', 'var')
@@ -129,12 +130,7 @@ additional_settings_internal.display.text.minor.each_sweep = false;
 % Overwrite default additional settings
 additional_settings_internal = update_structure(additional_settings_internal, additional_settings); 
 
-channels = additional_settings_internal.channels;
-channels_cell = fn_struct2cell(channels);
-
-for i = 1:size(channels_cell,2)
-    eval([channels_cell{4,i} '=' channels_cell{1,i} ';']);
-end
+c = additional_settings_internal.channels;
 
 major.disp = additional_settings_internal.display.text.major.disp;
 minor.disp = additional_settings_internal.display.text.minor.disp;
@@ -161,16 +157,16 @@ set_IA_precision();
 % end
 set_voltage_range();
 % if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'voltage_range'))
-%     ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], p.Results.voltage_range);
-%     if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigouts/' out_c '/range'])); end
+%     ziDAQ('setDouble', ['/' device '/sigouts/' c.out_c '/range'], p.Results.voltage_range);
+%     if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigouts/' c.out_c '/range'])); end
 % 
-%     ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], p.Results.voltage_range);
-%     if major.disp, fprintf('Signal in voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigins/' in_c '/range'])); end
+%     ziDAQ('setDouble', ['/' device '/sigins/' c.in_c '/range'], p.Results.voltage_range);
+%     if major.disp, fprintf('Signal in voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigins/' c.in_c '/range'])); end
 % end
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'imp50ohm'))) || any(strcmpi(varargin, 'imp50ohm'))
-    ziDAQ('setInt', ['/' device '/sigins/' in_c '/imp50'], p.Results.imp50ohm)
-    if ziDAQ('getInt', ['/' device '/sigins/' in_c '/imp50'])
+    ziDAQ('setInt', ['/' device '/sigins/' c.in_c '/imp50'], p.Results.imp50ohm)
+    if ziDAQ('getInt', ['/' device '/sigins/' c.in_c '/imp50'])
     impohm = '50';
     else
     impohm = '10M';
@@ -179,33 +175,33 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'imp50ohm'))) || any(strcmpi(
     SettingsStr.impohm = impohm;
 end
 
-ziDAQ('setInt', ['/' device '/sigouts/' out_c '/on'], 1);
+ziDAQ('setInt', ['/' device '/sigouts/' c.out_c '/on'], 1);
 
-ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/enables/' out_mixer_c], 1); 
+ziDAQ('setDouble', ['/' device '/sigouts/' c.out_c '/enables/' c.out_mixer_c], 1); 
 
 ziDAQ('setDouble', ['/' device '/demods/*/phaseshift'], 0);
-if major.disp, fprintf('Demod phase shift set to %g.\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/phaseshift'])); end
+if major.disp, fprintf('Demod phase shift set to %g.\n', ziDAQ('getDouble', ['/' device '/demods/' c.demod_c '/phaseshift'])); end
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'demod_rate'))) || any(strcmpi(varargin, 'demod_rate'))
-    ziDAQ('setDouble', ['/' device '/demods/' demod_c '/rate'], p.Results.demod_rate);
-    if major.disp, fprintf('Demod data transfer rate set to %g Sa/sec. \n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/rate'])); end
+    ziDAQ('setDouble', ['/' device '/demods/' c.demod_c '/rate'], p.Results.demod_rate);
+    if major.disp, fprintf('Demod data transfer rate set to %g Sa/sec. \n', ziDAQ('getDouble', ['/' device '/demods/' c.demod_c '/rate'])); end
 end
 
-ziDAQ('setInt', ['/' device '/demods/' demod_c '/harmonic'], 1);
-if major.disp, fprintf('Demod harmonic set to %g.\n', ziDAQ('getInt', ['/' device '/demods/' demod_c '/harmonic'])); end
+ziDAQ('setInt', ['/' device '/demods/' c.demod_c '/harmonic'], 1);
+if major.disp, fprintf('Demod harmonic set to %g.\n', ziDAQ('getInt', ['/' device '/demods/' c.demod_c '/harmonic'])); end
 
-ziDAQ('setInt', ['/' device '/demods/' demod_c '/enable'], 1);
-ziDAQ('setInt', ['/' device '/demods/*/oscselect'], str2double(osc_c));
-ziDAQ('setInt', ['/' device '/demods/*/adcselect'], str2double(in_c));
+ziDAQ('setInt', ['/' device '/demods/' c.demod_c '/enable'], 1);
+ziDAQ('setInt', ['/' device '/demods/*/oscselect'], str2double(c.osc_c));
+ziDAQ('setInt', ['/' device '/demods/*/adcselect'], str2double(c.in_c));
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'demod_time_constant'))) || any(strcmpi(varargin, 'demod_time_constant'))
     ziDAQ('setDouble', ['/' device '/demods/*/timeconstant'], p.Results.demod_time_constant);
-    if major.disp, fprintf('Demod time constant set to %g sec.\n', ziDAQ('getDouble', ['/' device '/demods/' demod_c '/timeconstant'])); end
+    if major.disp, fprintf('Demod time constant set to %g sec.\n', ziDAQ('getDouble', ['/' device '/demods/' c.demod_c '/timeconstant'])); end
 end
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'two_terminal'))) || any(strcmpi(varargin, 'two_terminal'))
-    ziDAQ('setInt', ['/' device '/imps/' imp_c '/mode'], p.Results.two_terminal);
-    if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
+    ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/mode'], p.Results.two_terminal);
+    if ziDAQ('getInt', ['/' device '/imps/' c.imp_c '/mode'])
         Terminals = 'Two (2) Terminal';
     else
         Terminals = 'Four (4) Terminal';
@@ -215,14 +211,14 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'two_terminal'))) || any(strc
 end
 
 
-if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
+if ziDAQ('getInt', ['/' device '/imps/' c.imp_c '/mode'])
     if (enable_default && any(strcmpi(p.UsingDefaults, 'cable_length'))) || any(strcmpi(varargin, 'cable_length'))
         ziDAQ('setInt', ['/' device '/system/impedance/calib/cablelength'], p.Results.cable_length);
         if major.disp, fprintf('Cable length compensation set to %g m.\n', ziDAQ('getInt', ['/' device '/system/impedance/calib/cablelength'])); end
     end
     if (enable_default && any(strcmpi(p.UsingDefaults, 'AC'))) || any(strcmpi(varargin, 'AC'))
-        ziDAQ('setInt', ['/' device '/sigins/' in_c '/ac'], p.Results.AC);
-        if ziDAQ('getInt', ['/' device '/sigins/' in_c '/ac'])
+        ziDAQ('setInt', ['/' device '/sigins/' c.in_c '/ac'], p.Results.AC);
+        if ziDAQ('getInt', ['/' device '/sigins/' c.in_c '/ac'])
             AC2T = 'ENABLED';
         else
             AC2T = 'DISABLED';
@@ -232,8 +228,8 @@ if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
     end
 else
     if (enable_default && any(strcmpi(p.UsingDefaults, 'AC'))) || any(strcmpi(varargin, 'AC'))
-        ziDAQ('setInt', ['/' device '/imps/' imp_c '/ac'], p.Results.AC);
-        if ziDAQ('getInt', ['/' device '/imps/' imp_c '/ac'])
+        ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/ac'], p.Results.AC);
+        if ziDAQ('getInt', ['/' device '/imps/' c.imp_c '/ac'])
             AC4T = 'ENABLED';
         else
             AC4T = 'DISABLED';
@@ -242,12 +238,12 @@ else
         SettingsStr.AC = AC4T;
     end
 end
-ziDAQ('setInt', ['/' device '/imps/' imp_c '/demod/order'], p.Results.demod_LFP_order);
-if major.disp, fprintf('IA Demod LFP order set to %g.\n', ziDAQ('getInt', ['/' device '/imps/' imp_c '/demod/order'])); end
+ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/demod/order'], p.Results.demod_LFP_order);
+if major.disp, fprintf('IA Demod LFP order set to %g.\n', ziDAQ('getInt', ['/' device '/imps/' c.imp_c '/demod/order'])); end
 
 if (enable_default && any(strcmpi(p.UsingDefaults, 'auto_range'))) || any(strcmpi(varargin, 'auto_range'))
-    ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/inputrange'], p.Results.auto_range);
-    if ziDAQ('getInt', ['/' device '/imps/' imp_c '/mode'])
+    ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/auto/inputrange'], p.Results.auto_range);
+    if ziDAQ('getInt', ['/' device '/imps/' c.imp_c '/auto/inputrange'])
         auto_r = 'ENABLED';
     else
         auto_r = 'DISABLED';
@@ -258,26 +254,26 @@ end
 
 set_current_range()
 % if (enable_default && any(strcmpi(p.UsingDefaults, 'current_range'))) || any(strcmpi(varargin, 'current_range'))
-%     ziDAQ('setDouble', ['/' device '/imps/' imp_c '/current/range'], p.Results.current_range);
-%     if major.disp, fprintf('IA current range set to %g A.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/current/range'])); end
+%     ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/current/range'], p.Results.current_range);
+%     if major.disp, fprintf('IA current range set to %g A.\n', ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/current/range'])); end
 % end
 
 % if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'voltage_range'))
-%     ziDAQ('setDouble', ['/' device '/imps/' imp_c '/voltage/range'], p.Results.voltage_range);
-%     if major.disp, fprintf('IA input voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/voltage/range'])); end
+%     ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/voltage/range'], p.Results.voltage_range);
+%     if major.disp, fprintf('IA input voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/voltage/range'])); end
 % 
-%     ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/range'], p.Results.voltage_range);
-%     if major.disp, fprintf('IA output voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/range'])); end
+%     ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/output/range'], p.Results.voltage_range);
+%     if major.disp, fprintf('IA output voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/output/range'])); end
 % end
 
-ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
-ziDAQ('setInt', ['/' device '/imps/' imp_c '/enable'], 1);
-ziDAQ('setInt', ['/' device '/imps/' imp_c '/output/on'], 1);
+ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/auto/output'], 0);
+ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/enable'], 1);
+ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/output/on'], 1);
     % 1 - Rs Cs, 2 - Rs Ls, 3 - G B, 4 -D Cs, 5 - Qs Cs, 6 - D Ls,
     % 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
 if (enable_default && any(strcmpi(p.UsingDefaults, 'model'))) || any(strcmpi(varargin, 'model'))
-    ziDAQ('setInt', ['/' device '/imps/' imp_c '/model'], p.Results.model);
-    switch ziDAQ('getInt', ['/' device '/imps/' imp_c '/model'])
+    ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/model'], p.Results.model);
+    switch ziDAQ('getInt', ['/' device '/imps/' c.imp_c '/model'])
         case 0
             model = 'Rp Cp';
         case 1
@@ -322,53 +318,53 @@ for v = 1:lpairs
         offset_val = offset_val - amplitude_val;
     end
     if any(strcmpi(sweep_order(2:3), 'frequency'))
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/freq'], frequency_val)
-        actual_frequency = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/freq']);
+        ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/freq'], frequency_val)
+        actual_frequency = ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/freq']);
         actual_frequency_vec(v) = actual_frequency;
         if major.disp, fprintf('IA frequency set to %g Hz.\n', actual_frequency_vec(v)); end
         title_params = [' Freq = ' num2str(actual_frequency)];
         for ic = size(SetByRange,2)
             if strcmpi(SetByRange{2,ic}, 'frequency')
                 if (frequency_val>=SetByRange{3,ic}(1) && frequency_val<=SetByRange{3,ic}(2)) && SetByRange{5,ic}
-                    evl(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
+                    eval(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
                     SetByRange{5,ic} = false;
                 elseif (frequency_val<SetByRange{3,ic}(1) || frequency_val>SetByRange{3,ic}(2)) && ~SetByRange{5,ic}
-                    evl(['set_' SetByRange{1,ic} '();'])
+                    eval(['set_' SetByRange{1,ic} '();'])
                     SetByRange{5,ic} = true;
                 end
             end
         end        
     end
     if any(strcmpi(sweep_order(2:3), 'amplitude'))
-        ziDAQ('setInt', ['/' device '/imps/' imp_c '/auto/output'], 0);
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/amplitude'], amplitude_val)
-        actual_amplitude = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/amplitude']);
+        ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/auto/output'], 0);
+        ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/output/amplitude'], amplitude_val)
+        actual_amplitude = ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/output/amplitude']);
         actual_amplitude_vec(v) = actual_amplitude;
         if major.disp, fprintf('IA test signal (amplitude) set to %g mV.\n', 1000*actual_amplitude_vec(v)); end
         title_params = [title_params ' amp = ' num2str(actual_amplitude)];
         for ic = size(SetByRange,2)
             if strcmpi(SetByRange{2,ic}, 'amplitude') && SetByRange{5,ic}
                 if (amplitude_val>=SetByRange{3,ic}(1) && amplitude_val<=SetByRange{3,ic}(2)) && SetByRange{5,ic}
-                    evl(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
+                    eval(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
                     SetByRange{5,ic} = false;
                 elseif (amplitude_val<SetByRange{3,ic}(1) || amplitude_val>SetByRange{3,ic}(2)) && ~SetByRange{5,ic}
-                    evl(['set_' SetByRange{1,ic} '();'])
+                    eval(['set_' SetByRange{1,ic} '();'])
                     SetByRange{5,ic} = true;
                 end
             end
         end 
     end
     if any(strcmpi(sweep_order(2:3), 'offset'))
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/bias/value'], offset_val)
-        ziDAQ('setInt', ['/' device '/imps/' imp_c '/bias/enable'], 1);
-        actual_offset = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/bias/value']);
+        ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/bias/value'], offset_val)
+        ziDAQ('setInt', ['/' device '/imps/' c.imp_c '/bias/enable'], 1);
+        actual_offset = ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/bias/value']);
         actual_offset_vec(v) = actual_offset;
         if major.disp, fprintf('IA bias voltage (offset) set to %g V.\n', actual_offset_vec(v)); end
         title_params = [title_params ' bias = ' num2str(actual_offset)];
         for ic = size(SetByRange,2)
-            if strcmpi(SetByRange{2,ic}, 'amplitude')
+            if strcmpi(SetByRange{2,ic}, 'offset')
                 if (offset_val>=SetByRange{3,ic}(1) && offset_val<=SetByRange{3,ic}(2)) && SetByRange{5,ic}
-                    evl(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
+                    eval(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
                     SetByRange{5,ic} = false;
                 elseif (offset_val<SetByRange{3,ic}(1) || offset_val>SetByRange{3,ic}(2)) && ~SetByRange{5,ic}
                     evl(['set_' SetByRange{1,ic} '();'])
@@ -414,7 +410,7 @@ end
 ziDisableEverything(device);
 %% Function
 function Get = set_IA_precision(varargin)
-    if (enable_default && any(strcmpi(p.UsingDefaults, 'IA_precision'))) || any(strcmpi(varargin, 'IA_precision'))
+    if (enable_default && any(strcmpi(p.UsingDefaults, 'IA_precision'))) || any(strcmpi(vararginTOP, 'IA_precision'))
         if isempty(varargin)
             SetVar = p.Results.IA_precision;
         else
@@ -438,35 +434,35 @@ function Get = set_IA_precision(varargin)
 end
 
 function Get = set_voltage_range(varargin)
-    if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(varargin, 'voltage_range'))
+    if (enable_default && any(strcmpi(p.UsingDefaults, 'voltage_range'))) || any(strcmpi(vararginTOP, 'voltage_range'))
         if isempty(varargin)
             SetVar = p.Results.voltage_range;
         else
             SetVar = varargin{1};
         end
-        ziDAQ('setDouble', ['/' device '/sigouts/' out_c '/range'], SetVar);
-        if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigouts/' out_c '/range'])); end
+        ziDAQ('setDouble', ['/' device '/sigouts/' c.out_c '/range'], SetVar);
+        if major.disp, fprintf('Signal out voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigouts/' c.out_c '/range'])); end
 
-        ziDAQ('setDouble', ['/' device '/sigins/' in_c '/range'], SetVare);
-        if major.disp, fprintf('Signal in voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigins/' in_c '/range'])); end
+        ziDAQ('setDouble', ['/' device '/sigins/' c.in_c '/range'], SetVar);
+        if major.disp, fprintf('Signal in voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/sigins/' c.in_c '/range'])); end
         
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/voltage/range'], SetVar);
-        Get = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/voltage/range']);
+        ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/voltage/range'], SetVar);
+        Get = ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/voltage/range']);
         if major.disp, fprintf('IA input voltage range set to %g V.\n', Get); end
 
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/output/range'], SetVar);
-        if major.disp, fprintf('IA output voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' imp_c '/output/range'])); end
+        ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/output/range'], SetVar);
+        if major.disp, fprintf('IA output voltage range set to %g V.\n', ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/output/range'])); end
     end
 end
 function Get = set_current_range(varargin)
-    if (enable_default && any(strcmpi(p.UsingDefaults, 'current_range'))) || any(strcmpi(varargin, 'current_range'))
+    if (enable_default && any(strcmpi(p.UsingDefaults, 'current_range'))) || any(strcmpi(vararginTOP, 'current_range'))
         if isempty(varargin)
             SetVar = p.Results.current_range;
         else
             SetVar = varargin{1};
         end
-        ziDAQ('setDouble', ['/' device '/imps/' imp_c '/current/range'], SetVar);
-        Get = ziDAQ('getDouble', ['/' device '/imps/' imp_c '/current/range']);
+        ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/current/range'], SetVar);
+        Get = ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/current/range']);
         if major.disp, fprintf('IA current range set to %g A.\n', Get); end
     end
 end
