@@ -252,7 +252,7 @@ if (enable_default && any(strcmpi(p.UsingDefaults, 'auto_range'))) || any(strcmp
     SettingsStr.auto_r = auto_r;
 end
 
-set_current_range()
+set_current_range();
 % if (enable_default && any(strcmpi(p.UsingDefaults, 'current_range'))) || any(strcmpi(varargin, 'current_range'))
 %     ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/current/range'], p.Results.current_range);
 %     if major.disp, fprintf('IA current range set to %g A.\n', ziDAQ('getDouble', ['/' device '/imps/' c.imp_c '/current/range'])); end
@@ -367,7 +367,7 @@ for v = 1:lpairs
                     eval(['set_' SetByRange{1,ic} '(' num2str(SetByRange{4,ic}) ');'])
                     SetByRange{5,ic} = false;
                 elseif (offset_val<SetByRange{3,ic}(1) || offset_val>SetByRange{3,ic}(2)) && ~SetByRange{5,ic}
-                    evl(['set_' SetByRange{1,ic} '();'])
+                    eval(['set_' SetByRange{1,ic} '();'])
                     SetByRange{5,ic} = true;
                 end
             end
