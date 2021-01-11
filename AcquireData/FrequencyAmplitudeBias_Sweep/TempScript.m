@@ -2,7 +2,7 @@
 clear
 FolderPath = ['C:\Users\' getenv('USERNAME') '\Google Drive\MATLAB Drive\vars'];
 % FolderPath = 'D:\Google Drive\MATLAB Drive\vars';
-SampleName = 'B5 b5 150um 9';
+SampleName = 'IB2 BL 100um 3';
 SweepID = 'A';
 FileName = [SampleName ' ' SweepID];
 SetName = '3D_sweep_order';
@@ -24,7 +24,7 @@ SavePlotPath = [FolderPath '\' SampleName '\' title];
 SaveDataPlots = false;
 %Select data to plot (leave empty to plot all data in 3D struct) and define plot aliases (from IA parametric model)
 plt_select_data = {};
-% plt_select_data(:,end+1) = {'param0'; 'Resistance [ohm]'};
+plt_select_data(:,end+1) = {'param0'; 'Resistance [ohm]'};
 plt_select_data(:,end+1) = {'param1'; 'Capacitance [F]'};
 %Select axis range - data outside range is discarded from here onward (applies to all subsequent fits)
 ax_range = {};
