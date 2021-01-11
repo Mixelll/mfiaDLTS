@@ -15,8 +15,8 @@ clear
 device_id = 'dev5168';
 
 %  ----- Sample name and measurement number -----
-SampleName = 'Test';
-CurrentMeasID = 'A';
+SampleName = 'V5 b7 150um 4';
+CurrentMeasID = 'M4T';
 StartTime = datestr(now, 'yyyy-mm-dd HH-MM');
 
 %  ----- Save path -----
@@ -38,14 +38,16 @@ read_param_struct.demod.phase = false;
 read_param_struct.impedance.grid = true;
 read_param_struct.impedance.param0 = true;
 read_param_struct.impedance.param1 = true;
+read_param_struct.impedance.absz = true;
+read_param_struct.impedance.phasez = true;
 
 
 %  ----- Sweep by Frequency and iterate over AC amplitude and offset -----
 SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
-start_frequency = 100; stop_frequency = 500e3; pts_frequency = 3; % Hz
-start_amplitude = 0.25; stop_amplitude = 0.01; pts_amplitude = 1; % V
-start_offset = -1; stop_offset = 0; pts_offset = 2; % V
+start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
+start_amplitude = 0.26; stop_amplitude = 0.01; pts_amplitude = 6; % V
+start_offset = -1; stop_offset = 0; pts_offset = 21; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
@@ -101,8 +103,8 @@ overwrite_defaults(:,end+1) = {'IA_precision'; 2};
     % 5 -  Qs Cs, 6 - D Ls, 7 - Q Ls, 8 - Rp Lp, 9 - D Cp
 % overwrite_defaults(:,end+1) = {'model'; 0};
 
-    %  ----- Enable two terminal measurement. -----
-% overwrite_defaults(:,end+1) = {'two_terminal'; 1};
+    %  ----- 1 - Enable two terminal (2T) measurement. 0 - 4T. -----
+overwrite_defaults(:,end+1) = {'two_terminal'; 0};
     
     %  ----- Enable two terminal cable length compensation. -----
 % overwrite_defaults(:,end+1) = {'cable_length'; 1};
@@ -117,8 +119,8 @@ overwrite_defaults(:,end+1) = {'IA_precision'; 2};
 % overwrite_defaults(:,end+1) = {'auto_range'; 0};
 
     %  ----- Current range. -----
-overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
-SetByRange(:,end+1) = {'current_range'; 'offset'; [-0.1 0.1] ; 1e-3};
+overwrite_defaults(:,end+1) = {'current_range'; 1e-3};
+% SetByRange(:,end+1) = {'current_range'; 'offset'; [-0.1 0.1] ; 1e-3};
 
     %  ----- Voltage range. -----
 % overwrite_defaults(:,end+1) = {'voltage_range'; 3};
