@@ -43,9 +43,9 @@ read_param_struct.impedance.param1 = true;
 %  ----- Sweep by Frequency and iterate over AC amplitude and offset -----
 SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
-start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
-start_amplitude = 0.25; stop_amplitude = 0.01; pts_amplitude = 25; % V
-start_offset = -1; stop_offset = 0; pts_offset = 21; % V
+start_frequency = 100; stop_frequency = 500e3; pts_frequency = 3; % Hz
+start_amplitude = 0.25; stop_amplitude = 0.01; pts_amplitude = 1; % V
+start_offset = -1; stop_offset = 0; pts_offset = 2; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
@@ -55,6 +55,8 @@ plt_cmds = {};
 plt_cmds{end+1} = 'colorbar(''eastoutside'')';
 
 %  ----- DC sweep (IV) -----
+DC_Measure = false; % true to enable DC sweep
+
 DC_read_param_struct.demod.r = true; % Current [A]
 DC_read_param_struct.impedance.grid = true; % Voltage [V]
 DC_read_param_struct.impedance.param0 = true; % Resistance [ohm]
@@ -76,7 +78,7 @@ additional_settings = struct; % don't touch
 additional_settings.enable_default = true; % defaults set by Michael
 % ==================== Experiment-dictated conditions on output ====================
     % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude. -----
-additional_settings.output.DLCP = true;
+additional_settings.output.DLCP = false;
 % ==================== Graph and text display settings ====================
     %  ----- Graphs -----
 % additional_settings.display.graph.disp = true;
@@ -116,7 +118,7 @@ overwrite_defaults(:,end+1) = {'IA_precision'; 2};
 
     %  ----- Current range. -----
 overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
-SetByRange(:,end+1) = {'current_range'; 'offset'; [-0.1 0.1] ; 1e-4};
+SetByRange(:,end+1) = {'current_range'; 'offset'; [-0.1 0.1] ; 1e-3};
 
     %  ----- Voltage range. -----
 % overwrite_defaults(:,end+1) = {'voltage_range'; 3};
@@ -272,7 +274,7 @@ if exist([RealSavePath '.mat'], 'file')
     id = 1;
     while true
         tPath = [RealSavePathID_Stripped num2str(id)];
-        if ~exist([RealSavePath '.mat'], 'file')
+        if ~exist([tPath '.mat'], 'file')
             RealSavePath = tPath;
             CurrentMeasID = [MeasIDold num2str(id)];
             if strcmp(additional_settings.display.graph.save.path, RealSavePathID_Stripped)
@@ -280,6 +282,7 @@ if exist([RealSavePath '.mat'], 'file')
             end
             break
         end
+        id = id +1;
     end
     fprintf('Sample %s already has a measurement ID = %s on the supplied path:\n%s\nRenaming measurement ID to %s and the path to:\n%s\n',SampleName,MeasIDold,RealSavePathOld,CurrentMeasID,RealSavePath);
 end
@@ -294,9 +297,9 @@ end
 
 [select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec, MFIA_Settings] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, SetByRange, SweepOrder, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
-
-IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});
-
+if DC_Measure
+    IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});
+end
 %%  EXTRACT AND RESHAPE DATA 
 [select_data_3D_desired_order, select_data_3D_sweep_order] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, DesiredOrder, SweepOrder, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
 select_data_3D_sweep_order.order = SweepOrder;
@@ -316,7 +319,9 @@ if ~exist(RealSavePath, 'dir')
     mkdir(RealSavePath)
 end
 %%  SAVE DATA
+if DC_Measure
 save([RealSavePath ' IV'],'IV_data')
+end
 save(RealSavePath, ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
     ['select_data_3D_desired_order_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
 save([RealSavePath '\' SampleName ' ' CurrentMeasID ' ' StartTime], ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
