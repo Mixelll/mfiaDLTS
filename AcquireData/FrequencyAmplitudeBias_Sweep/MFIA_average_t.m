@@ -1,4 +1,4 @@
-function [Cells, CellsofStruct,x_delta] = MFIA_average_t(DataCells,N_signals,SignalSlect,SegmentSelect,MovMean)
+function [Cells, CellsofStruct,x_delta] = MFIA_average_t(DataCells,N_signals,SignalSlect,SegmentSelect,Range,MovMean)
 if isempty(MovMean)
     MovMean = 1;
 end
@@ -34,10 +34,12 @@ for ic = 1:size(DataCells,2)
     Start = BorderFind(1);
     End = BorderFind(end)-1;
     N_segments = sum(Border)-1;
-    SL = floor(mean(diff(BorderFind)));
+    BorderFindDiff = diff(BorderFind);
+    SLF = floor(mean(BorderFindDiff(1:2:end)));
+    SLS = floor(mean(BorderFindDiff(2:2:end)));
     
-    strFirstV = num2str(mean(yV(BorderFind(1)+1:BorderFind(2)-1)));
-    strSecondV = num2str(mean(yV(BorderFind(2)+1:BorderFind(3)-1)));
+    strFirstV = num2str(round(mean(yV(BorderFind(1)+1:BorderFind(2)-1)),2));
+    strSecondV = num2str(round(mean(yV(BorderFind(2)+1:BorderFind(3)-1)),2));
     
     HL_Criteria = all(yLogicalHigh(BorderFind(1)+1:BorderFind(2)-1));
     if HL_Criteria
@@ -52,30 +54,48 @@ for ic = 1:size(DataCells,2)
         if any(strcmpi(Signals{isc},SignalSlect))
             DataOne = SignalCells{isc};
             y = DataOne(:,2);
-            yFirst = zeros(SL,ceil(N_segments/2));
-            ySecond = zeros(SL,floor(N_segments/2));
+            yFirst = zeros(SLF,ceil(N_segments/2));
+            ySecond = zeros(SLS,floor(N_segments/2));
             i = 1;
             for i_Border = BorderFind(1:2:end)'
-                if i_Border+SL>length(y)
+                if i_Border+SLF>length(y)
                     break
                 end
-                yFirst(:,i) = y(i_Border:i_Border+SL-1);
+                yFirst(:,i) = y(i_Border:i_Border+SLF-1);
                 i = i+1;
             end
             i = 1;
             for i_Border = BorderFind(2:2:end)'
-                if i_Border+SL>length(y)
+                if i_Border+SLS>length(y)
                     break
                 end
-                ySecond(:,i) = y(i_Border:i_Border+SL-1);
+                ySecond(:,i) = y(i_Border:i_Border+SLS-1);
                 i = i+1;
             end
+            
+            xVecF = (0:x_delta:x_delta*(SLF-1)).';
+            xVecS = (0:x_delta:x_delta*(SLS-1)).';
+            if ~isempty(Range)
+                if any([mod(Range,1) Range==0])
+                    xVecFL = xVecF>=Range(1) & xVecF<=Range(2);
+                    xVecSL = xVecS>=Range(1) & xVecS<=Range(2);
+                    
+                    yFirst = yFirst(xVecFL,:);
+                    xVecF = xVecF(xVecFL,:);
+                    ySecond = ySecond(xVecSL,:);
+                    xVecS = xVecS(xVecSL,:);
+                else
+                    yFirst = yFirst(Range(1):min(length(yFirst),Range(2)),:);
+                    xVecF = xVecF(Range(1):min(length(xVecF),Range(2)),:);
+                    ySecond = ySecond(Range(1):min(length(ySecond),Range(2)),:);
+                    xVecS = xVecS(Range(1):min(length(xVecS),Range(2)),:);
+                end
+            end
+            
             yFirstMean = movmean(mean(yFirst,2),MovMean);
             ySecondMean = movmean(mean(ySecond,2),MovMean);
-            xVec = (0:x_delta:x_delta*(SL-1)).';
-            
-            First = [xVec yFirstMean];
-            Second = [xVec ySecondMean];
+            First = [xVecF yFirstMean];
+            Second = [xVecS ySecondMean];
             if contains(StrFirst,SegmentSelect,'IgnoreCase',true)
                 D.(Signals{isc}).(StrFirst) = First;
                 Cells(:,end+1) = [{[DataCells{1,ic} ' ' Signals{isc} ' ' StrFirst ' V=' strFirstV]}; {First}; DataCells(3,ic)];
