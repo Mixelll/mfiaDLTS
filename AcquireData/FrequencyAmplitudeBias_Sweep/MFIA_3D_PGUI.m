@@ -1,4 +1,5 @@
 function DFH = MFIA_3D_PGUI(SubPlots)
+clear 'DataFigureHandles'
 k = 0;
 Nsbp = numel(SubPlots);
 for j = 1:size(SubPlots,2)
@@ -127,6 +128,5 @@ function popmenu_callback2D(src,cbdata,slider2D,SliderCall,value_cell,LeftTxt,Ri
     set(LeftTxt, 'String', num2str(AxBounds(1)))
     set(RightTxt, 'String', num2str(AxBounds(2)))
 end
-
 end
 
