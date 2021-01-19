@@ -37,10 +37,17 @@ AxesCell(2,:) = cellfun(@(c) permute(c,perm_vec), AxesCell(2,:) , 'UniformOutput
 AxesCell(:,:) = AxesCell(:,perm_vec);
 DataCell(2,:) = cellfun(@(c) permute(c,perm_vec), DataCell(2,:) , 'UniformOutput', false);
 
-
+% Create axes matrices
 FitAxMat = AxesCell{2,1};
 AxJ = shiftdim(mean(AxesCell{2,2}));
 AxK = shiftdim(mean(AxesCell{2,3}));
+
+% create axes vectors struct
+axesvec.(AxesCell{1,2}).vec = shiftdim(AxJ(:,1,1));
+axesvec.(AxesCell{1,3}).vec = shiftdim(AxK(1,:,1));
+% Addlabels
+axesvec.(AxesCell{1,2}).label = AxesCell{3,2};
+axesvec.(AxesCell{1,3}).label = AxesCell{3,3};
 
 if ~isempty(p.Results.plt_select_data)
     DataCell = DataCell(:,cellfun(@(c) contains(c,p.Results.plt_select_data(1,:),'IgnoreCase',true), DataCell(1,:))...
@@ -48,15 +55,15 @@ if ~isempty(p.Results.plt_select_data)
 end
 
 cd_mat = DataCell{2,1};
-[~, ~, ~, fit_cell] = fit_func(FitAxMat(:,round(size(FitAxMat,2)/2),round(size(FitAxMat,3)/2)), cd_mat(:,round(size(FitAxMat,2)/2),round(size(FitAxMat,3)/2)));
-fmax = size(fit_cell,2);
+[~, ~, ~, fit_cell0] = fit_func(FitAxMat(:,round(size(FitAxMat,2)/2),round(size(FitAxMat,3)/2)), cd_mat(:,round(size(FitAxMat,2)/2),round(size(FitAxMat,3)/2)));
+fmax = size(fit_cell0,2);
 FitOut = zeros([size(FitAxMat, [2 3]) fmax]);
 StrFitUscore = [];
-for c = fit_cell(1,:)
+for c = fit_cell0(1,:)
     StrFitUscore = [StrFitUscore '_' c{:}];
 end
 StrFitUscore(1) = '';
-FitTitles = fit_cell(3,:);
+FitTitles = fit_cell0(3,:);
 [subrow, subcol] = subplot_min_rectangle(size(DataCell,2)*fmax);
 fig = figure;
 i=1;
@@ -108,10 +115,14 @@ for cd = DataCell
 %             eval(['OutStruct.metadata.' fit_cell{1,f} '_range = val_range;'])
         end
         figure(fig);
+        UserDataStruct.axesvec = axesvec;
+        UserDataStruct.type = FitTitles{f};
         s = subplot(subrow, subcol, i);
+        surf(AxJ, AxK, RangedFitPlot);
+        s.UserData = UserDataStruct;
+        s.Title.UserData = FitTitles{f};
         sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
         i=i+1;
-        surf(AxJ, AxK, RangedFitPlot);
         OutFitCellInner = {fit_cell{1,f}; RangedFitOut; FitTitles{f}};
         xlabel(AxesCell{3,2})
         ylabel(AxesCell{3,3})
@@ -128,8 +139,9 @@ for cd = DataCell
     end
     OutStruct.data = OutFitCellInner;
     OutStruct.axes = AxesCell(2,2:3);
+    OutStruct.axesvec = axesvec;
     OutStruct.order = AxesCell(1,2:3);
-    OutStruct.metadata.span = num2str(span,3);
+    OutStruct.metadata.span = sprintf('%0.3g ',span);
     OutStruct.metadata.fitParams = StrFitUscore;
     OutStruct.metadata.fitNames = FitTitles;
     OutStructArray = [OutStructArray OutStruct];
