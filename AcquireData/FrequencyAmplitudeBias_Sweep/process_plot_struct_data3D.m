@@ -115,6 +115,7 @@ for i = 1:size(data_cell,2)
     s =  subplot(subrow, subcol, i);
     slice(Y,X,Z, data_cell{2,i}, Ysl, Xsl, Zsl);
     s.UserData = UserDataStruct;
+    s.Title.UserData = data_cell{4,i};
     sbp(ceil(i/subcol), mod(i,subcol) + (mod(i,subcol)==0)*subcol) = s;
     xlabel(Ylbl)
     ylabel(Xlbl)

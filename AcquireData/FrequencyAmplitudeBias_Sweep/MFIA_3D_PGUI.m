@@ -1,28 +1,28 @@
-function DFH = MFIA_3D_PGUI(SubPlots)
+function [figs] = MFIA_3D_PGUI(SubPlots)
 clear 'DataFigureHandles'
 k = 0;
 Nsbp = numel(SubPlots);
 for j = 1:size(SubPlots,2)
     for i = 1:size(SubPlots,1)
         k = k+1;
-        DFH(k).fig = figure('Position',get(0,'Screensize'));
-        DFH(k).ax3D = subplot(1,3,1);
-        DFH(k).ax2D = subplot(1,3,2); 
-        DFH(k).ax1D = subplot(1,3,3);
+        fig = figure('Position',get(0,'Screensize'), 'UserData',SubPlots(i,j).Title.UserData);
+        ax3D = subplot(1,3,1);
+        ax2D = subplot(1,3,2); 
+        ax1D = subplot(1,3,3);
         
-        copyobj(get(SubPlots(i,j), 'Children'),DFH(k).ax3D)
-        DFH(k).ax3D = update_structure(DFH(k).ax3D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', true);
-        DFH(k).ax2D.UserData.type = DFH(k).ax3D.UserData.type;
-        DFH(k).ax1D.UserData.type = DFH(k).ax3D.UserData.type;
+        copyobj(get(SubPlots(i,j), 'Children'),ax3D)
+        ax3D = update_structure(ax3D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', true);
+        ax2D.UserData.type = ax3D.UserData.type;
+        ax1D.UserData.type = ax3D.UserData.type;
         if Nsbp>2 || Nsbp==1
-            DFH(k).ax3D.Position = [0.05    0.11    0.304    0.815];
+            ax3D.Position = [0.05    0.11    0.304    0.815];
         else
-            DFH(k).ax3D.Position = [0.05 DFH(k).ax3D.Position(2:end)];
+            ax3D.Position = [0.05 ax3D.Position(2:end)];
         end
-        colorbar(DFH(k).ax3D, 'north')
+        colorbar(ax3D, 'north')
         
-        P3D = DFH(k).ax3D.Position;
-        Temp = DFH(k).ax3D.UserData.axesvec;
+        P3D = ax3D.Position;
+        Temp = ax3D.UserData.axesvec;
         Tempf = fieldnames(Temp)';
         ax_lbls = {Temp.(Tempf{1}).label Temp.(Tempf{2}).label Temp.(Tempf{3}).label};
         ax_ranges = {[min(Temp.(Tempf{1}).vec) max(Temp.(Tempf{1}).vec)] [min(Temp.(Tempf{2}).vec) max(Temp.(Tempf{2}).vec)] [min(Temp.(Tempf{3}).vec) max(Temp.(Tempf{3}).vec)]};
@@ -32,30 +32,29 @@ for j = 1:size(SubPlots,2)
         PopOne3D = PopStrVal{2,1};
         SliderStep2 = 0.1;
         
-        P2D = DFH(k).ax2D.Position;
-        SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,DFH(k).ax1D,AxisString,DFH(k).ax2D);
-        DFH(k).s2D = uicontrol('Parent',DFH(k).fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
+        P2D = ax2D.Position;
+        SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,ax1D,AxisString,ax2D);
+        s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
             'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
-        DFH(k).s2D.Position = [P2D(1) P2D(2)-0.08 P2D(3) 0.02];
+        s2D.Position = [P2D(1) P2D(2)-0.08 P2D(3) 0.02];
         LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)-0.02 P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(1)) ,'FontSize',15);
         RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)+P2D(3) P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(2)) ,'FontSize',15);
         
-        PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,DFH(k).s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
-        DFH(k).p2D = uicontrol('Parent',DFH(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'Units','normalized', 'Position', [P2D(1)+0.08 P2D(2)-0.09 0.08 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
+        PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
+        p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'Units','normalized', 'Position', [P2D(1)+0.08 P2D(2)-0.09 0.08 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
         
-        SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,DFH(k).ax2D,AxisString,DFH(k).ax3D.UserData);
-        DFH(k).s3D = uicontrol('Parent',DFH(k).fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
+        SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,ax2D,AxisString,ax3D.UserData);
+        s3D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
             'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2), 'SliderStep',[1/PopStrVal{4,1} SliderStep2]);
-        DFH(k).s3D.Position = [P3D(1) P3D(2)-0.08 P3D(3) 0.02];
+        s3D.Position = [P3D(1) P3D(2)-0.08 P3D(3) 0.02];
         LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.02 P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(1)) ,'FontSize',15);
         RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(2)) ,'FontSize',15);
         
-        PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,DFH(k).s3D,SliderCallFromPop3D,DFH(k).p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
-        DFH(k).p3D = uicontrol('Parent',DFH(k).fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1)+0.11 P3D(2)-0.09 0.08 0.05], 'Callback',PopCall3D);
-         
+        PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
+        p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'Units','normalized', 'Position', [P3D(1)+0.11 P3D(2)-0.09 0.08 0.05], 'Callback',PopCall3D);
+        figs(k) = fig;
     end
 end
-
 %% Functions
 function slider_callback3D(src,cbdata,Plot2D,SelectAxString,DataStruct)
     UserData = Plot2D.UserData;
