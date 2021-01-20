@@ -18,7 +18,7 @@ else
     p.addParameter('xmapping', 0, @isnumeric);
 end
 % Binary scan type.
-p.addParameter('scan', 1, @isnumeric);
+p.addParameter('scan', 0, @isnumeric);
 
 % Minimum wait time in seconds between a sweep parameter change and the recording of the next sweep point. This
 % parameter can be used to define the required settling time of the experimental setup. The effective wait time
