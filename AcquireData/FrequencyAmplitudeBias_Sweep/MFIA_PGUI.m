@@ -57,7 +57,7 @@ if D ==3
             RightTxt3D = uicontrol('Style','text', 'Units','pixels', 'Position',[P3D(1)+P3D(3) P3D(2)-120 70 30],'String',num2str(PopOne3D(2)) ,'FontSize',15);
 
             PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
-            p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','pixels', 'Position', [P3D(1)+350 P3D(2)-113 250 50], 'Callback',PopCall3D);
+            p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','pixels', 'Position', [P3D(1)+300 P3D(2)-113 250 50], 'Callback',PopCall3D);
             figs(k) = fig;
         end
     end

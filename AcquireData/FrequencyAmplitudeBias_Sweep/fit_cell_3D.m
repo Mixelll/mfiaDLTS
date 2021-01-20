@@ -24,7 +24,17 @@ if ~isempty(p.Results.plot_fit)
     if isfield(p.Results.plot_fit, 'properties')
         plot_properties = p.Results.plot_fit.properties;
     else
-        plot_properties = {''};
+        plot_properties = {};
+    end
+    if isfield(p.Results.plot_fit, 'commands')
+        plot_commands = p.Results.plot_fit.commands;
+    else
+        plot_commands = {};
+    end
+    if isfield(p.Results.plot_fit, 'screensize')
+        plot_screensize = p.Results.plot_fit.screensize;
+    else
+        plot_screensize = 0;
     end
 end
 
@@ -79,7 +89,7 @@ for cd = DataCell
                 disp(fit_progress)
             end
             if ~isempty(p.Results.plot_fit)
-                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), plot_properties{:}, [p.Results.title ' ' cd{4} newline strrep(fit_progress_title,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 15, plot_func, ~plot_visible);
+                ax = s_plot(FitAxMat(:,j,k), cd_mat(:,j,k), plot_properties, plot_commands, [p.Results.title ' ' cd{4} newline strrep(fit_progress_title,'_','\_')], fit_str, '', AxesCell{3,1}, cd{3}, 15, plot_func, ~plot_visible, plot_screensize);
                 if ~isempty(OutFitFunc)
                     hold(ax(1),'on');
                     fplot(OutFitFunc, span)
