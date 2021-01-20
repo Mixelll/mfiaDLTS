@@ -1,4 +1,4 @@
-function [figs] = MFIA_3D_PGUI(SubPlots,D)
+function [figs] = MFIA_PGUI(SubPlots,D)
 clear 'DataFigureHandles'
 k = 0;
 Nsbp = numel(SubPlots);
@@ -21,10 +21,9 @@ if D ==3
                 ax3D.Position = [0.05 ax3D.Position(2:end)];
             end
             colorbar(ax3D, 'north')
-
-            P3D = ax3D.Position;
-            P2D = ax2D.Position;
-            P1D = ax1D.Position;
+            ax3D.Units = 'pixels'; ax2D.Units = 'pixels'; ax1D.Units = 'pixels';
+            P3D = ax3D.Position; P2D = ax2D.Position; P1D = ax1D.Position;
+            ax3D.Units = 'normalized'; ax2D.Units = 'normalized'; ax1D.Units = 'normalized';
             Temp = ax3D.UserData.axesvec;
             Tempf = fieldnames(Temp)';
             ax_lbls = {Temp.(Tempf{1}).label Temp.(Tempf{2}).label Temp.(Tempf{3}).label};
@@ -37,28 +36,28 @@ if D ==3
 
             
             
-            c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1)+P1D(3)/8 P1D(2)-0.06 0.05 0.02]);
-            c2Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1)+P2D(3)/8 P2D(2)-0.06 0.05 0.02]);
+            c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','pixels', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-85 150 20]);
+            c2Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','pixels', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-85 150 20]);
             
             SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,ax1D,AxisString,ax2D,c1Dpc);
-            s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
+            s2D = uicontrol('Parent',fig,'Style','slider', 'Units','pixels', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
-            s2D.Position = [P2D(1) P2D(2)-0.08 P2D(3) 0.02];
-            LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)-0.02 P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(1)) ,'FontSize',15);
-            RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)+P2D(3) P2D(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(2)) ,'FontSize',15);
+            s2D.Position = [P2D(1) P2D(2)-120 P2D(3) 30];
+            LeftTxt2D = uicontrol('Style','text', 'Units','pixels', 'Position',[P2D(1)-20 P2D(2)-120 70 30],'String',num2str(PopOne2D(1)) ,'FontSize',15);
+            RightTxt2D = uicontrol('Style','text', 'Units','pixels', 'Position',[P2D(1)+P2D(3) P2D(2)-120 70 30],'String',num2str(PopOne2D(2)) ,'FontSize',15);
 
             PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
-            p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'FontSize',10, 'Units','normalized', 'Position', [P2D(1)+0.08 P2D(2)-0.085 0.08 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
+            p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'FontSize',10, 'Units','pixels', 'Position', [P2D(1)+150 P2D(2)-110 250 50], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
 
             SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,ax2D,AxisString,ax3D.UserData,c2Dpc);
-            s3D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
+            s3D = uicontrol('Parent',fig,'Style','slider', 'Units','pixels', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
                 'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2), 'SliderStep',[1/PopStrVal{4,1} SliderStep2]);
-            s3D.Position = [P3D(1) P3D(2)-0.08 P3D(3) 0.02];
-            LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.02 P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(1)) ,'FontSize',15);
-            RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.08 0.02 0.02],'String',num2str(PopOne3D(2)) ,'FontSize',15);
+            s3D.Position = [P3D(1) P3D(2)-120 P3D(3) 30];
+            LeftTxt3D = uicontrol('Style','text', 'Units','pixels', 'Position',[P3D(1)-20 P3D(2)-120 70 30],'String',num2str(PopOne3D(1)) ,'FontSize',15);
+            RightTxt3D = uicontrol('Style','text', 'Units','pixels', 'Position',[P3D(1)+P3D(3) P3D(2)-120 70 30],'String',num2str(PopOne3D(2)) ,'FontSize',15);
 
             PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
-            p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.11 P3D(2)-0.085 0.08 0.05], 'Callback',PopCall3D);
+            p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','pixels', 'Position', [P3D(1)+220 P3D(2)-113 250 50], 'Callback',PopCall3D);
             figs(k) = fig;
         end
     end
@@ -89,10 +88,9 @@ elseif D==2
                 ax2D.Position = [0.05 ax2D.Position(2:end)];
             end
             colorbar(ax2Dpc, 'northoutside')
-            
-            P2D = ax2D.Position;
-            P2Dpc = ax2Dpc.Position;
-            P1D = ax1D.Position;
+            ax2D.Units = 'pixels'; ax2Dpc.Units = 'pixels'; ax1D.Units = 'pixels';
+            P2D = ax2D.Position; P2Dpc = ax2Dpc.Position; P1D = ax1D.Position;
+            ax2D.Units = 'normalized'; ax2Dpc.Units = 'normalized'; ax1D.Units = 'normalized';
             Temp = ax2D.UserData.axesvec;
             Tempf = fieldnames(Temp)';
             ax_lbls = {Temp.(Tempf{1}).label Temp.(Tempf{2}).label};
@@ -102,17 +100,17 @@ elseif D==2
             PopOne2D = PopStrVal{2,1};
             SliderStep2 = 0.1;
             
-            c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1)+P1D(3)/8 P1D(2)-0.06 0.05 0.02]);
+            c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','pixels', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-85 150 20]);
             
             SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,ax1D,AxisString,ax2Dpc,c1Dpc);
-            s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
+            s2D = uicontrol('Parent',fig,'Style','slider', 'Units','pixels', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
-            s2D.Position = [P2Dpc(1) P2Dpc(2)-0.08 P2Dpc(3) 0.02];
-            LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2Dpc(1)-0.02 P2Dpc(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(1)) ,'FontSize',15);
-            RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2Dpc(1)+P2Dpc(3) P2Dpc(2)-0.08 0.02 0.02],'String',num2str(PopOne2D(2)) ,'FontSize',15);
+            s2D.Position = [P2Dpc(1) P2Dpc(2)-120 P2Dpc(3) 30];
+            LeftTxt2D = uicontrol('Style','text', 'Units','pixels', 'Position',[P2Dpc(1)+20 P2Dpc(2)-120 70 30],'String',num2str(PopOne2D(1)) ,'FontSize',15);
+            RightTxt2D = uicontrol('Style','text', 'Units','pixels', 'Position',[P2Dpc(1)+P2Dpc(3) P2Dpc(2)-120 70 30],'String',num2str(PopOne2D(2)) ,'FontSize',15);
 
             PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
-            p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P2Dpc(1)+0.08 P2Dpc(2)-0.085 0.08 0.05], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,:)));
+            p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','pixels', 'Position', [P2Dpc(1)+150 P2Dpc(2)-110 250 50], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,:)));
 
             figs(k) = fig;
         end
