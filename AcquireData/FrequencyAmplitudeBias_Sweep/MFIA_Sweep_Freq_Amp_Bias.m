@@ -46,8 +46,8 @@ read_param_struct.impedance.phasez = true;
 SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
-start_amplitude = 0.26; stop_amplitude = 0.01; pts_amplitude = 6; % V
-start_offset = -1.5; stop_offset = 0; pts_offset = 21; % V
+start_amplitude = 0.15; stop_amplitude = 0.01; pts_amplitude = 57; % V
+start_offset = -1.5; stop_offset = 0; pts_offset = 31; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
@@ -57,14 +57,14 @@ plt_cmds = {};
 plt_cmds{end+1} = 'colorbar(''eastoutside'')';
 
 %  ----- DC sweep (IV) -----
-DC_Measure = false; % true to enable DC sweep
+DC_Measure = true; % true to enable DC sweep
 
 DC_read_param_struct.demod.r = true; % Current [A]
 DC_read_param_struct.impedance.grid = true; % Voltage [V]
 DC_read_param_struct.impedance.param0 = true; % Resistance [ohm]
 
-DC_sweep_range = [-1 1]; % Vbias [V]
-DC_pts = 10; % sweep points
+DC_sweep_range = [-1.5 1]; % Vbias [V]
+DC_pts = 251; % sweep points
 DC_hysteresis = true; % Include a reverse sweep
 
 %% CHANGE SETTINGS (uncomment and change values)
@@ -80,7 +80,7 @@ additional_settings = struct; % don't touch
 additional_settings.enable_default = true; % defaults set by Michael
 % ==================== Experiment-dictated conditions on output ====================
     % Enable DLCP condition on offset (Vbias): ActualOffset = InputOffset - Amplitude. -----
-additional_settings.output.DLCP = false;
+additional_settings.output.DLCP = true;
 % ==================== Graph and text display settings ====================
     %  ----- Graphs -----
 % additional_settings.display.graph.disp = true;
