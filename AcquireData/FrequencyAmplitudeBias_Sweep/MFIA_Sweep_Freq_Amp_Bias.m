@@ -47,7 +47,7 @@ SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
 start_amplitude = 0.26; stop_amplitude = 0.01; pts_amplitude = 6; % V
-start_offset = -1; stop_offset = 0; pts_offset = 21; % V
+start_offset = -1.5; stop_offset = 0; pts_offset = 21; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
