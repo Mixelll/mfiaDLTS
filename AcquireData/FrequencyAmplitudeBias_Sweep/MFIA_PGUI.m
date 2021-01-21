@@ -170,12 +170,12 @@ end
 
 function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBox)
     XlblBefore = Plot1D.XLabel.String;
-    XLim = Plot1D.XLim
-    YLim = Plot1D.YLim
+    XLim = Plot1D.XLim;
+    YLim = Plot1D.YLim;
     UserData = Plot1D.UserData;
     P2DC = Plot2D.Children;
-    P2DX = Plot2D.XLabel.String
-    P2DY = Plot2D.YLabel.String
+    P2DX = Plot2D.XLabel.String;
+    P2DY = Plot2D.YLabel.String;
     if strcmpi(P2DX,AxisString)
         [~,SelectMinInd] = min(abs(P2DC.XData - src.Value));
         plot(Plot1D, P2DC.YData, shiftdim(P2DC.CData(:,SelectMinInd)))
