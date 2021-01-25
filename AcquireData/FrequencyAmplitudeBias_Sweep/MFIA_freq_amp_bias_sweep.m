@@ -303,7 +303,7 @@ actual_frequency_vec = zeros(1,length(frequency_vec));
 actual_amplitude_vec = zeros(1,length(amplitude_vec));
 actual_offset_vec = zeros(1,length(offset_vec));
 title_params = '';
-
+offset_sign = sign(offset_vec(round(length(offset_vec)/4)));
 %% Sweep by
 if additional_settings_internal.display.graph.save.if
     StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
@@ -315,7 +315,7 @@ for v = 1:lpairs
     amplitude_val = amplitude_vec(min(v,la));
     offset_val = offset_vec(min(v,lo));
     if additional_settings_internal.output.DLCP
-        offset_val = offset_val - amplitude_val;
+        offset_val = offset_val + offset_sign*amplitude_val;
     end
     if any(strcmpi(sweep_order(2:3), 'frequency'))
         ziDAQ('setDouble', ['/' device '/imps/' c.imp_c '/freq'], frequency_val)

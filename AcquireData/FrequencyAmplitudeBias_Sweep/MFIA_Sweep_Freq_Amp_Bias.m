@@ -15,8 +15,8 @@ clear
 device_id = 'dev5168';
 
 %  ----- Sample name and measurement number -----
-SampleName = 'V5 b7 150um 4';
-CurrentMeasID = 'M4T';
+SampleName = 'IB2 BL 100um 10';
+CurrentMeasID = 'DLCP4T Forward1';
 StartTime = datestr(now, 'yyyy-mm-dd HH-MM');
 
 %  ----- Save path -----
@@ -46,8 +46,8 @@ read_param_struct.impedance.phasez = true;
 SweepOrder = {'frequency','amplitude','offset'};
 freq_xmapping = {'freq_xmapping', 1}; % set 0 for linear distribution between start and stop, set 1 for log distribution
 start_frequency = 100; stop_frequency = 500e3; pts_frequency = 100; % Hz
-start_amplitude = 0.15; stop_amplitude = 0.01; pts_amplitude = 57; % V
-start_offset = -1.5; stop_offset = 0; pts_offset = 31; % V
+start_amplitude = 0.01; stop_amplitude = 0.15; pts_amplitude = 57; % V
+start_offset = 1; stop_offset = 0; pts_offset = 21; % V
 
 plt_log_freq = true; % set to plot sweep/desired order with logarithmic frequency values
 plot_desired_order = true;
@@ -57,7 +57,7 @@ plt_cmds = {};
 plt_cmds{end+1} = 'colorbar(''eastoutside'')';
 
 %  ----- DC sweep (IV) -----
-DC_Measure = true; % true to enable DC sweep
+DC_Measure = false; % true to enable DC sweep
 
 DC_read_param_struct.demod.r = true; % Current [A]
 DC_read_param_struct.impedance.grid = true; % Voltage [V]
@@ -119,7 +119,7 @@ overwrite_defaults(:,end+1) = {'two_terminal'; 0};
 % overwrite_defaults(:,end+1) = {'auto_range'; 0};
 
     %  ----- Current range. -----
-overwrite_defaults(:,end+1) = {'current_range'; 1e-3};
+overwrite_defaults(:,end+1) = {'current_range'; 1e-4};
 % SetByRange(:,end+1) = {'current_range'; 'offset'; [-0.1 0.1] ; 1e-3};
 
     %  ----- Voltage range. -----
