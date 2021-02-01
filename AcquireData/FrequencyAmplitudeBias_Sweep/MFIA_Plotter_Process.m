@@ -1,4 +1,4 @@
-function [Cells, CellsofStruct,x_delta] = MFIA_average_t(DataCells,N_signals,SignalSlect,SegmentSelect,Range,MovMean)
+function [Cells, CellsofStruct,x_delta] = MFIA_Plotter_Process(DataCells,N_signals,SignalSlect,SegmentSelect,Range,MovMean)
 if isempty(MovMean)
     MovMean = 1;
 end
