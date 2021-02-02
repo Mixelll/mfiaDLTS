@@ -300,7 +300,7 @@ end
 [select_data_sweep_order_struct_vec, full_data_sweep_order_struct_vec, MFIA_Settings] = MFIA_freq_amp_bias_sweep(device_id, additional_settings, SetByRange, SweepOrder, sweep_range, sweep_pts, frequency_vec, amplitude_vec, offset_vec, read_param_struct, overwrite_defaults{:});
 
 if DC_Measure
-    IV_data = MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});
+    MFIA_DC(device_id, additional_settings, DC_sweep_range, DC_pts, DC_read_param_struct, RealSavePath, DC_hysteresis, overwrite_defaults{:});
 end
 %%  EXTRACT AND RESHAPE DATA 
 [select_data_3D_desired_order, select_data_3D_sweep_order] = MFIA_data_reshape_3D(select_data_sweep_order_struct_vec, DesiredOrder, SweepOrder, pts_frequency, pts_amplitude, pts_offset, frequency_vec, amplitude_vec, offset_vec);
@@ -321,9 +321,6 @@ if ~exist(RealSavePath, 'dir')
     mkdir(RealSavePath)
 end
 %%  SAVE DATA
-if DC_Measure
-save([RealSavePath ' IV'],'IV_data')
-end
 save(RealSavePath, ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...
     ['select_data_3D_desired_order_' sweep_order_string(DesiredOrder)], ['full_struct_vec_' sweep_order_string(DesiredOrder)]);
 save([RealSavePath '\' SampleName ' ' CurrentMeasID ' ' StartTime], ['select_data_3D_sweep_order_' sweep_order_string(SweepOrder)],...

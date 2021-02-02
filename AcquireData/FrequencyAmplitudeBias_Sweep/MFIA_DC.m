@@ -176,8 +176,17 @@ graph.during_sweep = additional_settings_internal.display.graph.during_sweep;
 
 if ~isempty(InSavePath)
     StartTime = datestr(now, 'yyyy-mm-dd hh-MM');
-    SavePath = [InSavePath '\DC ' StartTime];
-    mkdir(SavePath)
+    SavePath0 = [InSavePath '\DC'];
+    i=1;
+    while true
+        SavePath = [SavePath0 num2str(i)];
+        if ~exist(SavePath, 'dir')
+            mkdir(SavePath)
+            break
+        else
+            i=i+1;
+        end
+    end
 end
 
 
@@ -480,7 +489,8 @@ IV_data.sweep = sweep;
 if hysteresis
     IV_data.sweeph = sweeph;
 end
-save([SavePath '\IV'],'IV_data') 
+save([SavePath '\IV'],'IV_data')
+save([SavePath '\IV' StartTime],'IV_data') 
 end
 
 function s = plot_data(plot_func, lbl, x, select_data, read_param_cell, Title, savepath)
@@ -501,7 +511,7 @@ for c = read_param_cell
         s = plot_func(x, eval(c{1}));
         set(s, 'LineWidth', 1.5)
         set(s, 'Color', 'black');
-        grid on
+        grid on 
         xlabel(lbl)
         ylabel(c{4})
         i=i+1;
