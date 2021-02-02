@@ -1,101 +1,113 @@
-function [outputArg1,outputArg2] = MFIA_DAQ_FrameSegmenter(DataCells,SignalSlect,SegmentSelect,Range,MovMean)
-if isempty(MovMean)
-    MovMean = 1;
-end
-CellsofStruct = DataCells;
-Cells = {};
-Fnames = fieldnames(DataCells{2,1})';
-Vfield = Fnames{contains(Fnames, 'volt', 'IgnoreCase',true)};
-for ic = 1:size(DataCells,2)
-    DataV = DataCells{2,ic}.(Vfield);
-    xV = DataV(:,1);
-    yV = DataV(:,2);
-    Data = DataCells{2,ic};
-    SignalLength = length(Data);
-    Signals = {};
+function [DataStruct] = MFIA_DAQ_FrameSegmenter(DataCells,varargin)
+p = inputParser;
+p.KeepUnmatched=true;
+p.addParameter('TransitionTime', 1.8667e-04, @isnumeric); % Actual voltage transition time should be less than TransitionTime
+p.addParameter('RoundVoltage', 5e-2, @isnumeric); % Round displayed voltage to within RoundVoltage
+p.addParameter('VoltageTransitionCriteria', 1e-2, @isnumeric); % Changes of voltage larger than VoltageTransitionCriteria will be treated as transition points
+p.addParameter('UniformInput', 0.1, @isnumeric); % Discard transition points if they appear less frequently than UniformInput fraction total points
+p.addParameter('CoerceVoltage', 0.1, @isnumeric); % If before-segment-voltage (Vfrom) or segment-voltage (Vto) of a certain transition point is within 
+% CoerceVoltage from the expected voltage (mean - from the majority of data sets), it will be coerced to the expected voltage
+p.parse(varargin{:});
 
-    x_delta = mean(diff(xV));
-    yMean = mean(y);
-    yLogicalHigh = yV>yMean;
-%     yLogicalLow = yV<yMean;
-    Border = [0 ; abs(diff(yLogicalHigh))];
-    BorderFind = find(Border);
-    Start = BorderFind(1);
-    End = BorderFind(end)-1;
-    N_segments = sum(Border)-1;
-    BorderFindDiff = diff(BorderFind);
-    SLF = floor(mean(BorderFindDiff(1:2:end)));
-    SLS = floor(mean(BorderFindDiff(2:2:end)));
-    
-    strFirstV = num2str(round(mean(yV(BorderFind(1)+1:BorderFind(2)-1)),2));
-    strSecondV = num2str(round(mean(yV(BorderFind(2)+1:BorderFind(3)-1)),2));
-    
-    HL_Criteria = all(yLogicalHigh(BorderFind(1)+1:BorderFind(2)-1));
-    if HL_Criteria
-        StrFirst = 'L2High';
-        StrSecond = 'H2Low';
-    else
-        StrFirst = 'H2Low';
-        StrSecond = 'L2High';
+Ncells = size(DataCells,2);
+Fnames = fieldnames(DataCells{2,1})';
+VfieldName = Fnames{contains(Fnames, 'volt', 'IgnoreCase',true)};
+RV = p.Results.RoundVoltage; % Voltage round bracket
+TC = p.Results.VoltageTransitionCriteria; % Transition Criteria
+UI = p.Results.UniformInput;
+CV = p.Results.CoerceVoltage;
+
+SetTable = table('Size',[0,7],'VariableNames', {'Set Number', 'Set Name', 'Transition Index', 'From', 'To', 'From Round', 'To Round'},...
+    'VariableTypes', {'double','string','double','double','double','double','double'});
+TransitionTable = table('Size',[0,7],'VariableNames', {'Transition Index', 'Occurances', 'Set Names', 'From Round', 'From SD', 'To Round', 'To SD'},...
+    'VariableTypes', {'double','double','cell','double','double','double','double'});
+for ic = 1:Ncells
+    Data = DataCells{2,ic};
+    DataV = Data.(VfieldName);
+    xV = DataV(:,1); yV = DataV(:,2); x_delta = mean(diff(xV));
+
+    TP = round(p.Results.TransitionTime/x_delta); % Transition points length
+    SL = length(yV);
+    yVdiff = diff(yV); yVdiffInd = find(abs(yVdiff)>TC).'+1; yVdiffInd(yVdiffInd<TP) = []; yVdiffInd(yVdiffInd>(SL-TP)) = []; % Find transition indexes
+
+    for i = yVdiffInd
+        Vfrom = mean(yV(max(i-2*TP+1,1):i-TP)); Vto = mean(yV(i+TP:min(i+2*TP-1,SL)));
+        SetTable(end+1,:) = {ic DataCells{1,ic} i Vfrom Vto CustomRound(Vfrom,RV) CustomRound(Vto,RV)};
     end
-    D = struct;
-    for isc = 1:length(SignalCells)
-        if any(strcmpi(Signals{isc},SignalSlect))
-            DataOne = SignalCells{isc};
-            y = DataOne(:,2);
-            yFirst = zeros(SLF,ceil(N_segments/2));
-            ySecond = zeros(SLS,floor(N_segments/2));
-            i = 1;
-            for i_Border = BorderFind(1:2:end)'
-                if i_Border+SLF>length(y)
-                    break
+end
+for i = unique(SetTable.('Transition Index')).'
+    TempTable = SetTable(SetTable.('Transition Index')==i,:);
+    Nsets = height(TempTable);
+    SetNames = TempTable.('Set Name');
+    FromArray = TempTable.('From');
+    ToArray = TempTable.('To');
+    TransitionTable(end+1,:) = {i Nsets {SetNames} CustomRound(mean(FromArray),RV) std(FromArray) CustomRound(mean(ToArray),RV) std(ToArray)};
+end
+disp(TransitionTable);
+
+for ic = 1:Ncells
+    Data = DataCells{2,ic};
+    DataV = Data.(VfieldName);
+    xV = DataV(:,1); yV = DataV(:,2); x_delta = mean(diff(xV));
+    
+    TP = round(p.Results.TransitionTime/x_delta); % Transition points length
+    SL = length(yV);
+    yVdiff = diff(yV); yVdiffInd = find(abs(yVdiff)>TC).'+1; yVdiffInd(yVdiffInd<TP) = []; yVdiffInd(yVdiffInd>(SL-TP)) = []; % Find transition indexes
+    
+    if isempty(yVdiffInd), yVdiffInd = []; end
+    Tvec = []; Tcell = cell(3,0); % Initialize temporary containers
+    for i = yVdiffInd
+        if ~UI || sum(TransitionTable(TransitionTable.('Transition Index')==i,:).Occurances/Ncells)>=UI
+            if isempty(Tvec) || i<(Tvec(end)+TP)
+                Tvec(end+1) = i;
+            end
+            if ~isempty(Tvec) && (i>(Tvec(end)+TP) || i==yVdiffInd(end))
+                TransitionIndex = Tvec(ceil(length(Tvec)/2));
+                Vfrom = mean(yV(max(Tvec(1)-2*TP+1,1):Tvec(1)-TP)); VfromExpected = TransitionTable(TransitionTable.('Transition Index')==TransitionIndex,:).('From Round');
+                if abs(Vfrom-VfromExpected)<CV, Vfrom = VfromExpected; end
+                Vto = mean(yV(Tvec(end)+TP:min(Tvec(end)+2*TP-1,SL))); VtoExpected = TransitionTable(TransitionTable.('Transition Index')==TransitionIndex,:).('From Round');
+                if abs(Vto-VtoExpected)<CV, Vto = VtoExpected; end
+                
+                if ~isempty(Tcell)
+                    Tcell{3,end} = {[Tcell{3,end} TransitionIndex]};
                 end
-                yFirst(:,i) = y(i_Border:i_Border+SLF-1);
-                i = i+1;
-            end
-            i = 1;
-            for i_Border = BorderFind(2:2:end)'
-                if i_Border+SLS>length(y)
-                    break
-                end
-                ySecond(:,i) = y(i_Border:i_Border+SLS-1);
-                i = i+1;
-            end
-            
-            xVecF = (0:x_delta:x_delta*(SLF-1)).';
-            xVecS = (0:x_delta:x_delta*(SLS-1)).';
-            if ~isempty(Range)
-                if any([mod(Range,1) Range==0])
-                    xVecFL = xVecF>=Range(1) & xVecF<=Range(2);
-                    xVecSL = xVecS>=Range(1) & xVecS<=Range(2);
-                    
-                    yFirst = yFirst(xVecFL,:);
-                    xVecF = xVecF(xVecFL,:);
-                    ySecond = ySecond(xVecSL,:);
-                    xVecS = xVecS(xVecSL,:);
-                else
-                    yFirst = yFirst(Range(1):min(length(yFirst),Range(2)),:);
-                    xVecF = xVecF(Range(1):min(length(xVecF),Range(2)),:);
-                    ySecond = ySecond(Range(1):min(length(ySecond),Range(2)),:);
-                    xVecS = xVecS(Range(1):min(length(xVecS),Range(2)),:);
-                end
-            end
-            
-            yFirstMean = movmean(mean(yFirst,2),MovMean);
-            ySecondMean = movmean(mean(ySecond,2),MovMean);
-            First = [xVecF yFirstMean];
-            Second = [xVecS ySecondMean];
-            if contains(StrFirst,SegmentSelect,'IgnoreCase',true)
-                D.(Signals{isc}).(StrFirst) = First;
-                Cells(:,end+1) = [{[DataCells{1,ic} ' ' Signals{isc} ' ' StrFirst ' V=' strFirstV]}; {First}; DataCells(3,ic)];
-            end
-            if contains(StrSecond,SegmentSelect,'IgnoreCase',true)
-                D.(Signals{isc}).(StrSecond) = Second;
-                Cells(:,end+1) = [{[DataCells{1,ic} ' ' Signals{isc} ' ' StrSecond ' V=' strSecondV]}; {Second}; DataCells(3,ic)];
+                Tcell(:,end+1) = {['from ' num2str(CustomRound(Vfrom,RV)) ' to ' num2str(CustomRound(Vto,RV))] ; [Vfrom Vto] ; TransitionIndex+1};
+                Tvec = i;    
             end
         end
     end
-    CellsofStruct{2,ic} = D;  
+    if ~isempty(Tcell)
+        Vfrom1 = Tcell{2,end}(2);
+        Vto1 = Tcell{2,1}(1);
+        Tcell = [{['from ' num2str(CustomRound(Vfrom1,RV)) ' to ' num2str(CustomRound(Vto1,RV))] ; [Vfrom1 Vto1]; [1 Tcell{3,1}(1)-1]} Tcell];
+        Tcell(3,end) = {[Tcell{3,end} SL]};
+    else
+        Vto = mean(yV(end-TP:end-1));
+        if ~isempty(varargin)
+            if length(varargin{:})==2
+                [~, FromInd] = max(abs(varargin{:}-Vto));
+                Vfrom = varargin{:}(FromInd);
+            elseif length(varargin{:})==1
+                Vfrom = varargin{:};
+            end
+        else
+            Vfrom = 0;
+        end
+        Tcell = {['from ' num2str(CustomRound(Vfrom,RV)) 'to ' num2str(CustomRound(Vto,RV))] ; [Vfrom Vto] ; [1 SL]};
+    end
+    
+    DataStruct = struct;
+    for c = Fnames
+        DataC = Data.(c{:});
+        for tc = Tcell
+            FT = tc{2}; % From V to V
+            ST = tc{3}; % Segment start-stop
+            DataC_Seg = DataC(ST(1):ST(2),2); xDataC_Seg = x_delta*(1:length(DataC_Seg)).';
+            TempStruct.(regexprep(['F' num2str(CustomRound(FT(1),RV)) 'T' num2str(CustomRound(FT(2),RV),3)], {'-','\.'}, {'m','p'})) = [xDataC_Seg DataC_Seg];
+        end
+        DataStruct.(c{:}) = TempStruct;
+    end
+ 
 end
 end
 
