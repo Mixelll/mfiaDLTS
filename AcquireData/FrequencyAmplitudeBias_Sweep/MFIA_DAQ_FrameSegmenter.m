@@ -1,4 +1,4 @@
-function [DataStruct] = MFIA_DAQ_FrameSegmenter(DataCells,varargin)
+function [DataStructCells,DataTable,TransitionTable,SetTable] = MFIA_DAQ_FrameSegmenter(DataCells,varargin)
 p = inputParser;
 p.KeepUnmatched=true;
 p.addParameter('TransitionTime', 1.8667e-04, @isnumeric); % Actual voltage transition time should be less than TransitionTime
@@ -16,11 +16,13 @@ RV = p.Results.RoundVoltage; % Voltage round bracket
 TC = p.Results.VoltageTransitionCriteria; % Transition Criteria
 UI = p.Results.UniformInput;
 CV = p.Results.CoerceVoltage;
-
+DataStructCells = DataCells;
+DataTable = table('Size',[0,7],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'From', 'To', 'Length Seconds'},...
+    'VariableTypes', {'string','double','string','double','double','double','double','double'});
 SetTable = table('Size',[0,7],'VariableNames', {'Set Number', 'Set Name', 'Transition Index', 'From', 'To', 'From Round', 'To Round'},...
     'VariableTypes', {'double','string','double','double','double','double','double'});
 TransitionTable = table('Size',[0,7],'VariableNames', {'Transition Index', 'Occurances', 'Set Names', 'From Round', 'From SD', 'To Round', 'To SD'},...
-    'VariableTypes', {'double','double','cell','double','double','double','double'});
+    'VariableTypes', {'double','double','cellstr','double','double','double','double'});
 for ic = 1:Ncells
     Data = DataCells{2,ic};
     DataV = Data.(VfieldName);
@@ -44,7 +46,8 @@ for i = unique(SetTable.('Transition Index')).'
     TransitionTable(end+1,:) = {i Nsets {SetNames} CustomRound(mean(FromArray),RV) std(FromArray) CustomRound(mean(ToArray),RV) std(ToArray)};
 end
 disp(TransitionTable);
-
+DiscardedIndices = [];
+DiscardedIndicesSets = {};
 for ic = 1:Ncells
     Data = DataCells{2,ic};
     DataV = Data.(VfieldName);
@@ -74,6 +77,10 @@ for ic = 1:Ncells
                 Tcell(:,end+1) = {['from ' num2str(CustomRound(Vfrom,RV)) ' to ' num2str(CustomRound(Vto,RV))] ; [Vfrom Vto] ; TransitionIndex+1};
                 Tvec = i;    
             end
+        else
+            DiscardedIndices(end+1) = i;
+            DiscardedIndicesSets(end+1) = DataCells{1,ic};
+            
         end
     end
     if ~isempty(Tcell)
@@ -107,7 +114,17 @@ for ic = 1:Ncells
         end
         DataStruct.(c{:}) = TempStruct;
     end
- 
+ DataStructCells{2,ic} = DataStruct; 
+end
+if ~isempty(DiscardedIndices)
+    DiscardedIndicesSets = unique(DiscardedIndicesSets);
+    DiscardedIndicesSetsStr = [];
+    for c = DiscardedIndicesSets
+        DiscardedIndicesSetsStr = [DiscardedIndicesSetsStr ', ' c{:}];
+    end 
+    warning(['Discarded a total of ' num2str(length(DiscardedIndices)) ' false transitions across ' num2str(length(DiscardedIndicesSets)) ' sets' ...
+        newline 'Discarded times: ' sprintf('%0.1g ',DiscardedIndices) '[sec]'...
+        newline 'From datasets: ' DiscardedIndicesSetsStr]);
 end
 end
 
