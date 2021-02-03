@@ -43,9 +43,9 @@ StartTime = datestr(now, 'yyyy-mm-dd HH-MM-SS');
 d123 = 1:3;
 ftAxPos = strcmpi(AxesCell(1,:),fit_axis);
 perm_vec = [d123(ftAxPos) d123(~ftAxPos)];
-AxesCell(2,:) = cellfun(@(c) permute(c,perm_vec), AxesCell(2,:) , 'UniformOutput', false);
+AxesCell(2,:) = cellfun(@(c) permute(c,perm_vec), AxesCell(2,:) , 'UniformOutput',false);
 AxesCell(:,:) = AxesCell(:,perm_vec);
-DataCell(2,:) = cellfun(@(c) permute(c,perm_vec), DataCell(2,:) , 'UniformOutput', false);
+DataCell(2,:) = cellfun(@(c) permute(c,perm_vec), DataCell(2,:) , 'UniformOutput',false);
 
 % Create axes matrices
 FitAxMat = AxesCell{2,1};
