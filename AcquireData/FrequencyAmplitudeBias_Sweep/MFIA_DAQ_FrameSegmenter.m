@@ -20,8 +20,8 @@ CV = p.Results.CoerceVoltage;
 VV = p.Results.VoltageValues;
 
 DataCellsStruct = DataCells;
-DataTable = table('Size',[0,11],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 'From', 'To', 't0', 'Length Seconds', 'Data'},...
-    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','cell'});
+DataTable = table('Size',[0,12],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 'From', 'To', 't0', 'Length Seconds', 'Length', 'Data'},...
+    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','cell'});
 SetTable = table('Size',[0,7],'VariableNames', {'Set Number', 'Set Name', 'Transition Index', 'From', 'To', 'From Round', 'To Round'},...
     'VariableTypes', {'double','string','double','double','double','double','double'});
 TransTable = table('Size',[0,7],'VariableNames', {'Transition Index', 'Occurances', 'Set Names', 'From Round', 'From SD', 'To Round', 'To SD'},...
@@ -122,7 +122,7 @@ for ic = 1:Ncells
             DataC_Seg = DataC(ST(1):ST(2),2); xDataC_Seg = x_delta*(1:length(DataC_Seg)).';
             FTstr = ['F' num2str(CustomRound(FTC(1),RV)) 'T' num2str(CustomRound(FTC(2),RV),3)]; FTvar = regexprep(FTstr, {'-','\.'}, {'m','p'});
             TempStruct.(FTvar) = [xDataC_Seg DataC_Seg];
-            DataTable(end+1,:) = {c{:}, ic, DataCells{1,ic}, DataCells{3,ic}{2}, FTstr, FTvar, CustomRound(FT(1),RV), CustomRound(FT(2),RV), xDataC_Seg(1), xDataC_Seg(end), {[xDataC_Seg DataC_Seg]}};
+            DataTable(end+1,:) = {c{:} ic DataCells{1,ic} DataCells{3,ic}{2} FTstr FTvar CustomRound(FT(1),RV) CustomRound(FT(2),RV) xDataC_Seg(1) xDataC_Seg(end) length(xDataC_Seg) {[xDataC_Seg DataC_Seg]}};
         end
         DataStruct.(c{:}) = TempStruct;
     end

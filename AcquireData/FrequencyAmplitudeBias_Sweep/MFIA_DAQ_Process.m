@@ -5,22 +5,38 @@ CellStrCharFn = @(s) iscell(s) || isstring(s) || ischar(s) || isa(s, 'function_h
 p = inputParser;
 p.KeepUnmatched=true;
 p.addParameter('DataSelect', {'Capacitance'}, CellStrChar); %
-p.addParameter('TemperatureRange', [-inf inf], @isnumeric); %
+p.addParameter('TemperatureRange', [-inf inf 1], @isnumeric); %
 p.addParameter('NumberRange', [1 inf], @isnumeric); %
-p.addParameter('TimeRange', [-inf inf], @isnumeric); % 
+p.addParameter('Range', [-inf inf], @isnumeric); % 
 p.addParameter('CurveSelect', {}, CellStrCharFn); % 
 p.addParameter('MovMean', 1, @isnumeric); % 
  
 p.parse(varargin{:});
 
 DS = p.Results.DataSelect;
-TR = p.Results.TimeRange;
 NR = p.Results.NumberRange;
+R = p.Results.Range;
 CS = p.Results.CurveSelect;
 MM = p.Results.MovMean;
-DSCflag = 1;
+TR = p.Results.TemperatureRange;
+if isempty(R)
+    R = [-inf inf -inf inf];
+elseif length(R)<4
+    R = [R(1:2) -inf inf];
+end
+if isempty(TR)
+    TR = [-inf inf 1];
+end
+if length(TR)<3
+    TeRflag = true;
+else
+    TeRflag = logical(TR(3));
+end
+
+DSCflag = true;
 if length(DS)~=1
     warning(['DataSelect has ' num2str(length(DS)) ' entries, DataStructCells will not be returned'])
+    DSCflag = false;
 end
 if ~isempty(DS)
     DataTypes = DataTable.('Data Type');
@@ -34,7 +50,11 @@ if ~isempty(DS)
     end
     DataTable = DataTable(BoolVec,:);
 end
-DataTable = DataTable(DataTable.T>=TR(1) & DataTable.T<=TR(2),:);
+if TeRflag
+    DataTable = DataTable(DataTable.T>=TR(1) & DataTable.T<=TR(2),:);
+else
+    DataTable = DataTable(DataTable.T<=TR(1) | DataTable.T>=TR(2),:);
+end
 DataTable = DataTable(DataTable.('Set Number')>=NR(1) & DataTable.('Set Number')<=NR(2),:);
 SetNames = DataTable.('Set Name').';
 SetNumbers = unique(DataTable.('Set Number')).';
@@ -42,8 +62,8 @@ Curves = {};
 Funcs = {};
 x_deltaArray = [];
 DataStructCells = struct;
-DataTableOut = table('Size',[0,10],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 'Length Seconds','MovMean', 'Data'},...
-    'VariableTypes', {'string','double','string','double','string','string','double','double','double','cell'});
+DataTableOut = table('Size',[0,11],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Length', 'MovMean', 'Data'},...
+    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','cell'});
 if ~isempty(CS)
     if iscell(CS)
         for c = CS
@@ -91,18 +111,20 @@ if ~isempty(CS)
             x = FnInput{1}(1:MinL,1); x_delta =  mean(diff(x)); x_deltaArray(end+1) = x_delta;
             FnInput = cellfun(@(c) c(1:MinL,2), FnInput , 'UniformOutput',false);
             FnOutput = movmean(Funcs{i}(FnInput{:}),MM);
+            Rvec = ~excludedata(x, FnOutput, 'box',R); x = x(Rvec); FnOutput = FnOutput(Rvec); 
             Data = {[x FnOutput]};
             FnStr = func2str(Funcs{i});
             FromToVar = FnStr(find(FnStr==')',1)+1:end);
             FromTo = regexprep(FromToVar, {'m','p'}, {'-','\.'});
             SetName = unique(DT.('Set Name'));
             T = unique(DT.T);
-            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) MM Data};
+            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) length(x) MM Data};
             if DSCflag
+                SetNameChar = convertStringsToChars(SetName);
                 if isfield(DataStructCells, FromToVar)
-                    DataStructCells.(FromToVar)(:,end+1) = {SetName; Data; {'T' T}};
+                    DataStructCells.(FromToVar)(:,end+1) = {SetNameChar; Data{:}; {'T' T}};
                 else
-                    DataStructCells.(FromToVar) = {SetName; Data; {'T' T}};
+                    DataStructCells.(FromToVar) = {SetNameChar; Data{:}; {'T' T}};
                 end
             end
         end
