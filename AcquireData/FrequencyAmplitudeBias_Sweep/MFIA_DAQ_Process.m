@@ -62,8 +62,8 @@ Curves = {};
 Funcs = {};
 x_deltaArray = [];
 DataStructCells = struct;
-DataTableOut = table('Size',[0,11],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Length', 'MovMean', 'Data'},...
-    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','cell'});
+DataTableOut = table('Size',[0,11],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Length', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
+    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','double','double','cell'});
 if ~isempty(CS)
     if iscell(CS)
         for c = CS
@@ -118,7 +118,10 @@ if ~isempty(CS)
             FromTo = regexprep(FromToVar, {'m','p'}, {'-','\.'});
             SetName = unique(DT.('Set Name'));
             T = unique(DT.T);
-            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) length(x) MM Data};
+            Mean = mean(FnOutput);
+            Var = moment(FnOutput,2);
+            NSD = sqrt(Var)/Mean;
+            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) length(x) MM Mean Var NSD Data};
             if DSCflag
                 SetNameChar = convertStringsToChars(SetName);
                 if isfield(DataStructCells, FromToVar)
