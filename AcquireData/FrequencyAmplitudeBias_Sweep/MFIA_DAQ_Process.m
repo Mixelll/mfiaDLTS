@@ -10,7 +10,9 @@ p.addParameter('NumberRange', [1 inf], @isnumeric); %
 p.addParameter('Range', [-inf inf], @isnumeric); % 
 p.addParameter('CurveSelect', {}, CellStrCharFn); % 
 p.addParameter('MovMean', 1, @isnumeric); % 
- 
+p.addParameter('ExcludeDiff', 1, @isnumeric); % 
+
+
 p.parse(varargin{:});
 
 DS = p.Results.DataSelect;
@@ -62,7 +64,7 @@ Curves = {};
 Funcs = {};
 x_deltaArray = [];
 DataStructCells = struct;
-DataTableOut = table('Size',[0,11],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Length', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
+DataTableOut = table('Size',[0,14],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Length', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
     'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','double','double','cell'});
 if ~isempty(CS)
     if iscell(CS)
@@ -110,8 +112,9 @@ if ~isempty(CS)
             MinL = min(cellfun(@(c)length(c), FnInput));
             x = FnInput{1}(1:MinL,1); x_delta =  mean(diff(x)); x_deltaArray(end+1) = x_delta;
             FnInput = cellfun(@(c) c(1:MinL,2), FnInput , 'UniformOutput',false);
-            FnOutput = movmean(Funcs{i}(FnInput{:}),MM);
+            FnOutput = Funcs{i}(FnInput{:});
             Rvec = ~excludedata(x, FnOutput, 'box',R); x = x(Rvec); FnOutput = FnOutput(Rvec); 
+            FnOutput = movmean(FnOutput,MM);
             Data = {[x FnOutput]};
             FnStr = func2str(Funcs{i});
             FromToVar = FnStr(find(FnStr==')',1)+1:end);
