@@ -20,12 +20,12 @@ CV = p.Results.CoerceVoltage;
 VV = p.Results.VoltageValues;
 
 DataCellsStruct = DataCells;
-DataTable = table('Size',[0,15],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 'From', 'To', 't0', 'Length Seconds', 'Length', 'Mean', 'Var', 'Norm SD', 'Data'},...
-    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','double','double','double','cell'});
+DataTable = table('Size',[0,19],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 'From', 'To', 'Time Constant', 't0', 'Length Seconds', 'Length', 'Start In Frame', 'End In Frame', 'False Transitions', 'Mean', 'Var', 'Norm SD', 'Data'},...
+    'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','double','double','double','cell','double','double','double','cell'});
 SetTable = table('Size',[0,7],'VariableNames', {'Set Number', 'Set Name', 'Transition Index', 'From', 'To', 'From Round', 'To Round'},...
     'VariableTypes', {'double','string','double','double','double','double','double'});
-TransTable = table('Size',[0,7],'VariableNames', {'Transition Index', 'Occurances', 'Set Names', 'From Round', 'From SD', 'To Round', 'To SD'},...
-    'VariableTypes', {'double','double','cellstr','double','double','double','double'});
+TransTable = table('Size',[0,8],'VariableNames', {'Transition Index', 'Occurances', 'Set Names', 'Set Numbers', 'From Round', 'From SD', 'To Round', 'To SD'},...
+    'VariableTypes', {'double','double','cellstr','cell','double','double','double','double'});
 for ic = 1:Ncells
     Data = DataCells{2,ic};
     DataV = Data.(VfieldName);
@@ -43,10 +43,11 @@ end
 for i = unique(SetTable.('Transition Index')).'
     TempTable = SetTable(SetTable.('Transition Index')==i,:);
     Nsets = height(TempTable);
+    SetNumbers = TempTable.('Set Number');
     SetNames = TempTable.('Set Name');
     FromArray = TempTable.('From');
     ToArray = TempTable.('To');
-    TransTable(end+1,:) = {i Nsets {SetNames} CustomRound(mean(FromArray),RV) std(FromArray,1) CustomRound(mean(ToArray),RV) std(ToArray,1)};
+    TransTable(end+1,:) = {i Nsets {SetNames} {SetNumbers} CustomRound(mean(FromArray),RV) std(FromArray,1) CustomRound(mean(ToArray),RV) std(ToArray,1)};
 end
 [~,DT_Ind] = sortrows(DataTable(:,1:7));
 DataTable = DataTable(DT_Ind,:);
@@ -55,6 +56,7 @@ DisInd = [];
 DisSet = {};
 NoTransVtoVec = [];
 for ic = 1:Ncells
+    DisIndTemp = [];
     Data = DataCells{2,ic};
     DataV = Data.(VfieldName);
     xV = DataV(:,1); yV = DataV(:,2); x_delta = mean(diff(xV));
@@ -84,6 +86,7 @@ for ic = 1:Ncells
                 Tvec = i;    
             end
         else
+            DisIndTemp(end+1) = i;
             DisInd(end+1) = i;
             DisSet(end+1) = DataCells(1,ic);
             
@@ -125,11 +128,17 @@ for ic = 1:Ncells
             Mean = mean(DataC_Seg);
             Var = moment(DataC_Seg,2);
             NSD = sqrt(Var)/Mean;
-            DataTable(end+1,:) = {c{:} ic DataCells{1,ic} DataCells{3,ic}{2} FTstr FTvar CustomRound(FT(1),RV) CustomRound(FT(2),RV) xDataC_Seg(1) xDataC_Seg(end) length(xDataC_Seg) Mean Var NSD {[xDataC_Seg DataC_Seg]}};
+            FalseTrans = [];
+            for d = DisIndTemp
+                if d>=ST(1) && d<=ST(2)
+                    FalseTrans(end+1) = d - ST(1) + 1;
+                end
+            end
+            DataTable(end+1,:) = {c{:} ic DataCells{1,ic} DataCells{3,ic}{2} FTstr FTvar CustomRound(FT(1),RV) CustomRound(FT(2),RV) x_delta xDataC_Seg(1) xDataC_Seg(end) length(xDataC_Seg) ST(1) ST(2) {FalseTrans} Mean Var NSD {[xDataC_Seg DataC_Seg]}};
         end
         DataStruct.(c{:}) = TempStruct;
     end
- DataCellsStruct{2,ic} = DataStruct; 
+ DataCellsStruct{2,ic} = DataStruct;
 end
 [~,DT_Ind] = sortrows(DataTable(:,1:7));
 DataTable = DataTable(DT_Ind,:);

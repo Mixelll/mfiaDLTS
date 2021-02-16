@@ -4,23 +4,25 @@ ChrStr = @(s) ischar(s) || isstring(s);
 CellStrCharFn = @(s) iscell(s) || isstring(s) || ischar(s) || isa(s, 'function_handle');
 p = inputParser;
 p.KeepUnmatched=true;
-p.addParameter('DataSelect', {'Capacitance'}, CellStrChar); %
-p.addParameter('TemperatureRange', [-inf inf 1], @isnumeric); %
-p.addParameter('NumberRange', [1 inf], @isnumeric); %
-p.addParameter('Range', [-inf inf], @isnumeric); % 
-p.addParameter('CurveSelect', {}, CellStrCharFn); % 
-p.addParameter('MovMean', 1, @isnumeric); % 
-p.addParameter('ExcludeDiff', 1, @isnumeric); % 
+p.addParameter('DataSelect', {'Capacitance'}, CellStrChar); % Select data type
+p.addParameter('TemperatureRange', [-inf inf 1], @isnumeric); % Select temperature range. Third element: true to select inside range, false for outside 
+p.addParameter('SetNumbers', [], @isnumeric); % Select sets by numbers
+p.addParameter('Range', [-inf inf], @isnumeric); % Trim data by time range
+p.addParameter('CurveSelect', {}, CellStrCharFn); % Select sets by name['F' PulseVoltage 'T' MeasureVoltage]
+p.addParameter('MovMean', 1, @isnumeric); % Apply a moving average
+p.addParameter('DeleteFalseTransition', true); % Replace data with NaN after a false transition
+
 
 
 p.parse(varargin{:});
 
 DS = p.Results.DataSelect;
-NR = p.Results.NumberRange;
+SN = p.Results.SetNumbers;
 R = p.Results.Range;
 CS = p.Results.CurveSelect;
 MM = p.Results.MovMean;
 TR = p.Results.TemperatureRange;
+DFT = p.Results.DeleteFalseTransition;
 if isempty(R)
     R = [-inf inf -inf inf];
 elseif length(R)<4
@@ -55,16 +57,18 @@ end
 if TeRflag
     DataTable = DataTable(DataTable.T>=TR(1) & DataTable.T<=TR(2),:);
 else
-    DataTable = DataTable(DataTable.T<=TR(1) | DataTable.T>=TR(2),:);
+    DataTable = DataTable(DataTable.T<TR(1) | DataTable.T>TR(2),:);
 end
-DataTable = DataTable(DataTable.('Set Number')>=NR(1) & DataTable.('Set Number')<=NR(2),:);
+if ~isempty(SN)
+    DataTable = DataTable(ismember(DataTable.('Set Number'),SN),:);
+end
 SetNames = DataTable.('Set Name').';
 SetNumbers = unique(DataTable.('Set Number')).';
 Curves = {};
 Funcs = {};
 x_deltaArray = [];
 DataStructCells = struct;
-DataTableOut = table('Size',[0,14],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Length', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
+DataTableOut = table('Size',[0,14],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Valid Data Points', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
     'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','double','double','cell'});
 if ~isempty(CS)
     if iscell(CS)
@@ -101,9 +105,11 @@ if ~isempty(CS)
             DT = DataTableD(DataTableD.('Set Number')==set,:);
             for i = 1:length(Curves)
                 FnInput = {};
+                FalseTrans = [];
                 for s = Curves{i}
                     try 
                         FnInput(end+1) = DT(DT.('FromToVar')==s,:).Data;
+                        FalseTrans = [FalseTrans DT(DT.('FromToVar')==s,:).('False Transitions'){:}];
                     catch 
                         error(['Expected one output from table but instead got ' num2str(height(DT(DT.('FromToVar')==s,:).Data)) ' outputs'])
                     end
@@ -113,7 +119,15 @@ if ~isempty(CS)
             x = FnInput{1}(1:MinL,1); x_delta =  mean(diff(x)); x_deltaArray(end+1) = x_delta;
             FnInput = cellfun(@(c) c(1:MinL,2), FnInput , 'UniformOutput',false);
             FnOutput = Funcs{i}(FnInput{:});
-            Rvec = ~excludedata(x, FnOutput, 'box',R); x = x(Rvec); FnOutput = FnOutput(Rvec); 
+            if DFT(1)
+                if ~isempty(FalseTrans)
+                    MFT = min(FalseTrans);
+                    FnOutput(MFT:end) = NaN;
+                end
+            end
+            Rvec = ~excludedata(x, FnOutput, 'box',R); x = x(Rvec); FnOutput = FnOutput(Rvec);
+            NanVec = isnan(FnOutput);
+            VDP = length(x) - sum(NanVec); % Valid data points
             FnOutput = movmean(FnOutput,MM);
             Data = {[x FnOutput]};
             FnStr = func2str(Funcs{i});
@@ -121,10 +135,10 @@ if ~isempty(CS)
             FromTo = regexprep(FromToVar, {'m','p'}, {'-','\.'});
             SetName = unique(DT.('Set Name'));
             T = unique(DT.T);
-            Mean = mean(FnOutput);
-            Var = moment(FnOutput,2);
+            Mean = mean(FnOutput(~NanVec));
+            Var = moment(FnOutput(~NanVec),2);
             NSD = sqrt(Var)/Mean;
-            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) length(x) MM Mean Var NSD Data};
+            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) VDP MM Mean Var NSD Data};
             if DSCflag
                 SetNameChar = convertStringsToChars(SetName);
                 if isfield(DataStructCells, FromToVar)

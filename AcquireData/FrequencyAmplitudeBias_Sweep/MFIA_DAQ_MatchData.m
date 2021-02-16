@@ -1,4 +1,4 @@
-function CtCellsFrames = MFIA_DAQ_MatchData(Ct_path, TimeZone, StartTime, EndTime, DataSelect)
+function [CtCellsFrames, tDelta] = MFIA_DAQ_MatchData(Ct_path, TimeZone, StartTime, EndTime, DataSelect)
 DataSelectC = fn_struct2cell(DataSelect);
 DataSelectC(5,:) = {'Voltage', 'Resistance', 'Capacitance'};
 CtCellsFrames = cell(3,0);
