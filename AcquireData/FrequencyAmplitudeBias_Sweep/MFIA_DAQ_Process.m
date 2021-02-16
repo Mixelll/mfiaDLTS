@@ -122,7 +122,8 @@ if ~isempty(CS)
             if DFT(1)
                 if ~isempty(FalseTrans)
                     MFT = min(FalseTrans);
-                    FnOutput(MFT:end) = NaN;
+                    FnOutput(MFT:end) = [];
+                    x(MFT:end) = [];
                 end
             end
             Rvec = ~excludedata(x, FnOutput, 'box',R); x = x(Rvec); FnOutput = FnOutput(Rvec);
