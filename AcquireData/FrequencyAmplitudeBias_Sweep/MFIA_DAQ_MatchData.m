@@ -1,4 +1,4 @@
-function [CtCellsFrames, tDelta] = MFIA_DAQ_MatchData(Ct_path, TimeZone, StartTime, EndTime, DataSelect)
+function [CtCellsFrames, tDelta, TimeTemperature] = MFIA_DAQ_MatchData(Ct_path, TimeZone, StartTime, EndTime, DataSelect)
 DataSelectC = fn_struct2cell(DataSelect);
 DataSelectC(5,:) = {'Voltage', 'Resistance', 'Capacitance'};
 CtCellsFrames = cell(3,0);
@@ -54,5 +54,6 @@ for i=1:N_Frames
     end
     CtCellsFrames(:,end+1) = {['T=' num2str(T_Curve,4)] ; DataStruct ; {'T' T_Curve}};
 end
+TimeTemperature(:,1) = (TimeTemperature(:,1) - LogT_time)/1e6;
 end
 

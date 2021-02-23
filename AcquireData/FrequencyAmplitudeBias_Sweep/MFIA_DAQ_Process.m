@@ -129,7 +129,7 @@ if ~isempty(CS)
             Rvec = ~excludedata(x, FnOutput, 'box',R); x = x(Rvec); FnOutput = FnOutput(Rvec);
             NanVec = isnan(FnOutput);
             VDP = length(x) - sum(NanVec); % Valid data points
-            FnOutput = movmean(FnOutput,MM);
+            FnOutput = movmean(FnOutput,MM,'omitnan');
             Data = {[x FnOutput]};
             FnStr = func2str(Funcs{i});
             FromToVar = FnStr(find(FnStr==')',1)+1:end);

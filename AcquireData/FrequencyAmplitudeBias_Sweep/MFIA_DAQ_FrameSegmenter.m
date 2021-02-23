@@ -1,4 +1,4 @@
-function [DataTable, DataCellsStruct, TransTable, SetTable] = MFIA_DAQ_FrameSegmenter(DataCells, varargin)
+function [DataTable, DataCellsStruct, TransTable, TransTableS, SetTable] = MFIA_DAQ_FrameSegmenter(DataCells, varargin)
 p = inputParser;
 p.KeepUnmatched=true;
 p.addParameter('TransitionTime', 1.8667e-04, @isnumeric); % Actual voltage transition time should be less than TransitionTime
@@ -26,6 +26,8 @@ SetTable = table('Size',[0,7],'VariableNames', {'Set Number', 'Set Name', 'Trans
     'VariableTypes', {'double','string','double','double','double','double','double'});
 TransTable = table('Size',[0,8],'VariableNames', {'Transition Index', 'Occurances', 'Set Names', 'Set Numbers', 'From Round', 'From SD', 'To Round', 'To SD'},...
     'VariableTypes', {'double','double','cellstr','cell','double','double','double','double'});
+TransTableS = table('Size',[0,9],'VariableNames', {'Mean Transition Index', 'Transition Indices', 'Occurances', 'Set Names', 'Set Numbers', 'From Round', 'From SD', 'To Round', 'To SD'},...
+    'VariableTypes', {'double','cell','double','cellstr','cell','double','double','double','double'});
 for ic = 1:Ncells
     Data = DataCells{2,ic};
     DataV = Data.(VfieldName);
@@ -49,14 +51,27 @@ for i = unique(SetTable.('Transition Index')).'
     ToArray = TempTable.('To');
     TransTable(end+1,:) = {i Nsets {SetNames} {SetNumbers} CustomRound(mean(FromArray),RV) std(FromArray,1) CustomRound(mean(ToArray),RV) std(ToArray,1)};
 end
+
+TransIndices = TransTable.('Transition Index').';
+[GroupInd, TransMean] = Groups(TransIndices, TP);
+for i = 1:max(GroupInd)
+    LVec = GroupInd==i;
+    TempTable = TransTable(LVec,:);
+    SetNames = unique(vertcat(TempTable.('Set Names'){:}));
+    SetNumbers = unique(vertcat(TempTable.('Set Numbers'){:}));
+    Nsets = numel(SetNumbers);
+    FromArray = TempTable.('From Round');
+    ToArray = TempTable.('To Round');
+    TransTableS(end+1,:) = {round(TransMean(i)) {TransIndices(LVec).'} Nsets {SetNames} {SetNumbers} CustomRound(mean(FromArray),RV) std(FromArray,1) CustomRound(mean(ToArray),RV) std(ToArray,1)};
+end
+disp(TransTableS);
 [~,DT_Ind] = sortrows(DataTable(:,1:7));
 DataTable = DataTable(DT_Ind,:);
-disp(TransTable);
 DisInd = [];
 DisSet = {};
 NoTransVtoVec = [];
+ValidTrans = vertcat(TransTableS(TransTableS.Occurances/Ncells >= UI,:).('Transition Indices'){:});
 for ic = 1:Ncells
-    DisIndTemp = [];
     Data = DataCells{2,ic};
     DataV = Data.(VfieldName);
     xV = DataV(:,1); yV = DataV(:,2); x_delta = mean(diff(xV));
@@ -64,33 +79,30 @@ for ic = 1:Ncells
     TP = round(p.Results.TransitionTime/x_delta); % Transition points length
     SL = length(yV);
     yVdiff = diff(yV); yVdiffInd = find(abs(yVdiff)>TC).'+1; yVdiffInd(yVdiffInd<TP) = []; yVdiffInd(yVdiffInd>(SL-TP)) = []; % Find transition indexes
-    
     if isempty(yVdiffInd), yVdiffInd = []; end
+    LVec = ismember(yVdiffInd,ValidTrans);
+    ValidInd = yVdiffInd(LVec);
+    DisIndTemp = yVdiffInd(~LVec); DisInd = [DisInd DisIndTemp]; if any(DisIndTemp), DisSet(end+1) = DataCells(1,ic); end
+    if ~isempty(ValidInd), ValidInd(end+1) = ValidInd(end); end
     Tvec = []; Tcell = cell(3,0); % Initialize temporary containers
-    for i = yVdiffInd
-        if ~UI || sum(TransTable(TransTable.('Transition Index')==i,:).Occurances/Ncells)>=UI
-            if isempty(Tvec) || i<(Tvec(end)+TP)
-                Tvec(end+1) = i;
-            end
-            if ~isempty(Tvec) && (i>(Tvec(end)+TP) || i==yVdiffInd(end))
-                TransInd= Tvec(ceil(length(Tvec)/2));
-                Vfrom = mean(yV(max(Tvec(1)-2*TP+1,1):Tvec(1)-TP)); VfromC = Vfrom; VfromExp = TransTable(TransTable.('Transition Index')==TransInd,:).('From Round');
-                if abs(Vfrom-VfromExp)<=CV, VfromC = VfromExp; end
-                Vto = mean(yV(Tvec(end)+TP:min(Tvec(end)+2*TP-1,SL))); VtoC = Vto; VtoExp = TransTable(TransTable.('Transition Index')==TransInd,:).('To Round');
-                if abs(Vto-VtoExp)<=CV, VtoC = VtoExp; end
-                
-                if ~isempty(Tcell)
-                    Tcell{3,end} = {[Tcell{3,end} TransInd+1]};
-                end
-                Tcell(:,end+1) = {[VfromC VtoC] ; [Vfrom Vto] ; TransInd+1};
-                Tvec = i;    
-            end
-        else
-            DisIndTemp(end+1) = i;
-            DisInd(end+1) = i;
-            DisSet(end+1) = DataCells(1,ic);
-            
+    for j = 1:length(ValidInd)
+        i = ValidInd(j);
+        if isempty(Tvec) || i<(Tvec(end)+TP)
+            Tvec(end+1) = i;
         end
+        if i>(Tvec(end)+TP) || j==length(ValidInd)
+            TransInd= Tvec(ceil(length(Tvec)/2));
+            Vfrom = mean(yV(max(Tvec(1)-2*TP+1,1):Tvec(1)-TP)); VfromC = Vfrom; VfromExp = TransTable(TransTable.('Transition Index')==TransInd,:).('From Round');
+            if abs(Vfrom-VfromExp)<=CV, VfromC = VfromExp; end
+            Vto = mean(yV(Tvec(end)+TP:min(Tvec(end)+2*TP-1,SL))); VtoC = Vto; VtoExp = TransTable(TransTable.('Transition Index')==TransInd,:).('To Round');
+            if abs(Vto-VtoExp)<=CV, VtoC = VtoExp; end
+
+            if ~isempty(Tcell)
+                Tcell(3,end) = {[Tcell{3,end} TransInd+1]};
+            end
+            Tcell(:,end+1) = {[VfromC VtoC] ; [Vfrom Vto] ; TransInd+1};
+            Tvec = i;    
+        end       
     end
     if ~isempty(Tcell)
         Vfrom1 = Tcell{2,end}(2);
@@ -134,7 +146,7 @@ for ic = 1:Ncells
                     FalseTrans(end+1) = d - ST(1) + 1;
                 end
             end
-            DataTable(end+1,:) = {c{:} ic DataCells{1,ic} DataCells{3,ic}{2} FTstr FTvar CustomRound(FT(1),RV) CustomRound(FT(2),RV) x_delta xDataC_Seg(1) xDataC_Seg(end) length(xDataC_Seg) ST(1) ST(2) {FalseTrans} Mean Var NSD {[xDataC_Seg DataC_Seg]}};
+            DataTable(end+1,:) = [c {ic} DataCells(1,ic) DataCells{3,ic}(2) {FTstr FTvar} {CustomRound(FT(1),RV) CustomRound(FT(2),RV) x_delta xDataC_Seg(1) xDataC_Seg(end) length(xDataC_Seg) ST(1) ST(2) {FalseTrans} Mean Var NSD {[xDataC_Seg DataC_Seg]}}];
         end
         DataStruct.(c{:}) = TempStruct;
     end
@@ -149,6 +161,7 @@ if ~isempty(DisInd)
         DisSetStr = [DisSetStr ', ' c{:}];
     end 
     warning(['Discarded a total of ' num2str(length(DisInd)) ' false transitions across ' num2str(length(DisSet)) ' sets' ...
+        newline 'Discarded transition Indices: ' sprintf('%0.1g ',unique(DisInd)) '[sec]'...
         newline 'Discarded transition times: ' sprintf('%0.1g ',unique(DisInd)*x_delta) '[sec]'...
         newline 'From datasets: ' DisSetStr]);
 end
