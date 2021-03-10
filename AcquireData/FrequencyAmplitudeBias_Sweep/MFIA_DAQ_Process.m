@@ -1,4 +1,4 @@
-function [DataTableOut, DataStructCells, x_delta] = MFIA_DAQ_Process(DataTable, varargin) 
+function [DataTableSegments, DataStructCells, x_delta] = MFIA_DAQ_Process(DataTable, varargin) 
 CellStrChar = @(s) iscell(s) || isstring(s) || ischar(s);
 ChrStr = @(s) ischar(s) || isstring(s);
 CellStrCharFn = @(s) iscell(s) || isstring(s) || ischar(s) || isa(s, 'function_handle');
@@ -11,8 +11,6 @@ p.addParameter('Range', [-inf inf], @isnumeric); % Trim data by time range
 p.addParameter('CurveSelect', {}, CellStrCharFn); % Select sets by name['F' PulseVoltage 'T' MeasureVoltage]
 p.addParameter('MovMean', 1, @isnumeric); % Apply a moving average
 p.addParameter('DeleteFalseTransition', true); % Replace data with NaN after a false transition
-
-
 
 p.parse(varargin{:});
 
@@ -62,13 +60,14 @@ end
 if ~isempty(SN)
     DataTable = DataTable(ismember(DataTable.('Set Number'),SN),:);
 end
+
 SetNames = DataTable.('Set Name').';
 SetNumbers = unique(DataTable.('Set Number')).';
 Curves = {};
 Funcs = {};
 x_deltaArray = [];
 DataStructCells = struct;
-DataTableOut = table('Size',[0,14],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Valid Data Points', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
+DataTableSegments = table('Size',[0,14],'VariableNames', {'Data Type', 'Set Number', 'Set Name', 'T', 'FromTo','FromToVar', 't0', 't end', 'Valid Data Points', 'MovMean', 'Mean', 'Var', 'Norm SD', 'Data'},...
     'VariableTypes', {'string','double','string','double','string','string','double','double','double','double','double','double','double','cell'});
 if ~isempty(CS)
     if iscell(CS)
@@ -132,14 +131,14 @@ if ~isempty(CS)
             FnOutput = movmean(FnOutput,MM,'omitnan');
             Data = {[x FnOutput]};
             FnStr = func2str(Funcs{i});
-            FromToVar = FnStr(find(FnStr==')',1)+1:end);
-            FromTo = regexprep(FromToVar, {'m','p'}, {'-','\.'});
+            FromToVar = regexprep(FnStr(find(FnStr==')',1)+1:end), {'-'}, {'M'});
+            FromTo = regexprep(FromToVar, {'m','M','p'}, {'-','-','\.'});
             SetName = unique(DT.('Set Name'));
             T = unique(DT.T);
             Mean = mean(FnOutput(~NanVec));
             Var = moment(FnOutput(~NanVec),2);
             NSD = sqrt(Var)/Mean;
-            DataTableOut(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) VDP MM Mean Var NSD Data};
+            DataTableSegments(end+1,:) = {d set SetName T FromTo FromToVar x(1) x(end) VDP MM Mean Var NSD Data};
             if DSCflag
                 SetNameChar = convertStringsToChars(SetName);
                 if isfield(DataStructCells, FromToVar)
