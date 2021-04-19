@@ -39,25 +39,29 @@ if D ==3
             c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
             c2Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-0.07 0.08 0.02]);
             
-            SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,ax1D,AxisString,ax2D,c1Dpc);
+            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2D,c1Dpc);
             s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
             s2D.Position = [P2D(1) P2D(2)-0.11 P2D(3) 0.025];
             LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)-0.03 P2D(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(1),3) ,'FontSize',15);
             RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)+P2D(3) P2D(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(2),3) ,'FontSize',15);
 
-            PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
+            PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'FontSize',10, 'Units','normalized', 'Position', [P2D(1)+0.1 P2D(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
 
-            SliderCallFromPop3D = @(source,callbackdata,AxisString) slider_callback3D(source,callbackdata,ax2D,AxisString,ax3D.UserData,c2Dpc);
+            SliderCallFromPop3D = @(src,cbdata,AxisString) slider_callback3D(src,cbdata,ax2D,AxisString,ax3D.UserData,c2Dpc);
             s3D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
                 'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2), 'SliderStep',[1/PopStrVal{4,1} SliderStep2]);
             s3D.Position = [P3D(1) P3D(2)-0.11 P3D(3) 0.025];
             LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.03 P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(1),3) ,'FontSize',15);
             RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(2),3) ,'FontSize',15);
 
-            PopCall3D = @(source,callbackdata) popmenu_callback3D(source,callbackdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
+            PopCall3D = @(src,cbdata) popmenu_callback3D(src,cbdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
             p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
+            
+            AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
+            AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',AddPlotBtnCall);
+            
             figs(k) = fig;
             end
         end
@@ -109,14 +113,14 @@ elseif D==2
             
             c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
             
-            SliderCallFromPop2D = @(source,callbackdata,AxisString) slider_callback2D(source,callbackdata,ax1D,AxisString,ax2Dpc,c1Dpc);
+            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2Dpc,c1Dpc);
             s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
             s2D.Position = [P2Dpc(1) P2Dpc(2)-0.11 P2Dpc(3) 0.025];
             LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2Dpc(1)-0.03 P2Dpc(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(1),3) ,'FontSize',15);
             RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2Dpc(1)+P2Dpc(3) P2Dpc(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(2),3) ,'FontSize',15);
 
-            PopCall2D = @(source,callbackdata,PopStrVal) popmenu_callback2D(source,callbackdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
+            PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P2Dpc(1)+0.1 P2Dpc(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,:)));
 
             figs(k) = fig;
@@ -237,5 +241,32 @@ function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
     Plot2Dpc.YLabel.String = Plot2Dsurf.YLabel.String;
     Plot2Dpc.UserData.type = Plot2Dsurf.UserData.type;
 end
+
+function AddPlotCallBack(src, evt, Plot1D)
+    prompt = {'Enter plot number:','Enter legend:'};
+    dlgtitle = 'Add Plot to Target Figure';
+    answer = inputdlg(prompt,dlgtitle);
+    TargetFigure = str2double(answer{1});
+    Legend = answer{2};
+    if ~isempty(Legend) && ~isempty(Plot2D.Legend)
+        Legend = Plot2D.Legend.String;
+    else
+        Legend = Plot1D.Title.String;
+    end
+    
+    XData = {Plot1D.Children.XData};
+    YData = {Plot1D.Children.YData};
+    xlbl = Plot2D.XLabel.String;
+    ylbl = Plot2D.YLabel.String;
+    if ishandle(TargetFigure)
+        Ax = findall(TargetFigure, 'type', 'axes');
+        hold(Ax(1),'on');
+        for ic=1:numel(XData)
+            plot(XData{ic}, YData{ic})
+        end
+        hold(Ax(1),'off');
+    else
+        s_plot(XData, YData, '', '', '', Legend, TargetFigure, xlbl, ylbl);
+    end
 end
 
