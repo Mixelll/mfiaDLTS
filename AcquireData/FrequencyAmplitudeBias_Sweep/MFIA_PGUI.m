@@ -243,30 +243,23 @@ function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
 end
 
 function AddPlotCallBack(src, evt, Plot1D)
-    prompt = {'Enter plot number:','Enter legend:'};
+    prompt = {'Enter plot number:', 'Enter legend:', 'Enter fontsize:', 'Enter legend:',};
     dlgtitle = 'Add Plot to Target Figure';
     answer = inputdlg(prompt,dlgtitle);
     TargetFigure = str2double(answer{1});
     Legend = answer{2};
-    if ~isempty(Legend) && ~isempty(Plot2D.Legend)
-        Legend = Plot2D.Legend.String;
+    FontSize = answer{3};
+    if isempty(Legend) && ~isempty(Plot1D.Legend)
+        Legend = Plot1D.Legend.String;
     else
         Legend = Plot1D.Title.String;
     end
     
     XData = {Plot1D.Children.XData};
     YData = {Plot1D.Children.YData};
-    xlbl = Plot2D.XLabel.String;
-    ylbl = Plot2D.YLabel.String;
-    if ishandle(TargetFigure)
-        Ax = findall(TargetFigure, 'type', 'axes');
-        hold(Ax(1),'on');
-        for ic=1:numel(XData)
-            plot(XData{ic}, YData{ic})
-        end
-        hold(Ax(1),'off');
-    else
-        s_plot(XData, YData, '', '', '', Legend, TargetFigure, xlbl, ylbl);
-    end
+    xlbl = Plot1D.XLabel.String;
+    ylbl = Plot1D.YLabel.String;
+    s_plot(XData, YData, PlotProperies, '', '', Legend, TargetFigure, xlbl, ylbl, FontSize, '', 0, 0, 1);
+end
 end
 
