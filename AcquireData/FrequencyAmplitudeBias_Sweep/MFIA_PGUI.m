@@ -35,7 +35,6 @@ if D ==3
             SliderStep2 = max(1/PopStrVal{4,2},0.1);
 
             
-            
             c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
             c2Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-0.07 0.08 0.02]);
             
@@ -60,7 +59,7 @@ if D ==3
             p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
             
             AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
-            AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',AddPlotBtnCall);
+            AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
             
             figs(k) = fig;
             end
@@ -82,8 +81,7 @@ elseif D==2
             LimCall = @(src, evt)LimCallback2D(src, evt, ax2D, ax2Dpc);
             ax2D.CreateFcn = @(src, evt) addlistener(ax2D, 'XLim', 'PostSet', LimCall);
             addlistener(ax2D, 'XLim', 'PostSet', LimCall);
-
-            
+ 
             try 
                 pcolor(ax2Dpc, mean(ax2D.Children.XData,2), mean(ax2D.Children.YData,1), ax2D.Children.CData.');
             catch
@@ -104,6 +102,10 @@ elseif D==2
             P2D = ax2D.Position; P2Dpc = ax2Dpc.Position; P1D = ax1D.Position;
             Temp = ax2D.UserData.axesvec;
             Tempf = fieldnames(Temp)';
+            for ic = 1:length(Tempf)
+                ax_lbls_all{ic} = Temp.(Tempf{ic}).label;
+            end
+            Tempf = [Tempf(strcmpi(ax_lbls_all, ax2D.XLabel.String)) Tempf(strcmpi(ax_lbls_all, ax2D.YLabel.String))];
             ax_lbls = {Temp.(Tempf{1}).label Temp.(Tempf{2}).label};
             ax_ranges = {[min(Temp.(Tempf{1}).vec) max(Temp.(Tempf{1}).vec)] [min(Temp.(Tempf{2}).vec) max(Temp.(Tempf{2}).vec)]};
             ax_lengths = {length(Temp.(Tempf{1}).vec) length(Temp.(Tempf{2}).vec)};
@@ -123,6 +125,9 @@ elseif D==2
             PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P2Dpc(1)+0.1 P2Dpc(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,:)));
 
+            AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
+            AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
+            
             figs(k) = fig;
             end
         end
@@ -243,23 +248,35 @@ function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
 end
 
 function AddPlotCallBack(src, evt, Plot1D)
-    prompt = {'Enter plot number:', 'Enter legend:', 'Enter fontsize:', 'Enter legend:',};
+    prompt = {'Enter plot number:', 'Enter legend:', 'Enter fontsize:', 'Enter plot properies:', 'Enter low x lim:', 'Enter high x lim:'};
     dlgtitle = 'Add Plot to Target Figure';
     answer = inputdlg(prompt,dlgtitle);
-    TargetFigure = str2double(answer{1});
-    Legend = answer{2};
-    FontSize = answer{3};
-    if isempty(Legend) && ~isempty(Plot1D.Legend)
-        Legend = Plot1D.Legend.String;
-    else
-        Legend = Plot1D.Title.String;
+    if ~isempty(answer) && ~isempty(answer{1})
+        TargetFigure = str2double(answer{1});
+        Legend = answer{2};
+        FontSize = answer{3};
+        PlotProperies = answer{4};
+        Lx = -inf; Hx = inf;
+        if ~isempty(answer{5}), Lx = str2double(answer{5}); end
+        if ~isempty(answer{6}), Hx = str2double(answer{6}); end
+        if isempty(Legend)
+            if ~isempty(Plot1D.Legend)
+                Legend = Plot1D.Legend.String;
+            elseif ~isempty(Plot1D.Title)
+                Legend = Plot1D.Title.String;
+            end
+        end
+        XData = {Plot1D.Children.XData};
+        YData = {Plot1D.Children.YData};
+        xlbl = Plot1D.XLabel.String;
+        ylbl = Plot1D.YLabel.String;
+
+        for ic2 = 1:numel(XData)
+            YData{ic2} = YData{ic2}(XData{ic2}>=Lx & XData{ic2}<=Hx);
+            XData{ic2} = XData{ic2}(XData{ic2}>=Lx & XData{ic2}<=Hx);
+        end
+        s_plot(XData, YData, PlotProperies, '', '', Legend, TargetFigure, xlbl, ylbl, FontSize, '', 0, 0, 1);
     end
-    
-    XData = {Plot1D.Children.XData};
-    YData = {Plot1D.Children.YData};
-    xlbl = Plot1D.XLabel.String;
-    ylbl = Plot1D.YLabel.String;
-    s_plot(XData, YData, PlotProperies, '', '', Legend, TargetFigure, xlbl, ylbl, FontSize, '', 0, 0, 1);
 end
 end
 
