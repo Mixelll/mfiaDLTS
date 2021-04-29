@@ -2,18 +2,21 @@ function [figs] = MFIA_PGUI(SubPlots,D)
 clear 'DataFigureHandles'
 k = 0;
 Nsbp = numel(SubPlots);
-if D ==3
+if D==3
     for j = 1:size(SubPlots,2)
         for i = 1:size(SubPlots,1)
             if strcmpi(class(SubPlots(i,j)),'matlab.graphics.axis.Axes')
             k = k+1;
-            fig = figure('Position',get(0,'Screensize'), 'UserData',SubPlots(i,j).Title.UserData);
+%             FigUserData.type = SubPlots(i,j).Title.UserData;
+%             fig = figure('Position',get(0,'Screensize'), 'UserData',FigUserData);
+            fig = figure('Position',get(0,'Screensize'));
             ax3D = subplot(1,3,1);
             ax2D = subplot(1,3,2); 
             ax1D = subplot(1,3,3);
 
             copyobj(get(SubPlots(i,j), 'Children'),ax3D)
             ax3D = update_structure(ax3D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', true);
+            fig.UserData.type = ax3D.UserData.type;
             ax2D.UserData.type = ax3D.UserData.type;
             ax1D.UserData.type = ax3D.UserData.type;
             if Nsbp>2 || Nsbp==1
@@ -55,8 +58,11 @@ if D ==3
             LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.03 P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(1),3) ,'FontSize',15);
             RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(2),3) ,'FontSize',15);
 
-            PopCall3D = @(src,cbdata) popmenu_callback3D(src,cbdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
+            PopCall3D = @(src,cbdata) popmenu_callback1D(src,cbdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
             p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
+            
+            PopCall1D = @(src,cbdata) popmenu_callbackFit1D(src,cbdata);
+            pf1D = uicontrol('Parent',fig, 'Style','popupmenu', 'string','', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.14 0.1 0.03], 'Callback',PopCall1D);
             
             AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
             AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
@@ -220,6 +226,13 @@ function popmenu_callback2D(src,cbdata,slider2D,SliderCall,value_cell,LeftTxt,Ri
         'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{1,SV}))
     set(LeftTxt, 'String', num2str(AxBounds(1),3))
     set(RightTxt, 'String', num2str(AxBounds(2),3))
+end
+
+function popmenu_callback1D(src,cbdata)
+    SV = src.Value;
+    ParentFig = src.Source.Parent;
+    if ~isempty(SV)
+    end
 end
 
 function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
