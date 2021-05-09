@@ -1,4 +1,4 @@
-function out = parse_num_or_sym2char(in)
+function out = parse_num_sym2char(in)
     if isempty(in)
         out = '';
     elseif isnumeric(in)

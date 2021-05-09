@@ -1,4 +1,4 @@
-function out = parse_str2num_or_sym(in)
+function out = parse_str2num_sym(in)
 if isempty(in)
     out = [];
 else

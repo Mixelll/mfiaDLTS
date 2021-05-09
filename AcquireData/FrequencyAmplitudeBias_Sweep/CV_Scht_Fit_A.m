@@ -29,10 +29,12 @@ classdef CV_Scht_Fit_A < matlab.mixin.SetGet
         function Menu(o)
             Properties = properties(o)';
             Values = get(o,Properties);
-            Values
-            ParseNumSym2Str(Values)
-            answer = inputdlg(Properties,'Input Fit Parameters',1,ParseNumSym2Str(Values))
-            ParseStr2NumSym(answer)
+            answer = inputdlg(Properties,'Input Fit Parameters',1,ParseCells(Values,@parse_num_cell_sym2char));
+            if ~isempty(answer)
+                NewValues = ParseCells(answer,@parse_str2num_cell_sym);
+                Pairs = [Properties ; NewValues];
+                set(o, Pairs{:})
+            end
         end
 	end
 end

@@ -9,8 +9,8 @@ Numel = numel(Input);
 
 Output = cell(1,Numel);
 j = 1;
-for ic = Input
-    Output{j} = Parse(ic{:});
+for ic = 1:numel(Input)
+    Output{j} = Parse(Input{ic});
     j = j+1;
 end
 if Numel==1 && UnCelledFlag

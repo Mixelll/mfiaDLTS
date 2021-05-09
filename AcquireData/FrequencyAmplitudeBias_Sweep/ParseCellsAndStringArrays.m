@@ -16,8 +16,8 @@ end
 
 Output = cell(1,Numel);
 j = 1;
-for ic = Input
-    in = ic{:};
+for ic = 1:numel(Input)
+    in = Input{ic};
     if isstring(in) && numel(in)>1
         for s = in
             Output{j} = Parse(s);
