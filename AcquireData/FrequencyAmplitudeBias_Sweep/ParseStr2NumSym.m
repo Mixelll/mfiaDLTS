@@ -1,6 +1,9 @@
 function Output = ParseStr2NumSym(Input)
 if ~iscell(Input)
+    UnCelledFlag = true;
     Input = {Input};
+else
+    UnCelledFlag = false;
 end
 Numel = 0;
 for i = 1:numel(Input)
@@ -31,7 +34,7 @@ for ic = Input
         j = j+1;
     end
 end
-if Numel==1
+if Numel==1 && UnCelledFlag
     Output = Output{:};
 end
 function out = parse(in)

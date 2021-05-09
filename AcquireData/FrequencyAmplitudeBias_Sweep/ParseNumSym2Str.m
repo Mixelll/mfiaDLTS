@@ -2,7 +2,10 @@ function Output = ParseNumSym2Str(Input)
 NumSym = @(x) isnumeric(x) || isa(x,'sym');
 StrChar = @(s) isstring(s) || ischar(s);
 if ~iscell(Input)
+    UnCelledFlag = true;
     Input = {Input};
+else
+    UnCelledFlag = false;
 end
 Numel = numel(Input);
 
@@ -18,7 +21,7 @@ for ic = Input
         j = j+1;
     end
 end
-if Numel==1
+if Numel==1 && UnCelledFlag
     Output = Output{:};
 end
 %%

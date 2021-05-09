@@ -30,8 +30,9 @@ classdef CV_Scht_Fit_A < matlab.mixin.SetGet
             Properties = properties(o)';
             Values = get(o,Properties);
             Values
-            ParseStr2NumSym(Values)
-%             answer = inputdlg(Properties,'Input Fit Parameters',1,ParseStr2NumSym(Values))
+            ParseNumSym2Str(Values)
+            answer = inputdlg(Properties,'Input Fit Parameters',1,ParseNumSym2Str(Values))
+            ParseStr2NumSym(answer)
         end
 	end
 end
