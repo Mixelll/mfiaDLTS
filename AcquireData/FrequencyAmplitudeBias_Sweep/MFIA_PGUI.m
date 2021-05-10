@@ -193,6 +193,10 @@ function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBoxLim,Check
     XlblBefore = Plot1D.XLabel.String;
     XLim = Plot1D.XLim;
     YLim = Plot1D.YLim;
+    if ~CheckBoxLim.Value
+        Plot1D.XAxis.LimitsMode = 'auto';
+        Plot1D.YAxis.LimitsMode = 'auto';
+    end
     UserData = Plot1D.UserData;
     P2DC = Plot2D.Children;
     P2DX = Plot2D.XLabel.String;
