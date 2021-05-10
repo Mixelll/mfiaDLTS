@@ -38,10 +38,14 @@ if D==3
             SliderStep2 = max(1/PopStrVal{4,2},0.1);
 
             
-            c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
-            c2Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-0.07 0.08 0.02]);
+            c1D_Lim = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
+            c1D_Hold = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Hold Plot', 'FontSize',13, 'Position',[P1D(1)+0.1 P1D(2)-0.07 0.08 0.02]);
+            c2D = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-0.07 0.08 0.02]);
             
-            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2D,c1Dpc);
+            PopCall1D = @(src,cbdata) popmenu_callbackFit1D(src,cbdata, ax1D);
+            pf1D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',[{'Disable'} RegisteredNames('Fit Classes')], 'FontSize',10, 'Units','normalized', 'Position', [P1D(1) P1D(2)-0.1 0.1 0.03], 'Callback',PopCall1D);
+            
+            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2D,c1D_Lim,c1D_Hold,pf1D);
             s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
             s2D.Position = [P2D(1) P2D(2)-0.11 P2D(3) 0.025];
@@ -51,18 +55,16 @@ if D==3
             PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'FontSize',10, 'Units','normalized', 'Position', [P2D(1)+0.1 P2D(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
 
-            SliderCallFromPop3D = @(src,cbdata,AxisString) slider_callback3D(src,cbdata,ax2D,AxisString,ax3D.UserData,c2Dpc);
+            SliderCallFromPop3D = @(src,cbdata,AxisString) slider_callback3D(src,cbdata,ax2D,AxisString,ax3D.UserData,c2D);
             s3D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
                 'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2), 'SliderStep',[1/PopStrVal{4,1} SliderStep2]);
             s3D.Position = [P3D(1) P3D(2)-0.11 P3D(3) 0.025];
             LeftTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)-0.03 P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(1),3) ,'FontSize',15);
             RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(2),3) ,'FontSize',15);
 
-            PopCall3D = @(src,cbdata) popmenu_callback1D(src,cbdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
+            PopCall3D = @(src,cbdata) popmenu_callback3D(src,cbdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
             p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
             
-%             PopCall1D = @(src,cbdata) popmenu_callbackFit1D(src,cbdata);
-%             pf1D = uicontrol('Parent',fig, 'Style','popupmenu', 'string','', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.14 0.1 0.03], 'Callback',PopCall1D);
             
             AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
             AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
@@ -119,9 +121,9 @@ elseif D==2
             PopOne2D = PopStrVal{2,1};
             SliderStep2 = max(1/PopStrVal{4,2},0.1);
             
-            c1Dpc = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
+            c1D_Lim = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
             
-            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2Dpc,c1Dpc);
+            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2Dpc,c1D_Lim);
             s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
             s2D.Position = [P2Dpc(1) P2Dpc(2)-0.11 P2Dpc(3) 0.025];
@@ -180,7 +182,14 @@ function slider_callback3D(src,cbdata,Plot2D,SelectAxString,DataStruct,CheckBox)
     end  
 end
 
-function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBox)
+function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBoxLim,CheckBoxHold,pf1D)
+    Hold = CheckBoxHold.Value;
+    TitleBefore = Plot1D.Title.String;
+    if ~isempty(Plot1D.Legend)
+        LegendBefore = Plot1D.Legend.String;
+    else
+        LegendBefore = {};
+    end
     XlblBefore = Plot1D.XLabel.String;
     XLim = Plot1D.XLim;
     YLim = Plot1D.YLim;
@@ -188,24 +197,52 @@ function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBox)
     P2DC = Plot2D.Children;
     P2DX = Plot2D.XLabel.String;
     P2DY = Plot2D.YLabel.String;
+
     if strcmpi(P2DX,AxisString)
         [~,SelectMinInd] = min(abs(P2DC.XData - src.Value));
-        plot(Plot1D, P2DC.YData, shiftdim(P2DC.CData(:,SelectMinInd)))
-        Plot1D.Title.String =[P2DX ' = ' num2str(P2DC.XData(SelectMinInd))];
-        Plot1D.XLabel.String = P2DY;
+        x = P2DC.YData;
+        y = shiftdim(P2DC.CData(:,SelectMinInd));
+        Title = [P2DX ' = ' num2str(P2DC.XData(SelectMinInd))];
+        XLabel = P2DY;
+
     elseif strcmpi(P2DY,AxisString)
         [~,SelectMinInd] = min(abs(P2DC.YData - src.Value));
-        plot(Plot1D, P2DC.XData, shiftdim(P2DC.CData(SelectMinInd,:)))
-        Plot1D.Title.String =[P2DY ' = ' num2str(P2DC.YData(SelectMinInd))];
-        Plot1D.XLabel.String = P2DX;
+        x = P2DC.XData;
+        y = shiftdim(P2DC.CData(SelectMinInd,:));
+        Title = [P2DY ' = ' num2str(P2DC.YData(SelectMinInd))];
+        XLabel = P2DX;
     end
+    
+    if Hold && strcmpi(XlblBefore, XLabel)
+        hold(Plot1D, 'on')
+    else
+        Hold = false;
+    end
+    plot(Plot1D, x, y, 'o')
+    Plot1D.Title.String = Title;
+    Plot1D.XLabel.String = XLabel;
     Plot1D.UserData = UserData;
     Plot1D.YLabel.String = Plot1D.UserData.type;
-    
-    if strcmpi(Plot1D.XLabel.String,XlblBefore) && CheckBox.Value
+    if Hold && (numel(findobj(Plot1D.Children, 'Type','Line'))>2 || ~isempty(LegendBefore))
+        legend(Plot1D, [LegendBefore Plot1D.Title.String])
+    elseif Hold
+        legend(Plot1D, {TitleBefore Plot1D.Title.String});
+    end
+    LegFitIn = Title;
+    if ~isempty(Plot1D.Legend)
+        Legend = Plot1D.Legend.String;
+        LegFitIn = Legend;
+    else
+        Legend = {};
+    end
+    if strcmpi(Plot1D.XLabel.String,XlblBefore) && CheckBoxLim.Value
         Plot1D.XLim = XLim;
         Plot1D.YLim = YLim;
     end
+    if ~strcmpi(pf1D.String(pf1D.Value), 'Disable')
+        Plot1D.Parent.UserData.Fit.(pf1D.String{pf1D.Value}).Fit(x,y, Plot1D, LegFitIn)
+    end
+	hold(Plot1D, 'off')
 end
 
 function popmenu_callback3D(src,cbdata,slider3D,SliderCall,Pop2D,Pop2D_call,value_cell,LeftTxt,RightTxt)
@@ -228,12 +265,36 @@ function popmenu_callback2D(src,cbdata,slider2D,SliderCall,value_cell,LeftTxt,Ri
     set(RightTxt, 'String', num2str(AxBounds(2),3))
 end
 
-% function popmenu_callback1D(src,cbdata)
-%     SV = src.Value;
-%     ParentFig = src.Source.Parent;
-%     if ~isempty(SV)
-%     end
-% end
+function popmenu_callbackFit1D(src,cbdata, Plot1D)
+    SV = src.Value;
+    pop = src;
+    SF = pop.String{SV};
+    [FitNames,FitHandles] = RegisteredNames('Fit Classes');
+    PopFitNames = [{'Disable'} FitNames];
+    if length(PopFitNames)~=length(pop.String) && ~all(strcmpi(PopFitNames, pop.String))
+        pop.String = FitNames;
+    end
+    if ~strcmpi(SF, 'Disable')
+        FC = FitHandles{strcmpi(FitNames, SF)};
+        ParentFig = pop.Parent;
+        if isfield(ParentFig.UserData, 'Fit')
+            ExFitNames = fieldnames(ParentFig.UserData.Fit);
+        else
+            ExFitNames = {};
+        end
+        if ~any(strcmp(ExFitNames, SF))
+            ParentFig.UserData.Fit.(SF) = FC();
+        end
+        ParentFig.UserData.Fit.(SF).Menu()
+        Lines = findobj(Plot1D.Children, 'Type','Line');
+        Line = Lines(1);
+        ParentFig.UserData.Fit.(SF).Fit(Line.XData,Line.YData, Plot1D, Line.DisplayName)
+    end
+end
+
+function Fit(method, x,y, target)
+    parent(target).UserData.Fit.(method).Fit(x,y, target)
+end
 
 function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
     XLim = Plot2Dsurf.XLim;
