@@ -10,6 +10,7 @@ if D==3
 %             FigUserData.type = SubPlots(i,j).Title.UserData;
 %             fig = figure('Position',get(0,'Screensize'), 'UserData',FigUserData);
             fig = figure('Position',get(0,'Screensize'));
+            AddProperties(fig);
             ax3D = subplot(1,3,1);
             ax2D = subplot(1,3,2); 
             ax1D = subplot(1,3,3);
@@ -52,7 +53,7 @@ if D==3
             LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)-0.03 P2D(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(1),3) ,'FontSize',15);
             RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2D(1)+P2D(3) P2D(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(2),3) ,'FontSize',15);
 
-            PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
+            PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D,pf1D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'FontSize',10, 'Units','normalized', 'Position', [P2D(1)+0.1 P2D(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
 
             SliderCallFromPop3D = @(src,cbdata,AxisString) slider_callback3D(src,cbdata,ax2D,AxisString,ax3D.UserData,c2D);
@@ -63,11 +64,16 @@ if D==3
             RightTxt3D = uicontrol('Style','text', 'Units','normalized', 'Position',[P3D(1)+P3D(3) P3D(2)-0.11 0.03 0.025],'String',num2str(PopOne3D(2),3) ,'FontSize',15);
 
             PopCall3D = @(src,cbdata) popmenu_callback3D(src,cbdata,s3D,SliderCallFromPop3D,p2D,PopCall2D,PopStrVal,LeftTxt3D,RightTxt3D);
-            p3D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
+            %p3D =
+            uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
             
             
             AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
-            AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
+            %AddPlotBtn = 
+            uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',AddPlotBtnCall);
+
+            %FigPropBtn = 
+            uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
             
             figs(k) = fig;
             end
@@ -79,6 +85,7 @@ elseif D==2
             if strcmpi(class(SubPlots(i,j)),'matlab.graphics.axis.Axes')
             k = k+1;
             fig = figure('Position',get(0,'Screensize'), 'UserData',SubPlots(i,j).Title.UserData);
+            AddProperties(fig);
             ax2D = subplot(1,3,1);
             ax2Dpc = subplot(1,3,2); 
             ax1D = subplot(1,3,3);
@@ -86,7 +93,7 @@ elseif D==2
             copyobj(get(SubPlots(i,j), 'Children'),ax2D)
             ax2D = update_structure(ax2D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', true);
             
-            LimCall = @(src, evt)LimCallback2D(src, evt, ax2D, ax2Dpc);
+            LimCall = @(src, evt) LimCallback2D(src, evt, ax2D, ax2Dpc);
             ax2D.CreateFcn = @(src, evt) addlistener(ax2D, 'XLim', 'PostSet', LimCall);
             addlistener(ax2D, 'XLim', 'PostSet', LimCall);
  
@@ -142,7 +149,7 @@ elseif D==2
     end
 end
 %% Functions
-function slider_callback3D(src,cbdata,Plot2D,SelectAxString,DataStruct,CheckBox)
+function slider_callback3D(src,~,Plot2D,SelectAxString,DataStruct,CheckBoxHold)
     XlblBefore = Plot2D.XLabel.String;
     YlblBefore = Plot2D.YLabel.String;
     XLim = Plot2D.XLim;
@@ -176,13 +183,13 @@ function slider_callback3D(src,cbdata,Plot2D,SelectAxString,DataStruct,CheckBox)
     Plot2D.YLabel.String = Axes.(AxNames{1}).label;
     Plot2D.Title.String =[Axes.(SelectAxString).label ' = ' num2str(Axes.(SelectAxString).vec(SelectMinInd))];
     Plot2D.UserData = UserData;
-    if strcmpi(Plot2D.XLabel.String,XlblBefore) && strcmpi(Plot2D.YLabel.String,YlblBefore) && CheckBox.Value
+    if strcmpi(Plot2D.XLabel.String,XlblBefore) && strcmpi(Plot2D.YLabel.String,YlblBefore) && CheckBoxHold.Value
         Plot2D.XLim = XLim;
         Plot2D.YLim = YLim;
     end  
 end
 
-function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBoxLim,CheckBoxHold,pf1D)
+function slider_callback2D(src,~,Plot1D,AxisString,Plot2D,CheckBoxLim,CheckBoxHold,pf1D)
     Hold = CheckBoxHold.Value;
     TitleBefore = Plot1D.Title.String;
     if ~isempty(Plot1D.Legend)
@@ -201,20 +208,21 @@ function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBoxLim,Check
     P2DC = Plot2D.Children;
     P2DX = Plot2D.XLabel.String;
     P2DY = Plot2D.YLabel.String;
-
+    PlotFlag = 0;
     if strcmpi(P2DX,AxisString)
         [~,SelectMinInd] = min(abs(P2DC.XData - src.Value));
         x = P2DC.YData;
         y = shiftdim(P2DC.CData(:,SelectMinInd));
         Title = [P2DX ' = ' num2str(P2DC.XData(SelectMinInd))];
         XLabel = P2DY;
-
+        PlotFlag = 1;
     elseif strcmpi(P2DY,AxisString)
         [~,SelectMinInd] = min(abs(P2DC.YData - src.Value));
         x = P2DC.XData;
         y = shiftdim(P2DC.CData(SelectMinInd,:));
         Title = [P2DY ' = ' num2str(P2DC.YData(SelectMinInd))];
         XLabel = P2DX;
+        PlotFlag = 1;
     end
     
     if Hold && strcmpi(XlblBefore, XLabel)
@@ -222,34 +230,36 @@ function slider_callback2D(src,cbdata,Plot1D,AxisString,Plot2D,CheckBoxLim,Check
     else
         Hold = false;
     end
-    plot(Plot1D, x, y, 'o')
-    Plot1D.Title.String = Title;
-    Plot1D.XLabel.String = XLabel;
-    Plot1D.UserData = UserData;
-    Plot1D.YLabel.String = Plot1D.UserData.type;
-    if Hold && (numel(findobj(Plot1D.Children, 'Type','Line'))>2 || ~isempty(LegendBefore))
-        legend(Plot1D, [LegendBefore Plot1D.Title.String])
-    elseif Hold
-        legend(Plot1D, {TitleBefore Plot1D.Title.String});
+    if PlotFlag
+        plot(Plot1D, x, y, src.Parent.UserData.Properties.Plot_Style)
+        Plot1D.Title.String = Title;
+        Plot1D.XLabel.String = XLabel;
+        Plot1D.UserData = UserData;
+        Plot1D.YLabel.String = Plot1D.UserData.type;
+        if Hold && (numel(findobj(Plot1D.Children, 'Type','Line'))>2 || ~isempty(LegendBefore))
+            legend(Plot1D, [LegendBefore Plot1D.Title.String])
+        elseif Hold
+            legend(Plot1D, {TitleBefore Plot1D.Title.String});
+        end
+        LegFitIn = Title;
+        if ~isempty(Plot1D.Legend)
+            Legend = Plot1D.Legend.String;
+            LegFitIn = Legend;
+        else
+            Legend = {};
+        end
+        if strcmpi(Plot1D.XLabel.String,XlblBefore) && CheckBoxLim.Value
+            Plot1D.XLim = XLim;
+            Plot1D.YLim = YLim;
+        end
+        if ~strcmpi(pf1D.String(pf1D.Value), 'Disable')
+            Plot1D.Parent.UserData.Fit.(pf1D.String{pf1D.Value}).Fit(x,y, Plot1D, LegFitIn)
+        end
+        hold(Plot1D, 'off')
     end
-    LegFitIn = Title;
-    if ~isempty(Plot1D.Legend)
-        Legend = Plot1D.Legend.String;
-        LegFitIn = Legend;
-    else
-        Legend = {};
-    end
-    if strcmpi(Plot1D.XLabel.String,XlblBefore) && CheckBoxLim.Value
-        Plot1D.XLim = XLim;
-        Plot1D.YLim = YLim;
-    end
-    if ~strcmpi(pf1D.String(pf1D.Value), 'Disable')
-        Plot1D.Parent.UserData.Fit.(pf1D.String{pf1D.Value}).Fit(x,y, Plot1D, LegFitIn)
-    end
-	hold(Plot1D, 'off')
 end
 
-function popmenu_callback3D(src,cbdata,slider3D,SliderCall,Pop2D,Pop2D_call,value_cell,LeftTxt,RightTxt)
+function popmenu_callback3D(src,~,slider3D,SliderCall,Pop2D,Pop2D_call,value_cell,LeftTxt,RightTxt)
     SV = src.Value;
     AxBounds = value_cell{2,SV};
     set(slider3D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2), 'SliderStep',[1/value_cell{4,SV} max(1/value_cell{4,SV},0.1)],...
@@ -260,16 +270,17 @@ function popmenu_callback3D(src,cbdata,slider3D,SliderCall,Pop2D,Pop2D_call,valu
     set(Pop2D, 'string',value_cell(1,:), 'Callback',@(src,cbdata)Pop2D_call(src,cbdata,value_cell));
 end
 
-function popmenu_callback2D(src,cbdata,slider2D,SliderCall,value_cell,LeftTxt,RightTxt)
+function popmenu_callback2D(src,~,slider2D,SliderCall,value_cell,LeftTxt,RightTxt,pf1D)
     SV = src.Value;
     AxBounds = value_cell{2,SV};
     set(slider2D, 'value',mean(AxBounds), 'min',AxBounds(1), 'max',AxBounds(2),  'SliderStep',[1/value_cell{4,SV} max(1/value_cell{4,SV},0.1)],...
         'Callback', @(src,cbdata) SliderCall(src,cbdata,value_cell{1,SV}))
     set(LeftTxt, 'String', num2str(AxBounds(1),3))
     set(RightTxt, 'String', num2str(AxBounds(2),3))
+    set(pf1D, 'value', 1)
 end
 
-function popmenu_callbackFit1D(src,cbdata, Plot1D)
+function popmenu_callbackFit1D(src,~, Plot1D)
     SV = src.Value;
     pop = src;
     SF = pop.String{SV};
@@ -296,11 +307,7 @@ function popmenu_callbackFit1D(src,cbdata, Plot1D)
     end
 end
 
-function Fit(method, x,y, target)
-    parent(target).UserData.Fit.(method).Fit(x,y, target)
-end
-
-function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
+function LimCallback2D(~, ~, Plot2Dsurf, Plot2Dpc)
     XLim = Plot2Dsurf.XLim;
     YLim = Plot2Dsurf.YLim;
     ZLim = Plot2Dsurf.ZLim;
@@ -325,7 +332,7 @@ function LimCallback2D(src, evt, Plot2Dsurf, Plot2Dpc)
     Plot2Dpc.UserData.type = Plot2Dsurf.UserData.type;
 end
 
-function AddPlotCallBack(src, evt, Plot1D)
+function AddPlotCallBack(~, ~, Plot1D)
     prompt = {'Enter plot number:', 'Enter legend:', 'Enter fontsize:', 'Enter plot properies:', 'Enter low x lim:', 'Enter high x lim:'};
     dlgtitle = 'Add Plot to Target Figure';
     answer = inputdlg(prompt,dlgtitle);
@@ -354,6 +361,19 @@ function AddPlotCallBack(src, evt, Plot1D)
             XData{ic2} = XData{ic2}(XData{ic2}>=Lx & XData{ic2}<=Hx);
         end
         s_plot(XData, YData, PlotProperies, '', '', Legend, TargetFigure, xlbl, ylbl, FontSize, '', 0, 0, 1);
+    end
+end
+
+function ChangeFigProperties(src, ~)
+    AddProperties(src.Parent);
+    src.Parent.UserData.Properties = StructrureFieldsMenu(src.Parent.UserData.Properties);
+end
+function AddProperties(fig)
+    MoreProp.Plot_Style = 'o';
+    if isfield(fig.UserData, 'Properties')
+        fig.UserData.Properties = update_structure(fig.UserData.Properties, MoreProp, 'onlynew',1);
+    else
+        fig.UserData.Properties = MoreProp;
     end
 end
 end
