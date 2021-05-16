@@ -75,7 +75,7 @@ if D==3
             %FigPropBtn = 
             uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
             
-            figs(k) = fig;
+            figs{k} = fig;
             end
         end
     end
@@ -143,7 +143,7 @@ elseif D==2
             AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
             AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
             
-            figs(k) = fig;
+            figs{k} = fig;
             end
         end
     end
@@ -286,8 +286,8 @@ function popmenu_callbackFit1D(src,~, Plot1D)
     SF = pop.String{SV};
     [FitNames,FitHandles] = RegisteredNames('Fit Classes');
     PopFitNames = [{'Disable'} FitNames];
-    if length(PopFitNames)~=length(pop.String) && ~all(strcmpi(PopFitNames, pop.String))
-        pop.String = FitNames;
+    if length(unique(lower(PopFitNames)))~=length(pop.String) || ~all(strcmpi(unique(lower(PopFitNames)), pop.String'))
+        pop.String = PopFitNames;
     end
     if ~strcmpi(SF, 'Disable')
         FC = FitHandles{strcmpi(FitNames, SF)};
@@ -300,10 +300,12 @@ function popmenu_callbackFit1D(src,~, Plot1D)
         if ~any(strcmp(ExFitNames, SF))
             ParentFig.UserData.Fit.(SF) = FC();
         end
-        ParentFig.UserData.Fit.(SF).Menu()
+        OK = ParentFig.UserData.Fit.(SF).Menu();
         Lines = findobj(Plot1D.Children, 'Type','Line');
         Line = Lines(1);
-        ParentFig.UserData.Fit.(SF).Fit(Line.XData,Line.YData, Plot1D, Line.DisplayName)
+        if OK
+            ParentFig.UserData.Fit.(SF).Fit(Line.XData,Line.YData, Plot1D, Line.DisplayName)
+        end
     end
 end
 

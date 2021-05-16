@@ -1,31 +1,19 @@
-classdef CV_Scht_Fit_A < matlab.mixin.SetGet
+classdef DLCP_Fit_A < matlab.mixin.SetGet
 	properties
         Range = [-inf inf]
         Area = (150e-4)^2 * pi
         RelativePermitivitty = 11.68
-        RelativePermitivitty_Limits = [-inf 0 inf]
-        Doping = sym('N')
-        Doping_Limits = [-inf 0 inf]
-        Vb = sym('Vb')
-        Vb_Limits = [-inf 0 inf]
-        IdealityFactor = sym('n')
-        IdealityFactor_Limits = [-inf 0 inf]
-        FitProperties = {}
-        FitPlotProperties = {}
+        Order = 1;
+        FitPlotProperties = {};
+        LegendProp = {'Location','Best'}
     end
 	methods 
         function Fit(o, x,y, Target, varargin)
-            LimChanged = @(x) any(x~=[-inf 0 inf]);
-            Limits = {};
-            if LimChanged(o.RelativePermitivitty_Limits), Limits(end+1:end+2) = {'es' o.RelativePermitivitty_Limits}; end
-            if LimChanged(o.Doping_Limits), Limits(end+1:end+2) = {'N' o.Doping_Limits}; end
-            if LimChanged(o.Vb_Limits), Limits(end+1:end+2) = {'Vb' o.Vb_Limits}; end
-            if LimChanged(o.IdealityFactor_Limits), Limits(end+1:end+2) = {'n' o.IdealityFactor_Limits}; end
-            [FitLeg, fun, span] = C_schot_fit_A(x,y,o.Range,o.Area,o.RelativePermitivitty,o.Doping,o.Vb,o.IdealityFactor,o.FitProperties,Limits{:});
+            [FitLeg, fun, span] = DLCP_fit(x,y,o.Area, 'range',o.Range, 'es',o.RelativePermitivitty, 'Order', o.Order);
             hold(Target, 'on')
             if ~isempty(varargin)
                 if iscell(varargin{:})
-                   legend([varargin{:}(1:end-1) {[varargin{:}{end} newline FitLeg]}]);
+                    legend([varargin{:}(1:end-1) {[varargin{:}{end} newline FitLeg]}]);
                 else
                     legend([char(varargin{:}) newline FitLeg]);
                 end
@@ -39,7 +27,9 @@ classdef CV_Scht_Fit_A < matlab.mixin.SetGet
             else
                 fplot(fun, span, o.FitPlotProperties{:}, 'Parent',Target);
             end
-%             legend.Location = 'Best';
+            if ~isempty(o.LegendProp)
+                legend(o.LegendProp{:});
+            end
             hold(Target, 'off')
         end
         function OK = Menu(o)
