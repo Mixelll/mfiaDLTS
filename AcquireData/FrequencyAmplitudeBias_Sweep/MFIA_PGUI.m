@@ -41,7 +41,7 @@ if D==3
             
             c1D_Lim = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
             c1D_Hold = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Hold Plot', 'FontSize',13, 'Position',[P1D(1)+0.1 P1D(2)-0.07 0.08 0.02]);
-            c2D = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-0.07 0.08 0.02]);
+            c2D_Lim = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P2D(1) P2D(2)-0.07 0.08 0.02]);
             
             PopCall1D = @(src,cbdata) popmenu_callbackFit1D(src,cbdata, ax1D);
             pf1D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',[{'Disable'} RegisteredNames('Fit Classes')], 'FontSize',10, 'Units','normalized', 'Position', [P1D(1) P1D(2)-0.1 0.1 0.03], 'Callback',PopCall1D);
@@ -56,7 +56,7 @@ if D==3
             PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D,pf1D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,2:3), 'FontSize',10, 'Units','normalized', 'Position', [P2D(1)+0.1 P2D(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,2:3)));
 
-            SliderCallFromPop3D = @(src,cbdata,AxisString) slider_callback3D(src,cbdata,ax2D,AxisString,ax3D.UserData,c2D);
+            SliderCallFromPop3D = @(src,cbdata,AxisString) slider_callback3D(src,cbdata,ax2D,AxisString,ax3D.UserData,c2D_Lim);
             s3D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop3D(src,cbdta,PopStrVal{3,1}),...
                 'value',mean(PopOne3D), 'min',PopOne3D(1), 'max',PopOne3D(2), 'SliderStep',[1/PopStrVal{4,1} SliderStep2]);
             s3D.Position = [P3D(1) P3D(2)-0.11 P3D(3) 0.025];
@@ -84,7 +84,7 @@ elseif D==2
         for i = 1:size(SubPlots,1)
             if strcmpi(class(SubPlots(i,j)),'matlab.graphics.axis.Axes')
             k = k+1;
-            fig = figure('Position',get(0,'Screensize'), 'UserData',SubPlots(i,j).Title.UserData);
+            fig = figure('Position',get(0,'Screensize'));
             AddProperties(fig);
             ax2D = subplot(1,3,1);
             ax2Dpc = subplot(1,3,2); 
@@ -92,7 +92,9 @@ elseif D==2
 
             copyobj(get(SubPlots(i,j), 'Children'),ax2D)
             ax2D = update_structure(ax2D, SubPlots(i,j), 'ignore',{'Parent'}, 'new', true);
-            
+            fig.UserData.type = ax2D.UserData.type;
+            ax2Dpc.UserData.type = ax2D.UserData.type;
+            ax1D.UserData.type = ax2D.UserData.type;
             LimCall = @(src, evt) LimCallback2D(src, evt, ax2D, ax2Dpc);
             ax2D.CreateFcn = @(src, evt) addlistener(ax2D, 'XLim', 'PostSet', LimCall);
             addlistener(ax2D, 'XLim', 'PostSet', LimCall);
@@ -129,19 +131,27 @@ elseif D==2
             SliderStep2 = max(1/PopStrVal{4,2},0.1);
             
             c1D_Lim = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Keep Axes Lim', 'FontSize',13, 'Position',[P1D(1) P1D(2)-0.07 0.08 0.02]);
+            c1D_Hold = uicontrol('Parent',fig,'Style','checkbox', 'Units','normalized', 'value',0, 'max',1, 'min',0, 'String','Hold Plot', 'FontSize',13, 'Position',[P1D(1)+0.1 P1D(2)-0.07 0.08 0.02]);
             
-            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2Dpc,c1D_Lim);
+            PopCall1D = @(src,cbdata) popmenu_callbackFit1D(src,cbdata, ax1D);
+            pf1D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',[{'Disable'} RegisteredNames('Fit Classes')], 'FontSize',10, 'Units','normalized', 'Position', [P1D(1) P1D(2)-0.1 0.1 0.03], 'Callback',PopCall1D);
+            
+            SliderCallFromPop2D = @(src,cbdata,AxisString) slider_callback2D(src,cbdata,ax1D,AxisString,ax2Dpc,c1D_Lim,c1D_Hold,pf1D);
             s2D = uicontrol('Parent',fig,'Style','slider', 'Units','normalized', 'Callback', @(src,cbdta) SliderCallFromPop2D(src,cbdta,PopStrVal{3,2}),...
                 'value',mean(PopOne2D), 'min',PopOne2D(1), 'max',PopOne2D(2), 'SliderStep',[1/PopStrVal{4,2} SliderStep2]);
             s2D.Position = [P2Dpc(1) P2Dpc(2)-0.11 P2Dpc(3) 0.025];
             LeftTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2Dpc(1)-0.03 P2Dpc(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(1),3) ,'FontSize',15);
             RightTxt2D = uicontrol('Style','text', 'Units','normalized', 'Position',[P2Dpc(1)+P2Dpc(3) P2Dpc(2)-0.11 0.03 0.025],'String',num2str(PopOne2D(2),3) ,'FontSize',15);
 
-            PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D);
+            PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D,pf1D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P2Dpc(1)+0.1 P2Dpc(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,:)));
 
             AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
-            AddPlotBtn = uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.1 P1D(2)-0.1 0.1 0.03], 'Callback',AddPlotBtnCall);
+            %AddPlotBtn = 
+            uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',AddPlotBtnCall);
+
+            %FigPropBtn = 
+            uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
             
             figs{k} = fig;
             end
