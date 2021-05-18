@@ -12,6 +12,7 @@ classdef CV_Scht_Fit_A < matlab.mixin.SetGet
         IdealityFactor_Limits = [-inf 0 inf]
         FitProperties = {}
         FitPlotProperties = {}
+        LegendProp = {'Location','Best'}
     end
 	methods 
         function Fit(o, x,y, Target, varargin)
@@ -24,13 +25,9 @@ classdef CV_Scht_Fit_A < matlab.mixin.SetGet
             [FitLeg, fun, span] = C_schot_fit_A(x,y,o.Range,o.Area,o.RelativePermitivitty,o.Doping,o.Vb,o.IdealityFactor,o.FitProperties,Limits{:});
             hold(Target, 'on')
             if ~isempty(varargin)
-                if iscell(varargin{:})
-                   legend([varargin{:}(1:end-1) {[varargin{:}{end} newline FitLeg]}]);
-                else
-                    legend([char(varargin{:}) newline FitLeg]);
-                end
-            else
-                Leg0 = legend(FitLeg);
+                legend(varargin{:});
+            elseif isempty(isempty(Target.Legend))
+                legend('Measured Data');
             end
             Lines = findobj(Target.Children, 'Type','Line');
             
@@ -39,7 +36,10 @@ classdef CV_Scht_Fit_A < matlab.mixin.SetGet
             else
                 fplot(fun, span, o.FitPlotProperties{:}, 'Parent',Target);
             end
-%             legend.Location = 'Best';
+            legend([Target.Legend.String(1:end-1) {[FitLeg newline 'Model: ' Target.Legend.String{end}]}])
+            if ~isempty(o.LegendProp)
+                legend(o.LegendProp{:});
+            end
             hold(Target, 'off')
         end
         function OK = Menu(o)

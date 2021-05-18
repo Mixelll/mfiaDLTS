@@ -68,9 +68,9 @@ if D==3
             uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P3D(1)+0.13 P3D(2)-0.088 0.13 0.03], 'Callback',PopCall3D);
             
             
-            AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
-            %AddPlotBtn = 
-            uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',AddPlotBtnCall);
+            ExportPlotBtnCall = @(src,cbdata) ExportPlotCallBack(src, cbdata, ax1D);
+            %ExportPlotBtn = 
+            uicontrol('Parent',fig, 'string','Export Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',ExportPlotBtnCall);
 
             %FigPropBtn = 
             uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
@@ -146,9 +146,9 @@ elseif D==2
             PopCall2D = @(src,cbdata,PopStrVal) popmenu_callback2D(src,cbdata,s2D,SliderCallFromPop2D,PopStrVal,LeftTxt2D,RightTxt2D,pf1D);
             p2D = uicontrol('Parent',fig, 'Style','popupmenu', 'string',PopStrVal(1,:), 'FontSize',10, 'Units','normalized', 'Position', [P2Dpc(1)+0.1 P2Dpc(2)-0.088 0.13 0.03], 'Callback',@(src,cbdta)PopCall2D(src,cbdta,PopStrVal(:,:)));
 
-            AddPlotBtnCall = @(src,cbdata) AddPlotCallBack(src, cbdata, ax1D);
-            %AddPlotBtn = 
-            uicontrol('Parent',fig, 'string','Add Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',AddPlotBtnCall);
+            ExportPlotBtnCall = @(src,cbdata) ExportPlotCallBack(src, cbdata, ax1D);
+            %ExportPlotBtn = 
+            uicontrol('Parent',fig, 'string','Export Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',ExportPlotBtnCall);
 
             %FigPropBtn = 
             uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
@@ -253,10 +253,7 @@ function slider_callback2D(src,~,Plot1D,AxisString,Plot2D,CheckBoxLim,CheckBoxHo
         end
         LegFitIn = Title;
         if ~isempty(Plot1D.Legend)
-            Legend = Plot1D.Legend.String;
-            LegFitIn = Legend;
-        else
-            Legend = {};
+            LegFitIn = Plot1D.Legend.String;
         end
         if strcmpi(Plot1D.XLabel.String,XlblBefore) && CheckBoxLim.Value
             Plot1D.XLim = XLim;
@@ -313,8 +310,12 @@ function popmenu_callbackFit1D(src,~, Plot1D)
         OK = ParentFig.UserData.Fit.(SF).Menu();
         Lines = findobj(Plot1D.Children, 'Type','Line');
         Line = Lines(1);
+        LegFitIn = Plot1D.Title.String;
+        if ~isempty(Plot1D.Legend)
+            LegFitIn = Plot1D.Legend.String;
+        end
         if OK
-            ParentFig.UserData.Fit.(SF).Fit(Line.XData,Line.YData, Plot1D, Line.DisplayName)
+            ParentFig.UserData.Fit.(SF).Fit(Line.XData,Line.YData, Plot1D, LegFitIn)
         end
     end
 end
@@ -344,18 +345,13 @@ function LimCallback2D(~, ~, Plot2Dsurf, Plot2Dpc)
     Plot2Dpc.UserData.type = Plot2Dsurf.UserData.type;
 end
 
-function AddPlotCallBack(~, ~, Plot1D)
-    prompt = {'Enter plot number:', 'Enter legend:', 'Enter fontsize:', 'Enter plot properies:', 'Enter low x lim:', 'Enter high x lim:'};
+function ExportPlotCallBack(~, ~, Plot1D)
+    prompt = {'Enter plot number:', 'Enter legend:', 'Enter font size:', 'Enter plot properies:', 'Enter Range:', 'Copy As is:'};
     dlgtitle = 'Add Plot to Target Figure';
-    answer = inputdlg(prompt,dlgtitle);
-    if ~isempty(answer) && ~isempty(answer{1})
-        TargetFigure = str2double(answer{1});
-        Legend = answer{2};
-        FontSize = answer{3};
-        PlotProperies = answer{4};
-        Lx = -inf; Hx = inf;
-        if ~isempty(answer{5}), Lx = str2double(answer{5}); end
-        if ~isempty(answer{6}), Hx = str2double(answer{6}); end
+    [Plot1D.Parent.UserData.ExportPlotProperties, OK] = StructrureFieldsMenu(Plot1D.Parent.UserData.ExportPlotProperties, @parse_num_cell_sym2char, @parse_str2num_cell, prompt, dlgtitle);
+    EPP = Plot1D.Parent.UserData.ExportPlotProperties;
+    if OK && ~isempty(EPP.Plot_Number)
+        Legend = EPP.Legend;
         if isempty(Legend)
             if ~isempty(Plot1D.Legend)
                 Legend = Plot1D.Legend.String;
@@ -363,29 +359,59 @@ function AddPlotCallBack(~, ~, Plot1D)
                 Legend = Plot1D.Title.String;
             end
         end
-        XData = {Plot1D.Children.XData};
-        YData = {Plot1D.Children.YData};
+        Range = EPP.Range;
+        if length(Range)<2
+            Lx = -inf; Hx = -inf;
+        else
+            Lx = Range(1); Hx = Range(2);
+        end
+        CopyChildren = EPP.CopyChildren;
+        
         xlbl = Plot1D.XLabel.String;
         ylbl = Plot1D.YLabel.String;
 
-        for ic2 = 1:numel(XData)
-            YData{ic2} = YData{ic2}(XData{ic2}>=Lx & XData{ic2}<=Hx);
-            XData{ic2} = XData{ic2}(XData{ic2}>=Lx & XData{ic2}<=Hx);
+        Children = Plot1D.Children(end:-1:1);
+        Cells = cell(1,numel(Children));
+        for i2 = 1:numel(Children)
+            Children(i2).UserData = [];
+            xd = Children(i2).XData;
+            if strcmpi(Children(i2).Type, 'line') && ~CopyChildren
+                Cells{i2} = [Children(i2).XData(xd>=Lx & xd<=Hx); Children(i2).YData(xd>=Lx & xd<=Hx)];
+            else
+                if strcmpi(Children(i2).Type, 'functionline') && ~CopyChildren
+                    xr = Children(i2).XRange;
+                    Children(i2).UserData = ['XRange=[' num2str(max(Lx,xr(1))) ' ' num2str(min(Hx,xr(2))) ']'];
+                end
+                Cells{i2} = Children(i2);
+            end
         end
-        s_plot(XData, YData, PlotProperies, '', '', Legend, TargetFigure, xlbl, ylbl, FontSize, '', 0, 0, 1);
+        s_plot([], Cells, EPP.PlotProperties, '', '', Legend, EPP.Plot_Number, xlbl, ylbl, EPP.FontSize, '', 0, 0, 1);
     end
 end
 
 function ChangeFigProperties(src, ~)
     AddProperties(src.Parent);
-    src.Parent.UserData.Properties = StructrureFieldsMenu(src.Parent.UserData.Properties);
+    src.Parent.UserData.Properties = StructrureFieldsMenu(src.Parent.UserData.Properties, @parse_num_cell_sym2char, @parse_str2num_cell);
 end
 function AddProperties(fig)
+    % General properties
     MoreProp.Plot_Style = 'o';
     if isfield(fig.UserData, 'Properties')
         fig.UserData.Properties = update_structure(fig.UserData.Properties, MoreProp, 'onlynew',1);
     else
         fig.UserData.Properties = MoreProp;
+    end
+    % Export plot properties
+    MoreExportPlotProp.Plot_Number = '';
+    MoreExportPlotProp.Legend = {};
+    MoreExportPlotProp.FontSize = '';
+    MoreExportPlotProp.PlotProperties = {};
+    MoreExportPlotProp.Range = [-inf inf];
+    MoreExportPlotProp.CopyChildren = 1;
+    if isfield(fig.UserData, 'AddPlotProperties')
+        fig.UserData.ExportPlotProperties = update_structure(fig.UserData.ExportPlotProperties, MoreExportPlotProp, 'onlynew',1);
+    else
+        fig.UserData.ExportPlotProperties = MoreExportPlotProp;
     end
 end
 end

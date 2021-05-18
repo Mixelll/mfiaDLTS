@@ -12,13 +12,9 @@ classdef DLCP_Fit_A < matlab.mixin.SetGet
             [FitLeg, fun, span] = DLCP_fit(x,y,o.Area, 'range',o.Range, 'es',o.RelativePermitivitty, 'Order', o.Order);
             hold(Target, 'on')
             if ~isempty(varargin)
-                if iscell(varargin{:})
-                    legend([varargin{:}(1:end-1) {[varargin{:}{end} newline FitLeg]}]);
-                else
-                    legend([char(varargin{:}) newline FitLeg]);
-                end
-            else
-                Leg0 = legend(FitLeg);
+                legend(varargin{:});
+            elseif isempty(isempty(Target.Legend))
+                legend('Measured Data');
             end
             Lines = findobj(Target.Children, 'Type','Line');
             
@@ -30,6 +26,7 @@ classdef DLCP_Fit_A < matlab.mixin.SetGet
             if ~isempty(o.LegendProp)
                 legend(o.LegendProp{:});
             end
+            legend([Target.Legend.String(1:end-1) {[FitLeg newline 'Model: ' Target.Legend.String{end}]}])
             hold(Target, 'off')
         end
         function OK = Menu(o)

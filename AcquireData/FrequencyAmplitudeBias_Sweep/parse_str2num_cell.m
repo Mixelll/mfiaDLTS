@@ -5,13 +5,22 @@ end
 if isempty(in)
     out = [];
 elseif in(1)=='{' && in(end)=='}'
-%     out = strsplit(in(2:end-1),',');
-    out = eval(in);
+    ins = in(2:end-1);
+    if ~isempty(ins) && (any(regexp(ins,'([^\d\,\''](?=[^\'']))|((?<=[^\''])[^\d\,\''])')) || (~any(strfind(ins,',')) && ins(1)~='''' && ~any(str2num(ins))))
+        out = strsplit(ins,',');
+        for ic = 1:numel(out)
+            Temp = str2num(out{ic});
+            if ~isempty(Temp)
+                out{ic} = Temp;
+            end
+        end  
+    else
+        out = eval(in);
+    end
     ind = [];
     for ic = 1:numel(out)
         if isempty(out{ic})
             ind(end+1) = ic;
-%             if out{ic}(1) == 
         end
     end
     out(ind) = [];
