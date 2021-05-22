@@ -75,7 +75,11 @@ if D==3
             %FigPropBtn = 
             uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
             
-            figs{k} = fig;
+            TextCall1D = @(src,cbdata) textbox_callback2D(src,cbdata, s2D);
+            %SliceText =
+            uicontrol('Parent',fig, 'Style','edit', 'string','0', 'FontSize',10, 'Units','normalized', 'Position', [P2D(1)+0.06 P2D(2)-0.08 0.03 0.03], 'Callback',TextCall1D);
+            
+            figs(k) = fig;
             end
         end
     end
@@ -149,11 +153,16 @@ elseif D==2
             ExportPlotBtnCall = @(src,cbdata) ExportPlotCallBack(src, cbdata, ax1D);
             %ExportPlotBtn = 
             uicontrol('Parent',fig, 'string','Export Plot', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.105 P1D(2)-0.1 0.05 0.03], 'Callback',ExportPlotBtnCall);
-
+            
+            TextCall1D = @(src,cbdata) textbox_callback2D(src,evt, s2D);
             %FigPropBtn = 
             uicontrol('Parent',fig, 'string','Settings', 'FontSize',10, 'Units','normalized', 'Position', [P1D(1)+0.16 P1D(2)-0.1 0.05 0.03], 'Callback',@ChangeFigProperties);
             
-            figs{k} = fig;
+            TextCall1D = @(src,cbdata) textbox_callback2D(src,cbdata, s2D);
+            %SliceText =
+            uicontrol('Parent',fig, 'Style','edit', 'string','0', 'FontSize',10, 'Units','normalized', 'Position', [P2Dpc(1)+0.06 P2Dpc(2)-0.08 0.03 0.03], 'Callback',TextCall1D);
+            
+            figs(k) = fig;
             end
         end
     end
@@ -241,7 +250,7 @@ function slider_callback2D(src,~,Plot1D,AxisString,Plot2D,CheckBoxLim,CheckBoxHo
         Hold = false;
     end
     if PlotFlag
-        plot(Plot1D, x, y, src.Parent.UserData.Properties.Plot_Style)
+        plot(Plot1D, x, y, Plot1D.Parent.UserData.Properties.Plot_Style)
         Plot1D.Title.String = Title;
         Plot1D.XLabel.String = XLabel;
         Plot1D.UserData = UserData;
@@ -265,7 +274,12 @@ function slider_callback2D(src,~,Plot1D,AxisString,Plot2D,CheckBoxLim,CheckBoxHo
         hold(Plot1D, 'off')
     end
 end
-
+function textbox_callback2D(src,~, slider2D)
+    srcc.Value = str2double(src.String);
+    if ~isnan(srcc.Value)
+        slider2D.Callback(srcc,srcc);
+    end
+end
 function popmenu_callback3D(src,~,slider3D,SliderCall,Pop2D,Pop2D_call,value_cell,LeftTxt,RightTxt)
     SV = src.Value;
     AxBounds = value_cell{2,SV};
